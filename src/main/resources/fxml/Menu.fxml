@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.Label?>
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.fpj.javafxController.MenuController"
+            prefHeight="640.0" prefWidth="1280.0">
+
+    <top>
+        <MenuBar>
+            <Menu text="Konto" onAction="#toAccount">
+            </Menu>
+            <Menu text="Nachrichten">
+                <MenuItem text="Pinnwand" onAction="#toPinwallMenu"/>
+                <MenuItem text="Meine Mailbox" onAction="#toMailbox"/>
+            </Menu>
+        </MenuBar>
+    </top>
+    <center>
+        <Label text="Willkommen!" style="-fx-font-size: 150" alignment="CENTER"/>
+    </center>
+</BorderPane>
