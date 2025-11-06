@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.fpj.javafxController.AccountPageController"
+            prefHeight="400.0" prefWidth="600.0">
+
+    <center>
+        <HBox>
+            <Label fx:id="usernameLabel" style="-fx-font-size: 40" HBox.margin="10.0"
+            alignment="CENTER"/>
+            <Label fx:id="balanceLabel" style="-fx-font-size: 40" alignment="CENTER"/>
+        </HBox>
+    </center>
+    <bottom>
+        <VBox>
+            <Button text="Überweisung" alignment="CENTER" prefHeight="100.0" prefWidth="100.0" VBox.margin="100"
+                    onAction="#toTransactionPage"/>
+            <Button text="Einzahlung" alignment="CENTER" prefWidth="100.0" prefHeight="100.0" VBox.margin="100"
+                    onAction="#toTransactionPage"/>
+            <Button text="Auszahlung" alignment="CENTER" prefWidth="100.0" prefHeight="100.0" VBox.margin="100"
+                    onAction="#toTransactionPage"/>
+        </VBox>
+    </bottom>
+
+</BorderPane>
