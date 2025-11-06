@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.fpj.javafxController.MenuController"
+            prefHeight="500.0" prefWidth="800.0" alignment="CENTER" spacing="150">
+
+    <Label text="Willkommen!" style="-fx-font-size: 50" alignment="CENTER"/>
+
+    <HBox alignment="CENTER" spacing="50">
+        <Button text="Konto" onAction="#toAccount" prefWidth="140" prefHeight="60" style="-fx-font-size: 20"/>
+        <Button text="Mailbox" onAction="#toMailbox" prefWidth="140" prefHeight="60" style="-fx-font-size: 20"/>
+        <Button text="Pinnwand" onAction="#toPinwallMenu" prefWidth="140" prefHeight="60" style="-fx-font-size: 20"/>
+    </HBox>
+
+</VBox>
