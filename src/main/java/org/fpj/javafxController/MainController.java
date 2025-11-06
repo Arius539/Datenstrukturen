@@ -6,7 +6,9 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -19,21 +21,24 @@ public class MainController {
     @FXML
     private AnchorPane overlayContainer;
 
-    private final LoginController loginController;
+    private final ApplicationContext springContext;
 
     @Autowired
-    public MainController(LoginController loginController){
-        this.loginController = loginController;
+    public MainController(ApplicationContext springContext){
+        this.springContext = springContext;
     }
 
     public void showLogin() throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
+        loader.setControllerFactory(springContext::getBean);
         VBox loginPane = loader.load();
+
+        LoginController loginController = loader.getController();
+        loginController.setMainController(this);
 
         AnchorPane.setTopAnchor(loginPane, (overlayContainer.getHeight() - loginPane.getPrefHeight()) / 2);
         AnchorPane.setLeftAnchor(loginPane, (overlayContainer.getWidth() - loginPane.getPrefWidth()) / 2);
 
-        loginController.setMainController(this);
         overlayContainer.getChildren().setAll(loginPane);
 
         overlayContainer.widthProperty().addListener((observable, oldValue, newValue) ->
@@ -44,6 +49,7 @@ public class MainController {
 
     public void hideLogin(){
         overlayContainer.getChildren().clear();
+        root.getChildren().remove(overlayContainer);
     }
 
 }
