@@ -8,6 +8,7 @@ import lombok.Setter;
 import org.fpj.wall.domain.WallComment;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -20,9 +21,10 @@ public class User {
     @Id
     @GeneratedValue
     private Long id;
+
     private String username;
     private String password;
-    private Timestamp createdAt;
+    private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "wallComment", cascade = CascadeType.ALL)
     private List<WallComment> wallComments;

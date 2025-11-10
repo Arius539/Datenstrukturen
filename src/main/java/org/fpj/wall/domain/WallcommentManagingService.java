@@ -5,6 +5,7 @@ import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +28,12 @@ public class WallcommentManagingService {
             throw new DataNotPresentException("Keine WallComments für Owner " + owner.getUsername() +
                     " vorhanden.");
         }
+    }
+
+    public WallComment saveWallComment(final WallComment wallComment){
+        wallComment.setCreatedAt(LocalDateTime.now());
+        WallComment saved = wallCommentRepo.save(wallComment);
+        return saved;
     }
 
 }

@@ -8,6 +8,7 @@ import lombok.Setter;
 import org.fpj.users.domain.User;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -26,6 +27,6 @@ public class WallComment {
     @OneToOne
     @JoinColumn(name = "users")
     private User author;
-    private Timestamp createdAt;
+    private LocalDateTime createdAt;
 
 }
