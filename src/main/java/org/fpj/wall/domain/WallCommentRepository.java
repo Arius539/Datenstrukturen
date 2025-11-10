@@ -1,24 +1,16 @@
 package org.fpj.wall.domain;
 
+
 import org.fpj.users.domain.User;
-import org.springframework.stereotype.Component;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Component
-public class WallCommentRepository {
 
-    //private Connection conn;
-
-//    @Autowired
-//    public WallCommentRepository(Connection conn){
-//        this.conn = conn;
-//    }
-
-
-//    public List<WallComment> getWallCommentsByUser(User wallOwner){
-//
-//    }
+@Repository
+public interface WallCommentRepository extends JpaRepository<WallComment, Long> {
+    List<WallComment> getWallcommentsForOwner(User owner);
 }
 
 
