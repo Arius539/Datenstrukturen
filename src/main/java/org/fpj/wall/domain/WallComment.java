@@ -21,10 +21,10 @@ public class WallComment {
     @GeneratedValue
     private Long id;
     private String content;
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "users")
     private User wallOwner;
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "users")
     private User author;
     private LocalDateTime createdAt;
