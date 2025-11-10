@@ -11,7 +11,8 @@ import java.util.Optional;
 
 @Repository
 public interface WallCommentRepository extends JpaRepository<WallComment, Long> {
-    Optional<List<WallComment>> getWallcommentsForOwner(User owner);
+    Optional<List<WallComment>> getWallCommentsByWallOwner(User wallOwner);
+    Optional<List<WallComment>> getWallCommentsByAuthor(User author);
 }
 
 
