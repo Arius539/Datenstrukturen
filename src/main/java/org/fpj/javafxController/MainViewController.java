@@ -7,15 +7,21 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 @Component
 public class MainViewController {
+
     @Autowired
     private ApplicationContext context;
 
@@ -23,179 +29,140 @@ public class MainViewController {
     @FXML private Label lblEmail;
     @FXML private Label lblBalance;
 
-    // Wall / Feed
-    @FXML private ListView<WallItem> lvWallComments;
-    @FXML private ListView<ActivityItem> lvActivity;
+    // Composer
+    @FXML private RadioButton rbDeposit;   // Einzahlen
+    @FXML private RadioButton rbTransfer;  // Überweisen
+    @FXML private RadioButton rbWithdraw;  // Auszahlen
+    @FXML private TextField tfEmpfaenger;
+    @FXML private TextField tfBetrag;
+    @FXML private TextField tfBetreff;
 
-    // Composer (zentral)
-    @FXML private VBox vbTransferRows;
-
-    // Chats (rechte Spalte)
-    @FXML private ListView<ChatPreview> lvChats;
+    // Listen
+    @FXML private ListView<TransactionItem> lvActivity;    // Letzte Transaktionen
+    @FXML private ListView<ChatPreview>     lvChats;       // Chats
 
     private static final double GAP = 12.0;
+    private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
     @FXML
     public void initialize() {
-        // Demo-Daten (später durch Services ersetzen)
+        // Demo-Daten – später durch Services ersetzen
         lblEmail.setText("demo_user@example.com");
         lblBalance.setText("€ 1.234,56");
 
-        // --- Activity / Überweisungen (Zeit, Typ, Betrag) ---
-        ObservableList<ActivityItem> activities = FXCollections.observableArrayList(
-                new ActivityItem("11.11.2025 10:23", "Senden",  "€ 15,00"),
-                new ActivityItem("10.11.2025 18:02", "Einzahlung", "€ 50,00"),
-                new ActivityItem("10.11.2025 09:14", "Auszahlung", "€ 20,00")
+        // Composer: Empfänger-Feld managed an visible binden, Startzustand
+        tfEmpfaenger.managedProperty().bind(tfEmpfaenger.visibleProperty());
+        applyTypeVisibility();
+
+        // Letzte Transaktionen (Empfänger/Sender, Betrag, Datum, Betreff)
+        ObservableList<TransactionItem> txs = FXCollections.observableArrayList(
+                // Betrag < 0 => Geld geht raus => Empfänger anzeigen
+                new TransactionItem("Bob",  new BigDecimal("-15.00"), LocalDateTime.now().minusHours(2),  "Kaffee"),
+                // Betrag > 0 => Geld kommt rein => Sender anzeigen
+                new TransactionItem("Alice",new BigDecimal("50.00"),  LocalDateTime.now().minusDays(1).withHour(18).withMinute(2), "Rückzahlung"),
+                new TransactionItem("Clara",new BigDecimal("-20.00"), LocalDateTime.now().minusDays(1).withHour(9).withMinute(14), "Taxi")
         );
-        lvActivity.setItems(activities);
+        lvActivity.setItems(txs);
         lvActivity.setCellFactory(list -> new ListCell<>() {
-            @Override protected void updateItem(ActivityItem it, boolean empty) {
+            @Override protected void updateItem(TransactionItem it, boolean empty) {
                 super.updateItem(it, empty);
-                if (empty || it == null) {
-                    setText(null); setGraphic(null);
-                } else {
-                    Label lTime = new Label(it.time());
-                    Label lType = new Label(it.type());
-                    Label lAmount = new Label(it.amount());
-                    HBox row = new HBox(GAP, lTime, lType, lAmount);
-                    row.setPadding(new Insets(6));
-                    setGraphic(row);
-                    setText(null);
-                }
+                if (empty || it == null) { setGraphic(null); setText(null); return; }
+
+                String counterpartyLabel = it.amount.signum() < 0 ? it.counterparty : it.counterparty; // Name anzeigen
+                String amountStr = formatAmount(it.amount);
+                String dateStr   = TS.format(it.timestamp);
+                String subject   = it.subject == null ? "" : it.subject;
+
+                Label lCounterparty = new Label(counterpartyLabel);
+                Label lAmount       = new Label(amountStr);
+                Label lDate         = new Label(dateStr);
+                Label lSubject      = new Label(subject);
+
+                HBox row = new HBox(GAP, lCounterparty, lAmount, lDate, lSubject);
+                row.setPadding(new Insets(6));
+                setGraphic(row);
+                setText(null);
             }
         });
 
-        // --- Wall-Kommentare (Zeit, User, Snippet) ---
-        ObservableList<WallItem> wall = FXCollections.observableArrayList(
-                new WallItem("11.11.2025 11:00", "Alice", "Willkommen auf meiner Wall!"),
-                new WallItem("10.11.2025 17:40", "Bob",   "Überweisung erhalten, danke."),
-                new WallItem("10.11.2025 09:05", "Clara", "Treffen wir uns morgen?")
-        );
-        lvWallComments.setItems(wall);
-        lvWallComments.setCellFactory(list -> new ListCell<>() {
-            @Override protected void updateItem(WallItem it, boolean empty) {
-                super.updateItem(it, empty);
-                if (empty || it == null) {
-                    setText(null); setGraphic(null);
-                } else {
-                    Label lTime = new Label(it.time());
-                    Label lUser = new Label(it.user());
-                    Label lMsg  = new Label(it.text());
-                    HBox row = new HBox(GAP, lTime, lUser, lMsg);
-                    row.setPadding(new Insets(6));
-                    row.setFillHeight(true);
-                    setGraphic(row);
-                    setText(null);
-                }
-            }
-        });
-
-        // --- Chats (Zeit, Kontakt, letzte Nachricht) ---
+        // Chats (Name, letzte Nachricht (20 Zeichen), Datum)
         ObservableList<ChatPreview> chats = FXCollections.observableArrayList(
-                new ChatPreview("11.11.2025 12:05", "Alice", "Alles gut?"),
-                new ChatPreview("11.11.2025 10:30", "Bob",   "Danke für die Zahlung."),
-                new ChatPreview("10.11.2025 19:10", "Clara", "Bis morgen!")
+                new ChatPreview("Alice", "Alles gut bei dir? Wir sehen uns später im Büro.", LocalDateTime.now().minusMinutes(10)),
+                new ChatPreview("Bob",   "Danke für die Zahlung.",                         LocalDateTime.now().minusHours(1)),
+                new ChatPreview("Clara", "Bis morgen!",                                     LocalDateTime.now().minusDays(1))
         );
         lvChats.setItems(chats);
         lvChats.setCellFactory(list -> new ListCell<>() {
             @Override protected void updateItem(ChatPreview it, boolean empty) {
                 super.updateItem(it, empty);
-                if (empty || it == null) {
-                    setText(null); setGraphic(null);
-                } else {
-                    Label lTime = new Label(it.time());
-                    Label lUser = new Label(it.contact());
-                    Label lMsg  = new Label(it.lastMessage());
-                    HBox row = new HBox(GAP, lTime, lUser, lMsg);
-                    row.setPadding(new Insets(6));
-                    setGraphic(row);
-                    setText(null);
-                }
+                if (empty || it == null) { setGraphic(null); setText(null); return; }
+
+                Label lName  = new Label(it.name);
+                Label lMsg   = new Label(truncate(it.lastMessage, 20));
+                Label lDate  = new Label(TS.format(it.timestamp));
+
+                HBox row = new HBox(GAP, lName, lMsg, lDate);
+                row.setPadding(new Insets(6));
+                setGraphic(row);
+                setText(null);
             }
         });
 
-        // Klick öffnet ein separates Chat-Fenster
+        // Klick: Chat-FXML öffnen
         lvChats.getSelectionModel().selectedItemProperty().addListener((obs, oldV, sel) -> {
             if (sel != null) {
-                openChatWindow(sel.contact());
-                // Selektion zurücksetzen, damit erneutes Klicken wieder öffnet
+                openChatWindow(sel.name);
                 lvChats.getSelectionModel().clearSelection();
             }
         });
-
-        // Composer initiale Zeile
-        addTransferRow();
     }
 
+    /* ================= Composer Verhalten ================= */
+
     @FXML
-    public void addTransferRow() {
-        GridPane grid = new GridPane();
-        grid.setHgap(8);
-        grid.setVgap(6);
-
-        ColumnConstraints c1 = new ColumnConstraints();
-        c1.setPercentWidth(60);
-        ColumnConstraints c2 = new ColumnConstraints();
-        c2.setPercentWidth(40);
-        grid.getColumnConstraints().addAll(c1, c2);
-
-        TextField tfEmpfaenger = new TextField();
-        tfEmpfaenger.setPromptText("Empfänger");
-        TextField tfBetrag = new TextField();
-        tfBetrag.setPromptText("Betrag (z. B. 12,34)");
-
-        grid.add(tfEmpfaenger, 0, 0);
-        grid.add(tfBetrag,     1, 0);
-
-        TextField tfGrund = new TextField();
-        tfGrund.setPromptText("Grund / Text / Betreff");
-
-        VBox container = new VBox(6, grid, tfGrund);
-        container.getStyleClass().add("composer-row");
-        container.setPadding(new Insets(8));
-
-        vbTransferRows.getChildren().add(container);
+    public void onTypeChanged() {
+        applyTypeVisibility();
     }
 
-    @FXML
-    public void removeTransferRow() {
-        int n = vbTransferRows.getChildren().size();
-        if (n > 0) vbTransferRows.getChildren().remove(n - 1);
+    private void applyTypeVisibility() {
+        boolean isTransfer = rbTransfer.isSelected();
+        tfEmpfaenger.setVisible(isTransfer); // bei Einzahlen/Auszahlen unsichtbar
+        if (!isTransfer) {
+            tfEmpfaenger.clear();
+        }
     }
 
     @FXML
     public void sendTransfers() {
-        // Placeholder: reine UI-Bestätigung
-        Alert a = new Alert(Alert.AlertType.INFORMATION, "Transfers würden jetzt gesendet.", ButtonType.OK);
+        String type = rbDeposit.isSelected() ? "Einzahlen" : rbWithdraw.isSelected() ? "Auszahlen" : "Überweisen";
+        String empf = tfEmpfaenger.isVisible() ? tfEmpfaenger.getText() : "(kein Empfänger)";
+        String betrag = tfBetrag.getText();
+        String betreff = tfBetreff.getText();
+
+        Alert a = new Alert(Alert.AlertType.INFORMATION,
+                "Typ: " + type + "\nEmpfänger: " + empf + "\nBetrag: " + betrag + "\nBetreff: " + betreff,
+                ButtonType.OK);
         a.setHeaderText(null);
         a.setTitle("Info");
         a.showAndWait();
     }
 
-    @FXML
-    public void openWallComments() {
-        Alert a = new Alert(Alert.AlertType.INFORMATION, "Navigation zur vollständigen Wall-Ansicht (Placeholder).", ButtonType.OK);
-        a.setHeaderText(null);
-        a.setTitle("Info");
-        a.showAndWait();
-    }
+    /* ================= Actions (Buttons links) ================= */
 
-    @FXML
-    public void openTransactionOverview() {
-        Alert a = new Alert(Alert.AlertType.INFORMATION, "Navigation zur Transaktionsübersicht (Placeholder).", ButtonType.OK);
-        a.setHeaderText(null);
-        a.setTitle("Info");
-        a.showAndWait();
-    }
+    @FXML public void actionTransactions()    { info("Navigation: Transaktionen (Placeholder)."); }
+    @FXML public void actionWallComments()    { info("Navigation: Wall Kommentare (Placeholder)."); }
+    @FXML public void actionDirectMessages() { info("Navigation: Massen Transaktion (Placeholder)."); }
+
+    /* ================= Chat-Fenster (aus FXML) ================= */
 
     private void openChatWindow(String contact) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/chat_window.fxml"));
-            loader.setControllerFactory(context::getBean); // Spring-basiert
+            loader.setControllerFactory(context::getBean);
             Parent root = loader.load();
 
             ChatWindowController ctrl = loader.getController();
-            ctrl.init(contact); // Parameter an "Page/Slice"-Controller
+            ctrl.init(contact);
 
             Stage dialog = new Stage();
             dialog.initModality(Modality.APPLICATION_MODAL);
@@ -208,16 +175,26 @@ public class MainViewController {
         }
     }
 
-    private void wireChatList() {
-        lvChats.getSelectionModel().selectedItemProperty().addListener((obs, oldV, sel) -> {
-            if (sel != null) {
-                openChatWindow(sel.contact());
-                lvChats.getSelectionModel().clearSelection();
-            }
-        });
+    /* ================= Utils & Modelle ================= */
+
+    private static String truncate(String s, int max) {
+        if (s == null) return "";
+        return s.length() <= max ? s : s.substring(0, max) + "…";
     }
 
-    public record ActivityItem(String time, String type, String amount) {}
-    public record WallItem(String time, String user, String text) {}
-    public record ChatPreview(String time, String contact, String lastMessage) {}
+    private static String formatAmount(BigDecimal amt) {
+        String sign = amt.signum() < 0 ? "-" : "+";
+        BigDecimal abs = amt.abs();
+        return sign + " € " + abs.setScale(2, BigDecimal.ROUND_HALF_UP).toPlainString();
+    }
+
+    private void info(String text) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION, text, ButtonType.OK);
+        a.setHeaderText(null);
+        a.setTitle("Info");
+        a.showAndWait();
+    }
+
+    public record TransactionItem(String counterparty, BigDecimal amount, LocalDateTime timestamp, String subject) {}
+    public record ChatPreview(String name, String lastMessage, LocalDateTime timestamp) {}
 }

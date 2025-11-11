@@ -4,6 +4,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import lombok.Setter;
+import org.fpj.javafxController.MainController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -22,20 +23,6 @@ public class ViewNavigator {
     public ViewNavigator(ApplicationContext context, MainController mainController){
         this.context = context;
         this.mainController = mainController;
-    }
-
-    public void showMenu() throws IOException {
-        loadView("main.fxml", "Menü");
-        mainController.hideLogin();
-    }
-
-    public void showAccount() throws IOException {
-        loadView("account.fxml", "Konto");
-    }
-
-    public void showMain() throws IOException {
-        loadView("main.fxml", "Main");
-        mainController.showLogin();
     }
 
     private void loadView(String fxml, String title) throws IOException {
