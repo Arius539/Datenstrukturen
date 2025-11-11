@@ -3,7 +3,7 @@ package org.fpj.javafxController;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import lombok.Setter;
-import org.fpj.Data.MoneyMovement;
+import org.fpj.Data.TransactionType;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -13,7 +13,7 @@ public class TransactionController {
     @FXML private TextField amountInput;
 
     @Setter
-    private MoneyMovement movementKind;
+    private TransactionType movementKind;
 
     @FXML
     private void submit(){
