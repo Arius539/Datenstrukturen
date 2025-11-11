@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<GridPane xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1"
+          fx:controller="org.fpj.javafxController.MainViewController"
+          hgap="12" vgap="12" stylesheets="@../styles/styles.css">
+
+    <padding>
+        <Insets topRightBottomLeft="12"/>
+    </padding>
+
+    <columnConstraints>
+        <ColumnConstraints percentWidth="25"/>
+        <ColumnConstraints percentWidth="50"/>
+        <ColumnConstraints percentWidth="25"/>
+    </columnConstraints>
+    <rowConstraints>
+        <RowConstraints vgrow="ALWAYS"/>
+    </rowConstraints>
+
+    <!-- Spalte 1: linke Sidebar -->
+    <VBox GridPane.columnIndex="0" spacing="12">
+
+        <!-- Profilkarte (nur E-Mail) -->
+        <StackPane styleClass="card">
+            <VBox spacing="6">
+                <Label text="Profil" styleClass="card-title"/>
+                <Label fx:id="lblEmail"/>
+            </VBox>
+        </StackPane>
+
+        <!-- Kontostand -->
+        <StackPane styleClass="card">
+            <VBox spacing="6">
+                <Label text="Kontostand" styleClass="card-title"/>
+                <Label fx:id="lblBalance" styleClass="balance"/>
+            </VBox>
+        </StackPane>
+
+        <!-- Wall-Kommentare -->
+        <StackPane styleClass="card" VBox.vgrow="ALWAYS">
+            <VBox spacing="8">
+                <Label text="Wall-Kommentare" styleClass="card-title"/>
+                <ListView fx:id="lvWallComments" VBox.vgrow="ALWAYS"/>
+                <Button text="öffne Wallcomments" onAction="#openWallComments"/>
+            </VBox>
+        </StackPane>
+    </VBox>
+
+    <!-- Spalte 2: zentraler Bereich -->
+    <VBox GridPane.columnIndex="1" spacing="12">
+
+        <!-- Transaktions-Composer (unverändert) -->
+        <StackPane styleClass="card">
+            <VBox spacing="8">
+                <Label text="Transaktions-Composer" styleClass="card-title"/>
+                <VBox fx:id="vbTransferRows" spacing="8"/>
+                <HBox spacing="8">
+                    <Button text="Zeile +" onAction="#addTransferRow"/>
+                    <Button text="Zeile -" onAction="#removeTransferRow"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="Senden" onAction="#sendTransfers"/>
+                </HBox>
+            </VBox>
+        </StackPane>
+
+        <!-- Aktivität / Feed -->
+        <StackPane styleClass="card" VBox.vgrow="ALWAYS">
+            <VBox spacing="8">
+                <Label text="Aktivität / Feed" styleClass="card-title"/>
+                <ListView fx:id="lvActivity" VBox.vgrow="ALWAYS"/>
+                <Button text="Transaktionsübersicht" onAction="#openTransactionOverview"/>
+            </VBox>
+        </StackPane>
+    </VBox>
+
+    <!-- Spalte 3: rechte Sidebar -->
+    <VBox GridPane.columnIndex="2" spacing="12">
+
+        <!-- App-Logo / Branding -->
+        <StackPane styleClass="card">
+            <VBox spacing="6" alignment="CENTER">
+                <Label text="Bezahlplattform" styleClass="app-logo"/>
+                <Label text="Branding-Bereich"/>
+            </VBox>
+        </StackPane>
+
+        <!-- Chats: nur Kontaktliste mit Vorschau -->
+        <StackPane styleClass="card" VBox.vgrow="ALWAYS">
+            <VBox spacing="8">
+                <Label text="Chats" styleClass="card-title"/>
+                <ListView fx:id="lvChats" VBox.vgrow="ALWAYS" />
+            </VBox>
+        </StackPane>
+    </VBox>
+</GridPane>
