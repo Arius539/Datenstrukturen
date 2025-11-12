@@ -20,10 +20,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         where (t.sender = :partyId or t.recipient = :partyId)
         order by t.createdAt desc
     """)
-    Page<Transaction> findByTransactionPartyOrderByCreatedAtDesc(
-            @Param("partyId") long partyId,
-            Pageable pageable
-    );
+    Page<Transaction> findByTransactionPartyOrderByCreatedAtDesc(@Param("partyId") long partyId, Pageable pageable);
 
     @Query(value = """
         SELECT

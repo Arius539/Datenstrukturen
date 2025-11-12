@@ -1,6 +1,7 @@
 package org.fpj.messaging.domain;
 
 import org.fpj.messaging.domain.DirectMessage;
+import org.fpj.users.domain.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,7 +18,5 @@ public interface DirectMessageRepository extends JpaRepository<DirectMessage, Lo
            or (dm.sender.id = :b and dm.recipient.id = :a)
         order by dm.createdAt desc
     """)
-    Page<DirectMessage> findConversation(@Param("a") long userA,
-                                         @Param("b") long userB,
-                                         Pageable pageable);
+    Page<DirectMessage> findConversation(@Param("a") Long userA, @Param("b") Long userB, Pageable pageable);
 }
