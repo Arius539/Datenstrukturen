@@ -4,7 +4,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import org.fpj.Data.MoneyMovement;
+import org.fpj.Data.TransactionType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -30,11 +30,11 @@ public class AccountPageController {
 
     }
 
-    private MoneyMovement getKind(final String btnText){
+    private TransactionType getKind(final String btnText){
         return switch (btnText) {
-            case "Überweisung" -> MoneyMovement.TRANSACTION;
-            case "Einzahlung" -> MoneyMovement.PAY_IN;
-            case "Auszahlung" -> MoneyMovement.PAY_OUT;
+            case "Überweisung" -> TransactionType.UEBERWEISUNG;
+            case "Einzahlung" -> TransactionType.EINZAHLUNG;
+            case "Auszahlung" -> TransactionType.AUSZAHLUNG;
             default -> throw new IllegalArgumentException();
         };
     }
