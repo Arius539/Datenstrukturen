@@ -8,15 +8,14 @@ import lombok.Setter;
 import org.fpj.users.domain.User;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Comment;
-
 import java.time.Instant;
 
 @Entity
 @Table(
         name = "direct_messages",
         indexes = {
-                @Index(name = "dm_sender_ctime", columnList = "sender_id,created_at"),
-                @Index(name = "dm_recipient_ctime", columnList = "recipient_id,created_at")
+                @Index(name = "dm_sender_ctime", columnList = "sender,created_at"),
+                @Index(name = "dm_recipient_ctime", columnList = "recipient,created_at")
         }
 )
 @AllArgsConstructor
@@ -24,17 +23,17 @@ import java.time.Instant;
 @Getter
 @Setter
 public class DirectMessage {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "sender", nullable = false)
+    @JoinColumn(name = "sender", nullable = false)      // FK-Spalte heißt "sender"
     private User sender;
 
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "recipient", nullable = false)
+    @JoinColumn(name = "recipient", nullable = false)   // FK-Spalte heißt "recipient"
     private User recipient;
 
     @Column(nullable = false)
@@ -44,3 +43,4 @@ public class DirectMessage {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 }
+
