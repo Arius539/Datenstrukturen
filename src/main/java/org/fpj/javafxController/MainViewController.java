@@ -41,8 +41,6 @@ public class MainViewController {
     private TransactionService transactionService;
 
     @Autowired
-    private DirectMessageService directMessageService;
-    @Autowired
     private DirectMessageController directMessageController;
 
     @Autowired
@@ -121,10 +119,8 @@ public class MainViewController {
             }
 
             lblBalance.setText(UiHelpers.formatEuro(result.newBalance()));
-            // Neueste Transaktion sichtbar machen
             transactionController.addLiteTransaction(result.itemLite());
 
-            // Eingaben zurücksetzen
             tfBetrag.clear();
             tfBetreff.clear();
             tfEmpfaenger.clear();
@@ -184,7 +180,7 @@ public class MainViewController {
     }
 
     private void initChatsList() {
-        lvChats.setItems(chatItems);
+        lvChats.setItems(directMessageController.getChatPreviews());
 
         lvChats.setCellFactory(list -> new ListCell<ChatPreview>() {
             private final Label title = new Label();

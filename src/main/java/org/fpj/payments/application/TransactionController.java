@@ -1,11 +1,15 @@
 package org.fpj.payments.application;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
+import javafx.scene.control.Alert;
 import lombok.Getter;
 import lombok.Setter;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 @Setter
@@ -17,7 +21,7 @@ public class TransactionController {
 
 
     private final ObservableList<TransactionItemLite> liteTransactionList = FXCollections.observableArrayList();
-    private static final int PAGE_SIZE_Lite_List = 5;
+    private static final int PAGE_SIZE_Lite_List = 100;
     private int currentPageLiteList = 0;
     private boolean lastPageLoadedLiteList = false;
     private boolean loadingNextPageLiteList = false;
@@ -38,7 +42,7 @@ public class TransactionController {
             return;
         }
 
-        int prefetchThreshold = 50;
+        int prefetchThreshold = 100;
         int size = liteTransactionList.size();
 
         if (visibleIndex >= size - prefetchThreshold) {
@@ -46,24 +50,74 @@ public class TransactionController {
         }
     }
 
+    /** Task to Load LiteTransactions */
     private void loadNextPageLite(User user) {
-        if (loadingNextPageLiteList || lastPageLoadedLiteList) {
+        if (!canLoadNextLitePage()) {
             return;
         }
 
         loadingNextPageLiteList = true;
 
-        var page = transactionService.findLiteItemsForUser(
-                user.getId(),
-                currentPageLiteList,
-                PAGE_SIZE_Lite_List
-        );
+        int pageToLoad = currentPageLiteList;
+        long userId = user.getId();
 
-        liteTransactionList.addAll(page.getContent());
+        Task<Page<TransactionItemLite>> task = createLitePageTask(userId, pageToLoad);
 
-        lastPageLoadedLiteList = page.isLast();
-        currentPageLiteList++;
+        task.setOnSucceeded(ev -> onLitePageLoaded(task.getValue(), pageToLoad));
+        task.setOnFailed(ev -> onLitePageFailed(task.getException()));
 
+        startBackgroundTask(task, pageToLoad);
+    }
+
+
+    private boolean canLoadNextLitePage() {
+        return !loadingNextPageLiteList && !lastPageLoadedLiteList;
+    }
+
+    private Task<Page<TransactionItemLite>> createLitePageTask(long userId, int pageToLoad) {
+        return new Task<>() {
+            @Override
+            protected Page<TransactionItemLite> call() {
+                return transactionService.findLiteItemsForUser(
+                        userId,
+                        pageToLoad,
+                        PAGE_SIZE_Lite_List
+                );
+            }
+        };
+    }
+
+    private void onLitePageLoaded(Page<TransactionItemLite> page, int pageToLoad) {
+        try {
+            liteTransactionList.addAll(page.getContent());
+            lastPageLoadedLiteList = page.isLast();
+            currentPageLiteList = pageToLoad + 1;
+        } finally {
+            loadingNextPageLiteList = false;
+        }
+    }
+
+    private void onLitePageFailed(Throwable ex) {
         loadingNextPageLiteList = false;
+
+        showError("Transaktionen konnten nicht geladen werden: " +
+                (ex != null ? ex.getMessage() : "Unbekannter Fehler"));
+    }
+
+    private void startBackgroundTask(Task<?> task, int pageToLoad) {
+        Thread t = new Thread(task, "trx-page-loader-" + pageToLoad);
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private void showError(String message) {
+        // falls du sicher im FX-Thread bist, kannst du Platform.runLater weglassen
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Fehler");
+            alert.setHeaderText(null);
+            alert.setContentText(message);
+            alert.showAndWait();
+        });
     }
 }
