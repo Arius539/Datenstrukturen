@@ -28,28 +28,4 @@ public class MainController {
         this.springContext = springContext;
     }
 
-    public void showLogin() throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
-        loader.setControllerFactory(springContext::getBean);
-        VBox loginPane = loader.load();
-
-        LoginController loginController = loader.getController();
-        loginController.setMainController(this);
-
-        AnchorPane.setTopAnchor(loginPane, (overlayContainer.getHeight() - loginPane.getPrefHeight()) / 2);
-        AnchorPane.setLeftAnchor(loginPane, (overlayContainer.getWidth() - loginPane.getPrefWidth()) / 2);
-
-        overlayContainer.getChildren().setAll(loginPane);
-
-        overlayContainer.widthProperty().addListener((observable, oldValue, newValue) ->
-                AnchorPane.setLeftAnchor(loginPane, (newValue.doubleValue() - loginPane.getPrefWidth()) / 2));
-        overlayContainer.heightProperty().addListener((observable, oldValue, newValue) ->
-                AnchorPane.setTopAnchor(loginPane, (newValue.doubleValue() - loginPane.getPrefHeight()) / 2));
-    }
-
-    public void hideLogin(){
-        overlayContainer.getChildren().clear();
-        root.getChildren().remove(overlayContainer);
-    }
-
 }
