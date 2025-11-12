@@ -6,6 +6,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import lombok.Setter;
+import org.fpj.users.domain.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -15,6 +19,14 @@ public class LoginController {
     private static final String LOGIN_STRING = "anmelden";
     private static final String NO_ACCOUNT = "noch kein Konto?";
     private static final String ACCOUNT_EXISTENT = "du hast bereits ein Konto?";
+
+    private final GenericApplicationContext context;
+
+    @Autowired
+    public LoginController(GenericApplicationContext context){
+        this.context = context;
+    }
+
 
     @FXML
     private TextField usernameInput;
