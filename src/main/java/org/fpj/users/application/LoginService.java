@@ -1,5 +1,6 @@
 package org.fpj.users.application;
 
+import org.fpj.Exceptions.LoginFailedException;
 import org.fpj.users.domain.User;
 import org.fpj.users.domain.UserManagingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,16 +22,25 @@ public class LoginService {
     }
 
     public void login(final String username, final String password) {
-        //Diese Methode in der Login-Methode nutzen, um den User im SpringContext zu registrieren
-        //User user = userManagingService.getUserByUsername(username);
+        final User user = userManagingService.getUserByUsername(username);
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        //if (passwordEncoder.matches(password, user.getPassword())){
-        //    context.registerBean("loggedInUser", User.class, user);
-        //}
-        //else {
-        //      throw new LoginFailedException("Passwort falsch");
-        //}
+        if (passwordEncoder.matches(password, user.getPasswordHash())){
+            context.registerBean("loggedInUser", User.class, user);
+        }
+        else {
+            throw new LoginFailedException("Passwort falsch");
+        }
     }
 
-    public void register()
+    public void register(final String username, final String password, final String passwordCheck){
+        if (passwordCheck.equals(password)){
+            final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+            final String hashedPassword = passwordEncoder.encode(password);
+            final User newUser = new User(username, hashedPassword);
+            final User savedUser = userManagingService.save(newUser);
+        }
+        else {
+            throw new LoginFailedException("Passwörter stimmen nicht überein");
+        }
+    }
 }
