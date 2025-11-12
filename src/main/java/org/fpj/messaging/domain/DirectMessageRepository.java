@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface DirectMessageRepository extends JpaRepository<DirectMessage, Long>{
     Page<DirectMessage> findByRecipient_IdOrderByCreatedAtDesc(Long recipientId, Pageable pageable);
     Page<DirectMessage> findBySender_IdOrderByCreatedAtDesc(Long senderId, Pageable pageable);
@@ -19,4 +21,16 @@ public interface DirectMessageRepository extends JpaRepository<DirectMessage, Lo
         order by dm.createdAt desc
     """)
     Page<DirectMessage> findConversation(@Param("a") Long userA, @Param("b") Long userB, Pageable pageable);
+
+    @Query(value = """
+    select *
+    from direct_messages dm
+    where (dm.sender = :a and dm.recipient = :b)
+       or (dm.sender = :b and dm.recipient = :a)
+    order by dm.created_at desc
+    limit 1
+    """, nativeQuery = true)
+    Optional<DirectMessage> lastMessageNative(@Param("a") Long userA,
+                                              @Param("b") Long userB);
+
 }

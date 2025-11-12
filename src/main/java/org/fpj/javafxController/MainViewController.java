@@ -3,118 +3,81 @@ package org.fpj.javafxController;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
-import javafx.scene.Parent;
 import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
+import javafx.scene.layout.*;
+import org.fpj.Data.UiHelpers;
+import org.fpj.messaging.application.ChatPreview;
+import org.fpj.messaging.application.DirectMessageService;
+import org.fpj.payments.application.TransactionService;
+import org.fpj.payments.application.TransactionItemLite;
+import org.fpj.payments.application.TransactionResult;
+import org.fpj.Exceptions.TransactionException;
+import org.fpj.users.application.UserService;
+import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
+import org.springframework.data.domain.PageRequest;
+import java.util.Comparator;
+import java.util.ArrayList;
+
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 @Component
 public class MainViewController {
 
     @Autowired
-    private ApplicationContext context;
+    private TransactionService transactionService;
+
+    @Autowired
+    private DirectMessageService directMessageService;
+
+    @Autowired
+    private UserService userService;
 
     // Profil/Saldo
     @FXML private Label lblEmail;
     @FXML private Label lblBalance;
 
     // Composer
-    @FXML private RadioButton rbDeposit;   // Einzahlen
-    @FXML private RadioButton rbTransfer;  // Überweisen
-    @FXML private RadioButton rbWithdraw;  // Auszahlen
+    @FXML private RadioButton rbDeposit;
+    @FXML private RadioButton rbTransfer;
+    @FXML private RadioButton rbWithdraw;
     @FXML private TextField tfEmpfaenger;
     @FXML private TextField tfBetrag;
     @FXML private TextField tfBetreff;
 
     // Listen
-    @FXML private ListView<TransactionItem> lvActivity;    // Letzte Transaktionen
-    @FXML private ListView<ChatPreview>     lvChats;       // Chats
+    @FXML private ListView<TransactionItemLite> lvActivity;
+    @FXML private ListView<ChatPreview>     lvChats;
 
-    private static final double GAP = 12.0;
     private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+
+    private User currentUser;
+    private final ObservableList<TransactionItemLite> activityItems = FXCollections.observableArrayList();
+    private final ObservableList<ChatPreview> chatItems = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
-        // Demo-Daten – später durch Services ersetzen
-        lblEmail.setText("demo_user@example.com");
-        lblBalance.setText("€ 1.234,56");
+        // User ermitteln
+        currentUser = userService.currentUser();
 
-        // Composer: Empfänger-Feld managed an visible binden, Startzustand
-        tfEmpfaenger.managedProperty().bind(tfEmpfaenger.visibleProperty());
-        applyTypeVisibility();
+        // Header befüllen
+        lblEmail.setText(currentUser.getUsername());
+        updateBalanceLabel();
 
-        // Letzte Transaktionen (Empfänger/Sender, Betrag, Datum, Betreff)
-        ObservableList<TransactionItem> txs = FXCollections.observableArrayList(
-                // Betrag < 0 => Geld geht raus => Empfänger anzeigen
-                new TransactionItem("Bob",  new BigDecimal("-15.00"), LocalDateTime.now().minusHours(2),  "Kaffee"),
-                // Betrag > 0 => Geld kommt rein => Sender anzeigen
-                new TransactionItem("Alice",new BigDecimal("50.00"),  LocalDateTime.now().minusDays(1).withHour(18).withMinute(2), "Rückzahlung"),
-                new TransactionItem("Clara",new BigDecimal("-20.00"), LocalDateTime.now().minusDays(1).withHour(9).withMinute(14), "Taxi")
-        );
-        lvActivity.setItems(txs);
-        lvActivity.setCellFactory(list -> new ListCell<>() {
-            @Override protected void updateItem(TransactionItem it, boolean empty) {
-                super.updateItem(it, empty);
-                if (empty || it == null) { setGraphic(null); setText(null); return; }
+        // Activity-List konfigurieren + Daten laden
+        initActivityList();
+        loadTransactionsFirstPage();
 
-                String counterpartyLabel = it.amount.signum() < 0 ? it.counterparty : it.counterparty; // Name anzeigen
-                String amountStr = formatAmount(it.amount);
-                String dateStr   = TS.format(it.timestamp);
-                String subject   = it.subject == null ? "" : it.subject;
+        // Chats konfigurieren + Daten laden
+        initChatsList();
+        loadChatPreviewsFirstPage();
 
-                Label lCounterparty = new Label(counterpartyLabel);
-                Label lAmount       = new Label(amountStr);
-                Label lDate         = new Label(dateStr);
-                Label lSubject      = new Label(subject);
-
-                HBox row = new HBox(GAP, lCounterparty, lAmount, lDate, lSubject);
-                row.setPadding(new Insets(6));
-                setGraphic(row);
-                setText(null);
-            }
-        });
-
-        // Chats (Name, letzte Nachricht (20 Zeichen), Datum)
-        ObservableList<ChatPreview> chats = FXCollections.observableArrayList(
-                new ChatPreview("Alice", "Alles gut bei dir? Wir sehen uns später im Büro.", LocalDateTime.now().minusMinutes(10)),
-                new ChatPreview("Bob",   "Danke für die Zahlung.",                         LocalDateTime.now().minusHours(1)),
-                new ChatPreview("Clara", "Bis morgen!",                                     LocalDateTime.now().minusDays(1))
-        );
-        lvChats.setItems(chats);
-        lvChats.setCellFactory(list -> new ListCell<>() {
-            @Override protected void updateItem(ChatPreview it, boolean empty) {
-                super.updateItem(it, empty);
-                if (empty || it == null) { setGraphic(null); setText(null); return; }
-
-                Label lName  = new Label(it.name);
-                Label lMsg   = new Label(truncate(it.lastMessage, 20));
-                Label lDate  = new Label(TS.format(it.timestamp));
-
-                HBox row = new HBox(GAP, lName, lMsg, lDate);
-                row.setPadding(new Insets(6));
-                setGraphic(row);
-                setText(null);
-            }
-        });
-
-        // Klick: Chat-FXML öffnen
-        lvChats.getSelectionModel().selectedItemProperty().addListener((obs, oldV, sel) -> {
-            if (sel != null) {
-                openChatWindow(sel.name);
-                lvChats.getSelectionModel().clearSelection();
-            }
-        });
     }
 
     /* ================= Composer Verhalten ================= */
@@ -126,7 +89,7 @@ public class MainViewController {
 
     private void applyTypeVisibility() {
         boolean isTransfer = rbTransfer.isSelected();
-        tfEmpfaenger.setVisible(isTransfer); // bei Einzahlen/Auszahlen unsichtbar
+        tfEmpfaenger.setVisible(isTransfer);
         if (!isTransfer) {
             tfEmpfaenger.clear();
         }
@@ -134,58 +97,183 @@ public class MainViewController {
 
     @FXML
     public void sendTransfers() {
-        String type = rbDeposit.isSelected() ? "Einzahlen" : rbWithdraw.isSelected() ? "Auszahlen" : "Überweisen";
-        String empf = tfEmpfaenger.isVisible() ? tfEmpfaenger.getText() : "(kein Empfänger)";
-        String betrag = tfBetrag.getText();
-        String betreff = tfBetreff.getText();
-
-        Alert a = new Alert(Alert.AlertType.INFORMATION,
-                "Typ: " + type + "\nEmpfänger: " + empf + "\nBetrag: " + betrag + "\nBetreff: " + betreff,
-                ButtonType.OK);
-        a.setHeaderText(null);
-        a.setTitle("Info");
-        a.showAndWait();
-    }
-
-    /* ================= Actions (Buttons links) ================= */
-
-    @FXML public void actionTransactions()    { info("Navigation: Transaktionen (Placeholder)."); }
-    @FXML public void actionWallComments()    { info("Navigation: Wall Kommentare (Placeholder)."); }
-    @FXML public void actionDirectMessages() { info("Navigation: Massen Transaktion (Placeholder)."); }
-
-    /* ================= Chat-Fenster (aus FXML) ================= */
-
-    private void openChatWindow(String contact) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/chat_window.fxml"));
-            loader.setControllerFactory(context::getBean);
-            Parent root = loader.load();
+            BigDecimal amount = parseAmountTolerant(tfBetrag.getText());
+            String subject = safe(tfBetreff.getText());
 
-            ChatWindowController ctrl = loader.getController();
-            ctrl.init(contact);
+            TransactionResult result;
+            if (rbDeposit.isSelected()) {
+                result = transactionService.deposit(currentUser, amount, subject);
+            } else if (rbWithdraw.isSelected()) {
+                result = transactionService.withdraw(currentUser, amount, subject);
+            } else if (rbTransfer.isSelected()) {
+                String recipient = safe(tfEmpfaenger.getText());
+                result = transactionService.transfer(currentUser, recipient, amount, subject);
+            } else {
+                throw new IllegalStateException("Kein Transaktionstyp ausgewählt.");
+            }
 
-            Stage dialog = new Stage();
-            dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.setTitle("Chat mit " + contact);
-            dialog.setScene(new javafx.scene.Scene(root, 480, 420));
-            dialog.showAndWait();
+            // UI aktualisieren
+            lblBalance.setText(UiHelpers.formatEuro(result.newBalance()));
+            // Neueste Transaktion sichtbar machen
+            activityItems.add(0, result.itemLite());
 
-        } catch (Exception e) {
-            throw new RuntimeException("Chat-Fenster konnte nicht geöffnet werden", e);
+            // Eingaben zurücksetzen
+            tfBetrag.clear();
+            tfBetreff.clear();
+            tfEmpfaenger.clear();
+
+            info("Transaktion erfolgreich.");
+        } catch (TransactionException ex) {
+            error("Transaktion fehlgeschlagen: " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            error("Eingabe ungültig: " + ex.getMessage());
+        } catch (Exception ex) {
+            error("Unerwarteter Fehler: " + ex.getMessage());
         }
     }
 
-    /* ================= Utils & Modelle ================= */
 
-    private static String truncate(String s, int max) {
-        if (s == null) return "";
-        return s.length() <= max ? s : s.substring(0, max) + "…";
+    @FXML public void actionTransactions()    { }
+    @FXML public void actionWallComments()    { info("Navigation: Wall Kommentare (Placeholder)."); }
+    @FXML public void actionDirectMessages()  { info("Navigation: Massen Transaktion (Placeholder)."); }
+
+    private void initActivityList() {
+        lvActivity.setItems(activityItems);
+
+        lvActivity.setCellFactory(list -> new ListCell<TransactionItemLite>() {
+            private final Label title = new Label();
+            private final Label subtitle = new Label();
+            private final VBox left = new VBox(2, title, subtitle);
+            private final Label amount = new Label();
+            private final Region spacer = new Region();
+            private final HBox root = new HBox(8, left, spacer, amount);
+
+            {
+                HBox.setHgrow(spacer, Priority.ALWAYS);
+            }
+
+            @Override
+            protected void updateItem(TransactionItemLite item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                    setText(null);
+                } else {
+                    title.setText(item.counterparty());
+                    subtitle.setText(TS.format(item.timestamp()) + "  •  " + UiHelpers.truncate(item.subject(), 64));
+                    amount.setText(UiHelpers.formatSignedEuro(item.amount()));
+                    amount.getStyleClass().removeAll("amt-pos", "amt-neg");
+                    if (item.amount().signum() >= 0) {
+                        amount.getStyleClass().add("amt-pos");
+                    } else {
+                        amount.getStyleClass().add("amt-neg");
+                    }
+                    setGraphic(root);
+                }
+            }
+        });
     }
 
-    private static String formatAmount(BigDecimal amt) {
-        String sign = amt.signum() < 0 ? "-" : "+";
-        BigDecimal abs = amt.abs();
-        return sign + " € " + abs.setScale(2, BigDecimal.ROUND_HALF_UP).toPlainString();
+    private void loadTransactionsFirstPage() {
+        activityItems.clear();
+        var page = transactionService.findLiteItemsForUser(currentUser.getId(), 0, 50);
+        page.getContent().forEach(activityItems::add);
+    }
+
+    private void initChatsList() {
+        lvChats.setItems(chatItems);
+
+        lvChats.setCellFactory(list -> new ListCell<ChatPreview>() {
+            private final Label title = new Label();
+            private final Label subtitle = new Label();
+            private final VBox left = new VBox(2, title, subtitle);
+            private final Label ts = new Label();
+            private final Region spacer = new Region();
+            private final HBox root = new HBox(8, left, spacer, ts);
+
+            {
+                HBox.setHgrow(spacer, Priority.ALWAYS);
+            }
+
+            @Override
+            protected void updateItem(ChatPreview item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+
+                title.setText(item.name());
+
+                String msg = item.lastMessage();
+                if (msg == null || msg.isBlank()) {
+                    subtitle.setText("Noch keine Nachrichten");
+                } else {
+                    subtitle.setText(UiHelpers.truncate(msg, 64));
+                }
+
+                ts.setText(item.timestamp() == null ? "" : TS.format(item.timestamp()));
+
+                setGraphic(root);
+            }
+        });
+    }
+
+    private void loadChatPreviewsFirstPage() {
+        chatItems.clear();
+        try {
+            var page = directMessageService.getChatPreviews(currentUser, PageRequest.of(0, 50));
+            var list = new ArrayList<>(page.getContent());
+
+            // Neueste Chats oben; Chats ohne Timestamp zuletzt
+            list.sort(Comparator
+                    .comparing(ChatPreview::timestamp,
+                            Comparator.nullsLast(Comparator.naturalOrder()))
+                    .reversed());
+
+            chatItems.addAll(list);
+        } catch (Exception ex) {
+            error("Chats konnten nicht geladen werden: " + ex.getMessage());
+        }
+    }
+
+
+    /* ================= Utils & Modelle ================= */
+
+    private void updateBalanceLabel() {
+        var balance = transactionService.computeBalance(currentUser.getId());
+        lblBalance.setText(UiHelpers.formatEuro(balance));
+    }
+
+    private static BigDecimal parseAmountTolerant(String raw) {
+        if (raw == null || raw.isBlank()) {
+            throw new IllegalArgumentException("Betrag ist erforderlich.");
+        }
+
+        String s = raw.replace("€","").replaceAll("[\\s\\u00A0]", "").trim();
+        int lastComma = s.lastIndexOf(',');
+        int lastDot   = s.lastIndexOf('.');
+        if (lastComma >= 0 && lastDot >= 0) {
+            if (lastComma > lastDot) {
+                s = s.replace(".", "").replace(',', '.');
+            } else {
+                s = s.replace(",", "");
+            }
+        } else if (s.contains(",")) {
+            s = s.replace(".", "").replace(',', '.');
+        }
+
+        try {
+            return new BigDecimal(s);
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("Betrag konnte nicht gelesen werden.");
+        }
+    }
+
+    private static String safe(String s) {
+        return s == null ? "" : s.trim();
     }
 
     private void info(String text) {
@@ -195,6 +283,10 @@ public class MainViewController {
         a.showAndWait();
     }
 
-    public record TransactionItem(String counterparty, BigDecimal amount, LocalDateTime timestamp, String subject) {}
-    public record ChatPreview(String name, String lastMessage, LocalDateTime timestamp) {}
+    private void error(String text) {
+        Alert a = new Alert(Alert.AlertType.ERROR, text, ButtonType.OK);
+        a.setHeaderText("Fehler");
+        a.setTitle("Fehler");
+        a.showAndWait();
+    }
 }

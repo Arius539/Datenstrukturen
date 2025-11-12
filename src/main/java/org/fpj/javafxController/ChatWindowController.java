@@ -8,8 +8,10 @@ import javafx.scene.control.TextField;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
 @Component
-@Scope("prototype") // wichtig: pro Fenster ein eigener Controller
+@Scope(SCOPE_PROTOTYPE)
 public class ChatWindowController {
 
     @FXML private Label lblContact;
