@@ -7,7 +7,9 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import org.fpj.Data.UiHelpers;
 import org.fpj.messaging.application.ChatPreview;
+import org.fpj.messaging.application.DirectMessageController;
 import org.fpj.messaging.application.DirectMessageService;
+import org.fpj.payments.application.TransactionController;
 import org.fpj.payments.application.TransactionService;
 import org.fpj.payments.application.TransactionItemLite;
 import org.fpj.payments.application.TransactionResult;
@@ -27,14 +29,21 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
+import static org.fpj.Data.UiHelpers.parseAmountTolerant;
+import static org.fpj.Data.UiHelpers.safe;
+
 @Component
 public class MainViewController {
 
+    @Autowired
+    private TransactionController transactionController;
     @Autowired
     private TransactionService transactionService;
 
     @Autowired
     private DirectMessageService directMessageService;
+    @Autowired
+    private DirectMessageController directMessageController;
 
     @Autowired
     private UserService userService;
@@ -51,14 +60,13 @@ public class MainViewController {
     @FXML private TextField tfBetrag;
     @FXML private TextField tfBetreff;
 
-    // Listen
-    @FXML private ListView<TransactionItemLite> lvActivity;
+
+    @FXML private ListView<TransactionItemLite> lvTransactions;
     @FXML private ListView<ChatPreview>     lvChats;
 
     private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
     private User currentUser;
-    private final ObservableList<TransactionItemLite> activityItems = FXCollections.observableArrayList();
     private final ObservableList<ChatPreview> chatItems = FXCollections.observableArrayList();
 
     @FXML
@@ -71,13 +79,12 @@ public class MainViewController {
         updateBalanceLabel();
 
         // Activity-List konfigurieren + Daten laden
-        initActivityList();
-        loadTransactionsFirstPage();
+        initTransactionList();
+        transactionController.loadTransactionsFirstPageLite(currentUser);
 
         // Chats konfigurieren + Daten laden
         initChatsList();
-        loadChatPreviewsFirstPage();
-
+        directMessageController.loadChatPreviewsFirstPage(currentUser);
     }
 
     /* ================= Composer Verhalten ================= */
@@ -113,10 +120,9 @@ public class MainViewController {
                 throw new IllegalStateException("Kein Transaktionstyp ausgewählt.");
             }
 
-            // UI aktualisieren
             lblBalance.setText(UiHelpers.formatEuro(result.newBalance()));
             // Neueste Transaktion sichtbar machen
-            activityItems.add(0, result.itemLite());
+            transactionController.addLiteTransaction(result.itemLite());
 
             // Eingaben zurücksetzen
             tfBetrag.clear();
@@ -138,10 +144,10 @@ public class MainViewController {
     @FXML public void actionWallComments()    { info("Navigation: Wall Kommentare (Placeholder)."); }
     @FXML public void actionDirectMessages()  { info("Navigation: Massen Transaktion (Placeholder)."); }
 
-    private void initActivityList() {
-        lvActivity.setItems(activityItems);
+    private void initTransactionList() {
+        lvTransactions.setItems(transactionController.getLiteTransactionList());
 
-        lvActivity.setCellFactory(list -> new ListCell<TransactionItemLite>() {
+        lvTransactions.setCellFactory(list -> new ListCell<TransactionItemLite>() {
             private final Label title = new Label();
             private final Label subtitle = new Label();
             private final VBox left = new VBox(2, title, subtitle);
@@ -170,15 +176,11 @@ public class MainViewController {
                         amount.getStyleClass().add("amt-neg");
                     }
                     setGraphic(root);
+                    int index = getIndex();
+                    transactionController.ensureNextPageLoaded(index, currentUser);
                 }
             }
         });
-    }
-
-    private void loadTransactionsFirstPage() {
-        activityItems.clear();
-        var page = transactionService.findLiteItemsForUser(currentUser.getId(), 0, 50);
-        page.getContent().forEach(activityItems::add);
     }
 
     private void initChatsList() {
@@ -217,63 +219,16 @@ public class MainViewController {
                 ts.setText(item.timestamp() == null ? "" : TS.format(item.timestamp()));
 
                 setGraphic(root);
+
+                int index = getIndex();
+                directMessageController.ensureNextChatPreviewPageLoaded(index,currentUser);
             }
         });
     }
 
-    private void loadChatPreviewsFirstPage() {
-        chatItems.clear();
-        try {
-            var page = directMessageService.getChatPreviews(currentUser, PageRequest.of(0, 50));
-            var list = new ArrayList<>(page.getContent());
-
-            // Neueste Chats oben; Chats ohne Timestamp zuletzt
-            list.sort(Comparator
-                    .comparing(ChatPreview::timestamp,
-                            Comparator.nullsLast(Comparator.naturalOrder()))
-                    .reversed());
-
-            chatItems.addAll(list);
-        } catch (Exception ex) {
-            error("Chats konnten nicht geladen werden: " + ex.getMessage());
-        }
-    }
-
-
-    /* ================= Utils & Modelle ================= */
-
     private void updateBalanceLabel() {
         var balance = transactionService.computeBalance(currentUser.getId());
         lblBalance.setText(UiHelpers.formatEuro(balance));
-    }
-
-    private static BigDecimal parseAmountTolerant(String raw) {
-        if (raw == null || raw.isBlank()) {
-            throw new IllegalArgumentException("Betrag ist erforderlich.");
-        }
-
-        String s = raw.replace("€","").replaceAll("[\\s\\u00A0]", "").trim();
-        int lastComma = s.lastIndexOf(',');
-        int lastDot   = s.lastIndexOf('.');
-        if (lastComma >= 0 && lastDot >= 0) {
-            if (lastComma > lastDot) {
-                s = s.replace(".", "").replace(',', '.');
-            } else {
-                s = s.replace(",", "");
-            }
-        } else if (s.contains(",")) {
-            s = s.replace(".", "").replace(',', '.');
-        }
-
-        try {
-            return new BigDecimal(s);
-        } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException("Betrag konnte nicht gelesen werden.");
-        }
-    }
-
-    private static String safe(String s) {
-        return s == null ? "" : s.trim();
     }
 
     private void info(String text) {

@@ -6,7 +6,7 @@
 
 <GridPane xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1"
           fx:controller="org.fpj.javafxController.MainViewController"
-          hgap="12" vgap="12" stylesheets="@../styles/styles.css">
+          hgap="12" vgap="12" stylesheets="@../styles/mainViewStyles.css">
 
     <padding>
         <Insets topRightBottomLeft="12"/>
@@ -88,7 +88,7 @@
         <StackPane styleClass="card" VBox.vgrow="ALWAYS">
             <VBox spacing="8">
                 <Label text="Letzte Transaktionen" styleClass="card-title"/>
-                <ListView fx:id="lvActivity" VBox.vgrow="ALWAYS"/>
+                <ListView fx:id="lvTransactions" VBox.vgrow="ALWAYS"/>
             </VBox>
         </StackPane>
     </VBox>

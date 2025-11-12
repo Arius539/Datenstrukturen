@@ -25,7 +25,7 @@ public class JavafxApp extends Application {
 
         Parent root = loader.load();
         Scene scene = new Scene(root, 1280, 860);
-        scene.getStylesheets().add(getClass().getResource("/styles/styles.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/styles/mainViewStyles.css").toExternalForm());
 
         stage.setTitle("Bezahlplattform");
         stage.setScene(scene);

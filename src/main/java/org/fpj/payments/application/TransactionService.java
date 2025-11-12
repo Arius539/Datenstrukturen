@@ -28,8 +28,6 @@ public class TransactionService {
     @Autowired
     private UserService userService;
 
-    /* =================== Queries (unverändert) =================== */
-
     @Transactional(readOnly = true)
     public Page<TransactionItemLite> findLiteItemsForUser(long userId, int page, int size) {
         Pageable pr = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));

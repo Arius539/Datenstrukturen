@@ -1,0 +1,194 @@
+.root {
+    -c-brand:        #fe0000;
+    -c-bg:           #FFFFFF;
+    -c-surface:      #F4F6F8;
+
+    -c-on-brand:     #FFFFFF;
+    -c-text:         #1A1A1A;
+    -c-text-muted:   derive(-c-text, 45%);
+    -c-border:       #E6E8EB;
+    -c-shadow:       rgba(16, 24, 40, 0.08);
+
+    -fx-accent:            -c-brand;
+    -fx-focus-color:       derive(-c-brand, -10%);
+    -fx-faint-focus-color: rgba(254, 0, 0);
+
+    -t-font-verySmall: 11px;
+    -t-font-small:     16px;
+    -t-font-default:   18px;
+    -t-font-large:     24px;
+    -t-font-veryLarge: 60px;
+}
+
+.text-verySmall { -fx-font-size: -t-font-verySmall; }
+.text-small     { -fx-font-size: -t-font-small; }
+.text-middle    { -fx-font-size: -t-font-middle; }
+.text-large     { -fx-font-size: -t-font-large; }
+.text-veryLarge { -fx-font-size: -t-font-veryLarge; }
+
+
+.grid-pane, .vbox, .hbox {
+    -fx-background-color: -c-bg;
+}
+
+.card {
+    -fx-background-color: -c-surface;
+    -fx-background-radius: 12;
+    -fx-padding: 12;
+    -fx-border-color: -c-border;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, -c-shadow, 12, 0.3, 0, 2);
+}
+
+.card-title {
+    -fx-font-size: -t-font-large;
+    -fx-font-weight: 700;
+    -fx-text-fill: -c-brand;
+}
+
+.balance {
+    -fx-font-size: -t-font-veryLarge;
+    -fx-font-weight: 700;
+    -fx-text-fill: derive(-c-brand, -10%);
+}
+
+.app-logo {
+    -fx-font-size: -t-font-large;
+    -fx-font-weight: 800;
+    -fx-text-fill: -c-brand;
+}
+
+.label {
+    -fx-text-fill: -c-text;
+    -fx-font-size: -t-font-middle;
+}
+
+
+.button {
+    -fx-background-color: linear-gradient(derive(-c-bg, -2%), derive(-c-bg, -6%));
+    -fx-text-fill: -c-text;
+    -fx-padding: 8 14;
+    -fx-background-radius: 10;
+    -fx-border-color: -c-border;
+    -fx-border-radius: 10;
+    -fx-cursor: hand;
+    -fx-font-size: -t-font-middle;
+}
+
+.button:hover {
+    -fx-background-color: linear-gradient(derive(-c-bg, -4%), derive(-c-bg, -10%));
+}
+
+.button:pressed {
+    -fx-background-color: derive(-c-bg, -14%);
+}
+
+.button.primary {
+    -fx-background-color: -c-brand;
+    -fx-text-fill: -c-on-brand;
+    -fx-border-color: transparent;
+}
+
+.button.primary:hover {
+    -fx-background-color: derive(-c-brand, -8%);
+}
+
+.button.primary:pressed {
+    -fx-background-color: derive(-c-brand, -16%);
+}
+
+.button:disabled {
+    -fx-opacity: 0.55;
+    -fx-cursor: default;
+}
+
+.text-field, .password-field {
+    -fx-font-size: -t-font-middle;
+    -fx-background-color: -c-bg;
+    -fx-text-fill: -c-text;
+    -fx-prompt-text-fill: -c-text-muted;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: -c-border;
+    -fx-padding: 8 10;
+}
+
+.text-field:focused, .password-field:focused {
+    -fx-border-color: -c-brand;
+    -fx-background-insets: 0;
+}
+
+.radio-button {
+    -fx-text-fill: -c-text;
+}
+
+.radio-button .radio,
+.radio-button:selected .radio {
+}
+
+.radio-button:selected .dot {
+    -fx-background-color: -c-on-brand;
+}
+
+.list-view {
+    -fx-background-color: transparent;
+    -fx-control-inner-background: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -c-text;
+    -fx-padding: 8 10;
+    -fx-border-color: transparent transparent -c-border transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.list-cell:filled:hover {
+    -fx-background-color: derive(-c-surface, -5%);
+}
+
+.list-cell:selected {
+    -fx-background-color: linear-gradient(derive(-c-brand, 80%), derive(-c-brand, 70%));
+    -fx-text-fill: -c-text;
+}
+
+.region {
+    -fx-background-color: transparent;
+}
+
+.card .button {
+    -fx-background-radius: 8;
+}
+
+.card .vbox {
+    -fx-spacing: 8;
+}
+
+.root.dark {
+    -c-bg:      #0F1115;
+    -c-surface: #171A21;
+    -c-text:    #EDEFF2;
+    -c-text-muted: derive(-c-text, -35%);
+    -c-border:  rgba(255,255,255,0.08);
+    -c-shadow:  rgba(0,0,0,0.6);
+}
+
+.root.dark .card-title,
+.root.dark .app-logo {
+    -fx-text-fill: -c-brand;
+}
+
+.root.dark .button {
+    -fx-background-color: #1E222B;
+    -fx-text-fill: -c-text;
+    -fx-border-color: -c-border;
+}
+
+.root.dark .text-field, .root.dark .password-field {
+    -fx-background-color: #1E222B;
+    -fx-border-color: -c-border;
+    -fx-text-fill: -c-text;
+    -fx-prompt-text-fill: -c-text-muted;
+}
