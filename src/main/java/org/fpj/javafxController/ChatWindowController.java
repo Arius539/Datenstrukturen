@@ -33,9 +33,8 @@ public class ChatWindowController {
     @Autowired
     private DirectMessageService directMessageService;
 
-    //Chat Window
     private final ObservableList<DirectMessage> chatMessages = FXCollections.observableArrayList();
-    private static final int PAGE_SIZE_CHAT_Messages = 50;
+    private static final int PAGE_SIZE_CHAT_Messages = 20;
     private int currentPageChatMessages = 0;
     private boolean lastPageLoadedChatMessages = false;
     private boolean loadingNextPageChatMessages = false;
@@ -63,21 +62,16 @@ public class ChatWindowController {
 
     @FXML
     public void initialize() {
-        if (scrollPane != null) {
-            scrollPane.vvalueProperty().addListener((obs, oldVal, newVal) -> {
-                if (newVal.doubleValue() <= 0.05) {
-                    ensureNextChatMessagesPageLoaded();
-                }
-            });
-        }
+
     }
 
     public void openChat(User currentUser, User chatPartner) {
         this.currentUser = currentUser;
         this.currentChatPartner = chatPartner;
+        lblContact.setText(chatPartner.getUsername().equals(currentUser.getUsername())? "Du": chatPartner.getUsername());
 
-        // Anzeige im Header aktualisieren
-        lblContact.setText(chatPartner.getUsername());
+        this.setupScrollPanel();
+        this.scrollToBottom();
 
         initChatMessages();
     }
@@ -90,20 +84,16 @@ public class ChatWindowController {
         chatMessages.clear();
         vbMessages.getChildren().clear();
 
+        this.scrollToBottom();
         loadNextPageChatMessages();
     }
 
+    // <editor-fold defaultstate="collapsed" desc="Infinite Scroll Messages">
     private void ensureNextChatMessagesPageLoaded() {
         if (loadingNextPageChatMessages || lastPageLoadedChatMessages) {
             return;
         }
         loadNextPageChatMessages();
-    }
-
-    private void loadNextChatMessagesIfPossible() {
-        if (canLoadNextChatMessagesPage()) {
-            loadNextPageChatMessages();
-        }
     }
 
     private boolean canLoadNextChatMessagesPage() {
@@ -121,8 +111,7 @@ public class ChatWindowController {
         loadingNextPageChatMessages = true;
         int pageToLoad = currentPageChatMessages;
 
-        Task<Page<DirectMessage>> task =
-                createChatMessagesPageTask(currentUser, currentChatPartner, pageToLoad);
+        Task<Page<DirectMessage>> task = createChatMessagesPageTask(currentUser, currentChatPartner, pageToLoad);
 
         task.setOnSucceeded(ev -> onChatMessagesPageLoaded(task.getValue(), pageToLoad));
         task.setOnFailed(ev -> onChatMessagesPageFailed(task.getException(), pageToLoad));
@@ -130,10 +119,7 @@ public class ChatWindowController {
        UiHelpers.startBackgroundTask(task, "chat-messages-loader-" + pageToLoad);
     }
 
-    /**
-     * DB liefert Messages DESC nach createdAt.
-     * Service-Methode ist frei erfunden und muss von dir bereitgestellt werden.
-     */
+
     private Task<Page<DirectMessage>> createChatMessagesPageTask(User currentUser, User contact, int pageToLoad) {
         return new Task<>() {
             @Override
@@ -147,28 +133,28 @@ public class ChatWindowController {
     private void onChatMessagesPageLoaded(Page<DirectMessage> page, int pageToLoad) {
         try {
             List<DirectMessage> desc = page.getContent();
-            List<DirectMessage> asc = new ArrayList<>(desc);
-            Collections.reverse(asc);
+            int beforeCount = this.chatMessages.size();
+            double oldV = this.scrollPane.getVvalue();   // aktueller Scrollzustand vor dem Einfügen
 
-            if (pageToLoad == 0) {
-                chatMessages.addAll(asc);
-                for (DirectMessage msg : asc) {
-                    addMessageNode(msg, false);
-                }
-                Platform.runLater(this::scrollToBottom);
-            } else {
-                chatMessages.addAll(0, asc);
-                for (DirectMessage msg : asc) {
-                    addMessageNode(msg, true); // nach oben
-                }
+            for (DirectMessage msg : desc) {
+                chatMessages.add(msg);
+                addMessageNode(msg, true);
             }
 
+
+            int afterCount = this.chatMessages.size();
+            if (afterCount > 0 && beforeCount > 0) {
+                double r = (double) beforeCount / (double) afterCount;
+                double newV = r * oldV + (1.0 - r);     // gleiche Sichtposition relativ zum unteren Rand
+                this.scrollPane.setVvalue(newV);
+            }
             lastPageLoadedChatMessages = page.isLast();
             currentPageChatMessages = pageToLoad + 1;
         } finally {
             loadingNextPageChatMessages = false;
         }
     }
+    // </editor-fold>
 
     private void onChatMessagesPageFailed(Throwable ex, int pageToLoad) {
         loadingNextPageChatMessages = false;
@@ -229,6 +215,15 @@ public class ChatWindowController {
         scrollPane.setVvalue(1.0);
     }
 
+    public void setupScrollPanel(){
+        if (scrollPane != null) {
+            scrollPane.vvalueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal.doubleValue() <= 0.10) {
+                    ensureNextChatMessagesPageLoaded();
+                }
+            });
+        }
+    }
 
     @FXML
     private void send() {
@@ -249,7 +244,6 @@ public class ChatWindowController {
 
     }
 
-    /*____________________Helper________________*/
 
     private void showError(String message) {
         Platform.runLater(() -> {

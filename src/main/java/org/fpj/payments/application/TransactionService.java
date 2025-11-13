@@ -3,9 +3,10 @@ package org.fpj.payments.application;
 import org.fpj.Exceptions.TransactionException;
 import org.fpj.payments.domain.Transaction;
 import org.fpj.payments.domain.TransactionRepository;
+import org.fpj.payments.domain.TransactionResult;
+import org.fpj.payments.domain.TransactionRow;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
-import org.springframework.beans.TypeMismatchException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -13,13 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.NumberFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Locale;
 import java.util.Optional;
 
-import static org.fpj.Data.TransactionType.*;
+import static org.fpj.payments.domain.TransactionType.*;
 
 @Service
 public class TransactionService {
@@ -30,43 +27,9 @@ public class TransactionService {
     private UserService userService;
 
     @Transactional(readOnly = true)
-    public Page<TransactionItemLite> findLiteItemsForUser(long userId, int page, int size) {
-        Pageable pr = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return txRepo.findRowsForUser(userId, pr).map(r -> {
-            boolean outgoing = r.senderId() != null && r.senderId().longValue() == userId;
-
-            BigDecimal signed = r.amount() == null ? BigDecimal.ZERO
-                    : (outgoing ? r.amount().negate() : r.amount());
-
-            String name = outgoing
-                    ? (r.recipientUsername() != null ? r.recipientUsername() : "Empfänger unbekannt")
-                    : (r.senderUsername() != null ? r.senderUsername() : "Sender unbekannt");
-            String counterparty = switch (r.type()) {
-                case EINZAHLUNG   -> "Einzahlung";
-                case AUSZAHLUNG   -> "Auszahlung";
-                case UEBERWEISUNG -> (outgoing ? "Überweisung an " : "Überweisung von ") + name;
-            };
-            LocalDateTime ts = LocalDateTime.ofInstant(r.createdAt(), ZoneId.systemDefault());
-            return new TransactionItemLite(counterparty, signed, ts, r.description());
-        });
-    }
-
-    public Page<TransactionItem> findItemsForUser(long userId, int page, int size) {
-        Pageable pr = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return txRepo.findRowsForUser(userId, pr).map(r -> {
-            BigDecimal signed = r.amount() == null ? BigDecimal.ZERO: r.amount();
-
-            String sender= r.senderUsername() == null ? "Unbekannt" : r.senderUsername();
-            String recipient= r.recipientUsername() == null ? "Unbekannt" : r.senderUsername();
-
-            String type = switch (r.type()) {
-                case EINZAHLUNG   -> "Einzahlung";
-                case AUSZAHLUNG   -> "Auszahlung";
-                case UEBERWEISUNG -> "Überweisung";
-            };
-            LocalDateTime ts = LocalDateTime.ofInstant(r.createdAt(), ZoneId.systemDefault());
-            return new TransactionItem(sender, recipient, signed, ts, r.description(),type);
-        });
+    public Page<TransactionRow> findLiteItemsForUser(long userId, int page, int size) {
+        Pageable pr = PageRequest.of(page, size);
+        return txRepo.findRowsForUser(userId, pr);
     }
 
     @Transactional(readOnly = true)
@@ -91,9 +54,7 @@ public class TransactionService {
         txRepo.save(tx);
 
         BigDecimal newBalance = computeBalance(user.getId());
-        return new TransactionResult(tx, newBalance,
-                new TransactionItemLite("Einzahlung", a,
-                        LocalDateTime.ofInstant(tx.getCreatedAt(), ZoneId.systemDefault()), subject));
+        return new TransactionResult(tx, newBalance);
     }
 
     @Transactional
@@ -111,9 +72,7 @@ public class TransactionService {
         txRepo.save(tx);
 
         BigDecimal newBalance = computeBalance(user.getId());
-        return new TransactionResult(tx, newBalance,
-                new TransactionItemLite("Auszahlung", a.negate(),
-                        LocalDateTime.ofInstant(tx.getCreatedAt(), ZoneId.systemDefault()), subject));
+        return new TransactionResult(tx, newBalance);
     }
 
     @Transactional
@@ -146,9 +105,7 @@ public class TransactionService {
 
         BigDecimal newBalance = computeBalance(sender.getId());
         String cp = "Überweisung an " + recipient.getUsername();
-        return new TransactionResult(tx, newBalance,
-                new TransactionItemLite(cp, a.negate(),
-                        LocalDateTime.ofInstant(tx.getCreatedAt(), ZoneId.systemDefault()), subject));
+        return new TransactionResult(tx, newBalance);
     }
 
     /* =================== Helpers =================== */

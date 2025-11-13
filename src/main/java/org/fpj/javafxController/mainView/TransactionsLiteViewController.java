@@ -12,22 +12,20 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
-import org.controlsfx.control.textfield.AutoCompletionBinding;
 import org.controlsfx.control.textfield.TextFields;
 import org.fpj.Data.UiHelpers;
 import org.fpj.Exceptions.TransactionException;
-import org.fpj.payments.application.TransactionItemLite;
-import org.fpj.payments.application.TransactionResult;
+import org.fpj.payments.domain.TransactionResult;
+import org.fpj.payments.domain.TransactionRow;
 import org.fpj.payments.application.TransactionService;
+import org.fpj.payments.domain.Transaction;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -38,8 +36,6 @@ import static org.fpj.Data.UiHelpers.safe;
 @Setter
 @Component
 public class TransactionsLiteViewController {
-    private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
-
     @Autowired
     private ApplicationContext applicationContext;
 
@@ -57,9 +53,9 @@ public class TransactionsLiteViewController {
     @FXML private TextField tfBetrag;
     @FXML private TextField tfBetreff;
 
-    @FXML private ListView<TransactionItemLite> lvTransactions;
+    @FXML private ListView<TransactionRow> lvTransactions;
 
-    private final ObservableList<TransactionItemLite> liteTransactionList = FXCollections.observableArrayList();
+    private final ObservableList<TransactionRow> liteTransactionList = FXCollections.observableArrayList();
     private static final int PAGE_SIZE_Lite_List = 100;
     private int currentPageLiteList = 0;
     private boolean lastPageLoadedLiteList = false;
@@ -76,7 +72,7 @@ public class TransactionsLiteViewController {
         loadTransactionsFirstPageLite();
     }
 
-    private void addLiteTransaction(TransactionItemLite  transactionItem) {
+    private void addLiteTransaction(TransactionRow  transactionItem) {
         this.liteTransactionList.add(0,transactionItem);
     }
 
@@ -96,7 +92,7 @@ public class TransactionsLiteViewController {
     private void initTransactionList() {
         lvTransactions.setItems(this.liteTransactionList);
 
-        lvTransactions.setCellFactory(list -> new ListCell<TransactionItemLite>() {
+        lvTransactions.setCellFactory(list -> new ListCell<TransactionRow>() {
             private final Label title = new Label();
             private final Label subtitle = new Label();
             private final VBox left = new VBox(2, title, subtitle);
@@ -109,14 +105,25 @@ public class TransactionsLiteViewController {
             }
 
             @Override
-            protected void updateItem(TransactionItemLite item, boolean empty) {
+            protected void updateItem(TransactionRow item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
                     setGraphic(null);
                     setText(null);
                 } else {
-                    title.setText(item.counterparty());
-                    subtitle.setText(TS.format(item.timestamp()) + "  •  " + UiHelpers.truncate(item.subject(), 20));
+
+                    boolean outgoing = item.senderId() != currentUser.getId();
+                    String name = outgoing
+                            ? (item.recipientUsername() != null ? item.recipientUsername() : "Empfänger unbekannt")
+                            : (item.senderUsername() != null ? item.senderUsername() : "Sender unbekannt");
+                    String counterparty = switch (item.type()) {
+                        case EINZAHLUNG   -> "Einzahlung";
+                        case AUSZAHLUNG   -> "Auszahlung";
+                        case UEBERWEISUNG -> (outgoing ? "Überweisung an " : "Überweisung von ") + name;
+                    };
+
+                    title.setText(counterparty);
+                    subtitle.setText(UiHelpers.formatInstant(item.createdAt()) + "  •  " + UiHelpers.truncate(item.description(), 20));
                     amount.setText(UiHelpers.formatSignedEuro(item.amount()));
                     amount.getStyleClass().removeAll("amt-pos", "amt-neg");
                     if (item.amount().signum() >= 0) {
@@ -164,7 +171,7 @@ public class TransactionsLiteViewController {
         int pageToLoad = currentPageLiteList;
         long userId = currentUser.getId();
 
-        Task<Page<TransactionItemLite>> task = createLitePageTask(userId, pageToLoad);
+        Task<Page<TransactionRow>> task = createPageTask(userId, pageToLoad);
 
         task.setOnSucceeded(ev -> onLitePageLoaded(task.getValue(), pageToLoad));
         task.setOnFailed(ev -> onLitePageFailed(task.getException()));
@@ -177,10 +184,10 @@ public class TransactionsLiteViewController {
         return !loadingNextPageLiteList && !lastPageLoadedLiteList;
     }
 
-    private Task<Page<TransactionItemLite>> createLitePageTask(long userId, int pageToLoad) {
+    private Task<Page<TransactionRow>> createPageTask(long userId, int pageToLoad) {
         return new Task<>() {
             @Override
-            protected Page<TransactionItemLite> call() {
+            protected Page<TransactionRow> call() {
                 return transactionService.findLiteItemsForUser(
                         userId,
                         pageToLoad,
@@ -190,7 +197,7 @@ public class TransactionsLiteViewController {
         };
     }
 
-    private void onLitePageLoaded(Page<TransactionItemLite> page, int pageToLoad) {
+    private void onLitePageLoaded(Page<TransactionRow> page, int pageToLoad) {
         try {
             liteTransactionList.addAll(page.getContent());
             lastPageLoadedLiteList = page.isLast();
@@ -246,8 +253,16 @@ public class TransactionsLiteViewController {
             }
 
             this.balanceRefreshCallback.accept(UiHelpers.formatEuro(result.newBalance()));
-            addLiteTransaction(result.itemLite());
 
+            Transaction t= result.transaction();
+            Long sId = t.getSender()== null ? null : t.getSender().getId();
+            Long rId = t.getRecipient()== null ? null : t.getRecipient().getId();
+
+            String sName = t.getSender()== null ? null : t.getSender().getUsername();
+            String rName = t.getRecipient()== null ? null : t.getRecipient().getUsername();
+
+            TransactionRow row= new TransactionRow(t.getId(),t.getAmount(),t.getCreatedAt(), t.getTransactionType(),sId, sName, rId, rName, t.getDescription());
+            addLiteTransaction(row);
             tfBetrag.clear();
             tfBetreff.clear();
             tfEmpfaenger.clear();

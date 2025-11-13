@@ -16,7 +16,7 @@ public interface DirectMessageRepository extends JpaRepository<DirectMessage, Lo
         from DirectMessage dm
         where (dm.sender.id = :a and dm.recipient.id = :b)
            or (dm.sender.id = :b and dm.recipient.id = :a)
-        order by dm.createdAt desc
+        order by dm.createdAt asc
     """)
     Page<DirectMessage> findConversation(@Param("a") Long userA, @Param("b") Long userB, Pageable pageable);
 

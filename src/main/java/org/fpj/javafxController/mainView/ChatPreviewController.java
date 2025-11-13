@@ -41,8 +41,6 @@ public class ChatPreviewController {
 
     @Autowired
     private UserService userService;
-    @Autowired
-    private TransactionService transactionService;
 
     @Autowired
     private DirectMessageService directMessageService;
@@ -78,6 +76,7 @@ public class ChatPreviewController {
         chatPreviews.clear();
         loadNextPageChatPreview();
     }
+
     // <editor-fold defaultstate="collapsed" desc="initialize">
     private void initChatList() {
         lvChats.setItems(this.chatPreviews);
@@ -103,7 +102,7 @@ public class ChatPreviewController {
                     return;
                 }
 
-                title.setText(item.name());
+                title.setText(item.name().equals(currentUser.getUsername())? "Du": item.name());
 
                 String msg = item.lastMessage();
                 if (msg == null || msg.isBlank()) {

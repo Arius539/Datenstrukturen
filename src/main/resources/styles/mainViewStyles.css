@@ -176,39 +176,49 @@
 .card .vbox {
     -fx-spacing: 8;
 }
-
-.root.dark {
-    -c-bg:          #101215;
-    -c-surface:     #181B20;
-    -c-surface-alt: #1F232A;
-    -c-text:        #E5E7EB;
-    -c-text-muted:  #9CA3AF;
-    -c-border:      rgba(255, 255, 255, 0.08);
-    -c-shadow:      rgba(0, 0, 0, 0.7);
-
-    -fx-background-color: -c-bg;
+.auto-complete-popup {
+    -fx-background-color: transparent;
+    -fx-font-size: 13px;
+    -fx-padding: 4 0 0 0;
 }
 
-.root.dark .card-title,
-.root.dark .balance {
-    -fx-text-fill: -c-brand;
-}
-
-.root.dark .button {
-    -fx-background-color: #222731;
-    -fx-text-fill: -c-text;
+/* Container-ListView des Popups */
+.auto-complete-popup > .list-view {
+    -fx-background-color: -c-surface;        /* Weiß, wie Cards/Textfelder */
+    -fx-control-inner-background: -c-surface;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
     -fx-border-color: -c-border;
+    -fx-border-width: 1;
+    -fx-padding: 4;
+    -fx-effect: dropshadow(gaussian, -c-shadow, 16, 0.3, 0, 4);
+    -fx-pref-width: 240;
 }
 
-.root.dark .button:hover {
+/* Zellen im Popup – Basiszustand */
+.auto-complete-popup .list-cell {
+    -fx-background-color: -c-surface;        /* Weiß */
+    -fx-text-fill: -c-text;
+    -fx-padding: 8 10;
+    -fx-border-color: transparent transparent -c-border transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+/* Hover: Blau wie Selection, Text weiß */
+.auto-complete-popup .list-cell:filled:hover {
+    -fx-background-color: -c-brand;
+    -fx-text-fill: -c-on-brand;
+    -fx-cursor: hand;
+}
+
+/* Selected: ebenfalls Blau, Text weiß */
+.auto-complete-popup .list-cell:filled:selected {
     -fx-background-color: -c-brand;
     -fx-text-fill: -c-on-brand;
 }
 
-.root.dark .text-field,
-.root.dark .password-field {
-    -fx-background-color: #222731;
-    -fx-border-color: -c-border;
-    -fx-text-fill: -c-text;
-    -fx-prompt-text-fill: -c-text-muted;
+/* Fokus explizit an Selection-Hervorhebung anpassen */
+.auto-complete-popup .list-cell:filled:focused {
+    -fx-background-color: -c-brand-dark;
+    -fx-text-fill: -c-on-brand;
 }

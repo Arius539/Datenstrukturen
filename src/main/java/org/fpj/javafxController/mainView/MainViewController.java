@@ -1,37 +1,16 @@
 package org.fpj.javafxController.mainView;
 
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import org.controlsfx.control.textfield.AutoCompletionBinding;
-import org.fpj.Data.UiHelpers;
-import org.fpj.javafxController.ChatWindowController;
-import org.fpj.messaging.application.ChatPreview;
 import org.fpj.payments.application.TransactionService;
-import org.fpj.payments.application.TransactionItemLite;
-import org.fpj.payments.application.TransactionResult;
-import org.fpj.Exceptions.TransactionException;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.util.*;
 
-import javafx.scene.control.TextField;
-import javafx.scene.layout.VBox;
-import org.controlsfx.control.textfield.TextFields;
-
-
-import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
-
-import static org.fpj.Data.UiHelpers.parseAmountTolerant;
-import static org.fpj.Data.UiHelpers.safe;
 
 @Component
 public class MainViewController {

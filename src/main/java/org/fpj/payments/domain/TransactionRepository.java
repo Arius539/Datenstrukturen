@@ -1,11 +1,6 @@
 package org.fpj.payments.domain;
-import org.fpj.payments.application.TransactionRow;
-import org.fpj.payments.application.TransactionRow;
-import org.fpj.Data.TransactionType;
-import org.fpj.payments.application.TransactionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,7 +14,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     @Query(
             value = """
-        select new org.fpj.payments.application.TransactionRow(
+        select new org.fpj.payments.domain.TransactionRow(
             t.id, t.amount, t.createdAt, t.transactionType,
             s.id, s.username, r.id, r.username, t.description
         )

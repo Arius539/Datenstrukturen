@@ -1,4 +1,4 @@
-package org.fpj.Data;
+package org.fpj.payments.domain;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;

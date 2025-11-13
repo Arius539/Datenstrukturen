@@ -1,10 +1,10 @@
-package org.fpj.payments.application;
+package org.fpj.payments.domain;
 
 public record TransactionRow(
         Long id,
         java.math.BigDecimal amount,
         java.time.Instant createdAt,
-        org.fpj.Data.TransactionType type,
+        TransactionType type,
         Long senderId,
         String senderUsername,
         Long recipientId,

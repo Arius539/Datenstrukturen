@@ -47,7 +47,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
                 ) x
                 group by contact_id
             ) c on c.contact_id = u.id
-            where u.id <> :a
             order by c.last_at desc
             """,
             countQuery = """

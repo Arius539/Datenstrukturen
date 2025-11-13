@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourcePerFileMappings">
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/a849249d-608b-49ff-b974-3461130be655/BulkImportDirectMessages.sql" value="a849249d-608b-49ff-b974-3461130be655" />
     <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/a849249d-608b-49ff-b974-3461130be655/BulkImportTransactions.sql" value="a849249d-608b-49ff-b974-3461130be655" />
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/a849249d-608b-49ff-b974-3461130be655/console.sql" value="a849249d-608b-49ff-b974-3461130be655" />
     <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/a849249d-608b-49ff-b974-3461130be655/testInsert.sql" value="a849249d-608b-49ff-b974-3461130be655" />
+    <file url="file://$PROJECT_DIR$/src/main/java/org/fpj/users/domain/UserRepository.java" value="a849249d-608b-49ff-b974-3461130be655" />
   </component>
 </project>

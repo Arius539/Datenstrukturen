@@ -46,9 +46,8 @@
         <StackPane styleClass="card" VBox.vgrow="ALWAYS">
             <VBox spacing="8">
                 <Label text="Aktionen" styleClass="card-title"/>
-                <Button text="Transaktionsübersicht" onAction="#actionTransactions"/>
+                <Button text="Meine Transaktionen" onAction="#actionTransactions"/>
                 <Button text="Meine Pinnwand"        onAction="#actionWallComments"/>
-                <Button text="Direktnachrichten"     onAction="#actionDirectMessages"/>
                 <Region VBox.vgrow="ALWAYS"/>
             </VBox>
         </StackPane>
