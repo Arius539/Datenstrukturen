@@ -4,26 +4,70 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="org.fpj.javafxController.ChatWindowController">
-
+<BorderPane xmlns="http://javafx.com/javafx/23"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.fpj.javafxController.ChatWindowController"
+            prefWidth="800"
+            prefHeight="600"
+            styleClass="root"
+            stylesheets="@../styles/chatWindowStyles.css">
     <top>
-        <HBox spacing="12">
-            <padding><Insets topRightBottomLeft="12"/></padding>
-            <Label text="Chat mit:" styleClass="card-title"/>
-            <Label fx:id="lblContact"/>
+        <HBox spacing="12" styleClass="chat-header">
+            <padding>
+                <Insets top="12" right="12" bottom="12" left="12"/>
+            </padding>
+
+            <Label fx:id="lblContact"
+                   text="Benutzername"
+                   styleClass="chat-username"/>
+
+            <Pane HBox.hgrow="ALWAYS"/>
+
+            <Button fx:id="btnExport"
+                    text="Exportieren"
+                    onAction="#exportChat"
+                    styleClass="button primary chat-export-button"/>
         </HBox>
     </top>
 
     <center>
-        <ListView fx:id="lvMessages"/>
+        <ScrollPane fx:id="scrollPane"
+                    fitToWidth="true"
+                    hbarPolicy="NEVER"
+                    vbarPolicy="AS_NEEDED"
+                    styleClass="chat-scroll">
+            <content>
+                <VBox fx:id="vbMessages"
+                      spacing="8"
+                      fillWidth="true"
+                      styleClass="chat-container"/>
+            </content>
+        </ScrollPane>
     </center>
 
     <bottom>
-        <HBox spacing="8">
-            <padding><Insets topRightBottomLeft="12"/></padding>
-            <TextField fx:id="tfInput" HBox.hgrow="ALWAYS" promptText="Nachricht eingeben…"/>
-            <Button text="Senden" onAction="#send"/>
-        </HBox>
+        <VBox styleClass="chat-input-wrapper">
+            <padding>
+                <Insets top="8" right="12" bottom="12" left="12"/>
+            </padding>
+
+            <Separator/>
+
+            <HBox spacing="8" styleClass="chat-input-row">
+                <TextArea fx:id="taInput"
+                          HBox.hgrow="ALWAYS"
+                          promptText="Nachricht eingeben…"
+                          prefRowCount="2"
+                          wrapText="true"
+                          styleClass="chat-input-area"/>
+
+                <Button fx:id="btnSend"
+                        text="Senden"
+                        defaultButton="true"
+                        onAction="#send"
+                        styleClass="button primary chat-send-button"/>
+            </HBox>
+        </VBox>
     </bottom>
+
 </BorderPane>

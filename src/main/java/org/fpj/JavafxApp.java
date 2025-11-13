@@ -20,13 +20,11 @@ public class JavafxApp extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/main_view.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/mainView/main_view.fxml"));
         loader.setControllerFactory(context::getBean);
 
         Parent root = loader.load();
         Scene scene = new Scene(root, 1280, 860);
-        scene.getStylesheets().add(getClass().getResource("/styles/mainViewStyles.css").toExternalForm());
-
         stage.setTitle("Bezahlplattform");
         stage.setScene(scene);
         stage.show();

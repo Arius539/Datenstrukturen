@@ -1,7 +1,5 @@
 package org.fpj.messaging.domain;
 
-import org.fpj.messaging.domain.DirectMessage;
-import org.fpj.users.domain.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -33,4 +31,16 @@ public interface DirectMessageRepository extends JpaRepository<DirectMessage, Lo
     Optional<DirectMessage> lastMessageNative(@Param("a") Long userA,
                                               @Param("b") Long userB);
 
+    @Query(
+            value = """
+            INSERT INTO direct_messages (sender, recipient, content, created_at) 
+            VALUES (:senderId, :recipientId, :content, NOW())
+            RETURNING id 
+        """,
+            nativeQuery = true
+    )
+    Long add(@Param("senderId") Long senderId, @Param("recipientId") Long recipientId, @Param("content") String content);
+
+    @Query("SELECT d FROM DirectMessage d WHERE d.id = :id")
+    Optional<DirectMessage> getDirectMessageById(@Param("id") Long id);
 }

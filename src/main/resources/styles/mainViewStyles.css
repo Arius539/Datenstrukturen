@@ -1,33 +1,27 @@
+/* wurde KI erstellt erstelle mir eine passende css zu dieser fxml: main_view.fxml, und ein passendes Farbkonzept (Rot, Weiß, Grau) */
 .root {
-    -c-brand:        #fe0000;
-    -c-bg:           #FFFFFF;
-    -c-surface:      #F4F6F8;
-
+    -c-brand:        #0F61A8;
+    -c-brand-dark:   #094272;
+    -c-bg:           #F3F6FA;
+    -c-surface:      #FFFFFF;
+    -c-surface-alt:  #E7EDF5;
     -c-on-brand:     #FFFFFF;
     -c-text:         #1A1A1A;
-    -c-text-muted:   derive(-c-text, 45%);
-    -c-border:       #E6E8EB;
-    -c-shadow:       rgba(16, 24, 40, 0.08);
+    -c-text-muted:   #6B7280;
+    -c-border:       #CBD5E1;
+    -c-shadow:       rgba(0, 0, 0, 0.08);
 
     -fx-accent:            -c-brand;
-    -fx-focus-color:       derive(-c-brand, -10%);
-    -fx-faint-focus-color: rgba(254, 0, 0);
+    -fx-focus-color:       -c-brand;
+    -fx-faint-focus-color: rgba(227, 6, 19, 0.25);
 
-    -t-font-verySmall: 11px;
-    -t-font-small:     16px;
-    -t-font-default:   18px;
-    -t-font-large:     24px;
-    -t-font-veryLarge: 60px;
+    -fx-font-family: "Segoe UI", "Roboto", "Sans-Serif";
+    -fx-background-color: -c-bg;
 }
 
-.text-verySmall { -fx-font-size: -t-font-verySmall; }
-.text-small     { -fx-font-size: -t-font-small; }
-.text-middle    { -fx-font-size: -t-font-middle; }
-.text-large     { -fx-font-size: -t-font-large; }
-.text-veryLarge { -fx-font-size: -t-font-veryLarge; }
-
-
-.grid-pane, .vbox, .hbox {
+.grid-pane,
+.vbox,
+.hbox {
     -fx-background-color: -c-bg;
 }
 
@@ -37,50 +31,63 @@
     -fx-padding: 12;
     -fx-border-color: -c-border;
     -fx-border-radius: 12;
-    -fx-effect: dropshadow(gaussian, -c-shadow, 12, 0.3, 0, 2);
+    -fx-effect: dropshadow(gaussian, -c-shadow, 16, 0.3, 0, 3);
 }
 
 .card-title {
-    -fx-font-size: -t-font-large;
-    -fx-font-weight: 700;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
     -fx-text-fill: -c-brand;
 }
 
 .balance {
-    -fx-font-size: -t-font-veryLarge;
-    -fx-font-weight: 700;
-    -fx-text-fill: derive(-c-brand, -10%);
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -c-brand-dark;
 }
 
 .app-logo {
-    -fx-font-size: -t-font-large;
+    -fx-font-size: 18px;
     -fx-font-weight: 800;
     -fx-text-fill: -c-brand;
 }
 
 .label {
     -fx-text-fill: -c-text;
-    -fx-font-size: -t-font-middle;
+    -fx-font-size: 14px;
 }
 
 
+.text-verySmall { -fx-font-size: 11px; }
+.text-small     { -fx-font-size: 13px; }
+.text-default   { -fx-font-size: 14px; }
+.text-large     { -fx-font-size: 18px; }
+.text-veryLarge { -fx-font-size: 32px; }
+
 .button {
-    -fx-background-color: linear-gradient(derive(-c-bg, -2%), derive(-c-bg, -6%));
+    -fx-background-color: linear-gradient(to bottom, -c-surface, -c-surface-alt);
     -fx-text-fill: -c-text;
     -fx-padding: 8 14;
     -fx-background-radius: 10;
     -fx-border-color: -c-border;
     -fx-border-radius: 10;
     -fx-cursor: hand;
-    -fx-font-size: -t-font-middle;
+    -fx-font-size: 14px;
 }
 
 .button:hover {
-    -fx-background-color: linear-gradient(derive(-c-bg, -4%), derive(-c-bg, -10%));
+    -fx-background-color: -c-brand;
+    -fx-text-fill: -c-on-brand;
 }
 
 .button:pressed {
-    -fx-background-color: derive(-c-bg, -14%);
+    -fx-background-color: -c-brand-dark;
+    -fx-text-fill: -c-on-brand;
+}
+
+.button:disabled {
+    -fx-opacity: 0.6;
+    -fx-cursor: default;
 }
 
 .button.primary {
@@ -90,21 +97,13 @@
 }
 
 .button.primary:hover {
-    -fx-background-color: derive(-c-brand, -8%);
+    -fx-background-color: -c-brand-dark;
 }
 
-.button.primary:pressed {
-    -fx-background-color: derive(-c-brand, -16%);
-}
-
-.button:disabled {
-    -fx-opacity: 0.55;
-    -fx-cursor: default;
-}
-
-.text-field, .password-field {
-    -fx-font-size: -t-font-middle;
-    -fx-background-color: -c-bg;
+.text-field,
+.password-field {
+    -fx-font-size: 14px;
+    -fx-background-color: -c-surface;
     -fx-text-fill: -c-text;
     -fx-prompt-text-fill: -c-text-muted;
     -fx-background-radius: 10;
@@ -113,7 +112,8 @@
     -fx-padding: 8 10;
 }
 
-.text-field:focused, .password-field:focused {
+.text-field:focused,
+.password-field:focused {
     -fx-border-color: -c-brand;
     -fx-background-insets: 0;
 }
@@ -122,12 +122,27 @@
     -fx-text-fill: -c-text;
 }
 
-.radio-button .radio,
-.radio-button:selected .radio {
+.radio-button > .radio {
+    -fx-background-color: -c-surface;
+    -fx-border-color: -c-border;
+    -fx-border-width: 2;
+    -fx-background-radius: 100;
+    -fx-border-radius: 100;
+    -fx-padding: 2;
 }
 
-.radio-button:selected .dot {
-    -fx-background-color: -c-on-brand;
+.radio-button:selected > .radio {
+    -fx-border-color: -c-brand;
+    -fx-background-color: -c-surface;
+}
+
+.radio-button > .radio > .dot {
+    -fx-background-radius: 100;
+    -fx-background-color: transparent;
+}
+
+.radio-button:selected > .radio > .dot {
+    -fx-background-color: -c-brand;
 }
 
 .list-view {
@@ -146,20 +161,16 @@
 }
 
 .list-cell:filled:hover {
-    -fx-background-color: derive(-c-surface, -5%);
+    -fx-background-color: -c-surface-alt;
 }
 
 .list-cell:selected {
-    -fx-background-color: linear-gradient(derive(-c-brand, 80%), derive(-c-brand, 70%));
-    -fx-text-fill: -c-text;
+    -fx-background-color: -c-brand;
+    -fx-text-fill: -c-on-brand;
 }
 
 .region {
     -fx-background-color: transparent;
-}
-
-.card .button {
-    -fx-background-radius: 8;
 }
 
 .card .vbox {
@@ -167,27 +178,36 @@
 }
 
 .root.dark {
-    -c-bg:      #0F1115;
-    -c-surface: #171A21;
-    -c-text:    #EDEFF2;
-    -c-text-muted: derive(-c-text, -35%);
-    -c-border:  rgba(255,255,255,0.08);
-    -c-shadow:  rgba(0,0,0,0.6);
+    -c-bg:          #101215;
+    -c-surface:     #181B20;
+    -c-surface-alt: #1F232A;
+    -c-text:        #E5E7EB;
+    -c-text-muted:  #9CA3AF;
+    -c-border:      rgba(255, 255, 255, 0.08);
+    -c-shadow:      rgba(0, 0, 0, 0.7);
+
+    -fx-background-color: -c-bg;
 }
 
 .root.dark .card-title,
-.root.dark .app-logo {
+.root.dark .balance {
     -fx-text-fill: -c-brand;
 }
 
 .root.dark .button {
-    -fx-background-color: #1E222B;
+    -fx-background-color: #222731;
     -fx-text-fill: -c-text;
     -fx-border-color: -c-border;
 }
 
-.root.dark .text-field, .root.dark .password-field {
-    -fx-background-color: #1E222B;
+.root.dark .button:hover {
+    -fx-background-color: -c-brand;
+    -fx-text-fill: -c-on-brand;
+}
+
+.root.dark .text-field,
+.root.dark .password-field {
+    -fx-background-color: #222731;
     -fx-border-color: -c-border;
     -fx-text-fill: -c-text;
     -fx-prompt-text-fill: -c-text-muted;

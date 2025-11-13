@@ -1,8 +1,8 @@
 package org.fpj.messaging.application;
 
+import org.fpj.Exceptions.DataNotPresentException;
 import org.fpj.messaging.domain.DirectMessage;
 import org.fpj.messaging.domain.DirectMessageRepository;
-import org.fpj.payments.domain.TransactionRepository;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,15 +37,26 @@ public class DirectMessageService {
                     if (lastOpt.isEmpty()) {
                         return new ChatPreview(contact.getUsername(),
                                 null,
-                                null);
+                                null, null);
                     }
                     DirectMessage dm = lastOpt.get();
                     String lastText = dm.getContent();
                     Instant ts = dm.getCreatedAt();
-                    return new ChatPreview(contact.getUsername(), lastText,LocalDateTime.ofInstant(ts, ZoneId.systemDefault()));
+                    return new ChatPreview(contact.getUsername(), lastText,LocalDateTime.ofInstant(ts, ZoneId.systemDefault()), dm.getSender().getUsername());
                 })
                 .toList();
         return new PageImpl<>(previews, pageable, contactsPage.getTotalElements());
     }
+    public Page<DirectMessage> getConversation(User userA, User userB, Pageable pageable) {
+      return  dmRepo.findConversation(userA.getId(), userB.getId(), pageable);
+    }
+
+    @Transactional
+    public DirectMessage addDirectMessage(DirectMessageRow row) {
+        Long id = dmRepo.add(row.sender().getId(), row.recipient().getId(), row.content());
+        return dmRepo.getDirectMessageById(id)
+                .orElseThrow(() -> new DataNotPresentException("DirectMessage not found for id " + id));
+    }
+
 
 }

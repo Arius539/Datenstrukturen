@@ -17,6 +17,7 @@ import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Locale;
+import java.util.Optional;
 
 import static org.fpj.Data.TransactionType.*;
 
@@ -120,7 +121,11 @@ public class TransactionService {
         if (recipientUsername == null || recipientUsername.isBlank()) {
             throw new TransactionException("Empfänger ist erforderlich.");
         }
-        User recipient = userService.findByUsername(recipientUsername);
+       Optional<User> optRecipient = userService.findByUsername(recipientUsername);
+        if (!optRecipient.isPresent()) {
+            throw new TransactionException("Der angegebene Empfänger existiert nicht.");
+        }
+        User recipient = optRecipient.get();
 
         if (recipient.getId() == sender.getId()) {
             throw new TransactionException("Überweisung an sich selbst ist nicht erlaubt.");

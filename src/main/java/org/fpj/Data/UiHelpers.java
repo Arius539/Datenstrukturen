@@ -1,8 +1,15 @@
 package org.fpj.Data;
 
+import javafx.concurrent.Task;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.Timestamp;
 import java.text.NumberFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 public class UiHelpers {
@@ -51,5 +58,23 @@ public class UiHelpers {
 
     public static String safe(String s) {
         return s == null ? "" : s.trim();
+    }
+
+    public static String formatInstant(Instant t) {
+        if (t == null) {
+            return "";
+        }
+
+        DateTimeFormatter fmt = DateTimeFormatter
+                .ofPattern("dd.MM.yyyy HH:mm")
+                .withZone(ZoneId.of("Europe/Berlin"));
+
+        return fmt.format(t);
+    }
+
+    public static void startBackgroundTask(Task<?> task, String threadName) {
+        Thread t = new Thread(task, threadName);
+        t.setDaemon(true);
+        t.start();
     }
 }
