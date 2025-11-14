@@ -69,7 +69,6 @@ public class ChatWindowController {
         this.currentUser = currentUser;
         this.currentChatPartner = chatPartner;
         lblContact.setText(chatPartner.getUsername().equals(currentUser.getUsername())? "Du": chatPartner.getUsername());
-
         this.setupScrollPanel();
         this.scrollToBottom();
 

@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.antlr.v4.runtime.misc.NotNull;
+import org.fpj.Data.UiHelpers;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -57,4 +58,9 @@ public class Transaction {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    public String amountString(long currentUserId) {
+        boolean outgoing = this.sender== null ? false : this.sender.getId() == currentUserId;
+        return UiHelpers.formatSignedEuro(!outgoing ? this.amount : new BigDecimal("0").subtract(this.amount));
+    }
 }

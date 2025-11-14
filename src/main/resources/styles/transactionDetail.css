@@ -1,0 +1,143 @@
+/* wurde KI erstellt erstelle mir eine passende css zu dieser fxml: main_view.fxml, und ein passendes Farbkonzept (Blau, Weiß, Grau) */
+.root {
+    -c-brand:        #0F61A8;
+    -c-brand-dark:   #094272;
+    -c-bg:           #F3F6FA;
+    -c-surface:      #FFFFFF;
+    -c-surface-alt:  #E7EDF5;
+    -c-on-brand:     #FFFFFF;
+    -c-text:         #1A1A1A;
+    -c-text-muted:   #6B7280;
+    -c-border:       #CBD5E1;
+    -c-shadow:       rgba(0, 0, 0, 0.08);
+
+    -fx-accent:            -c-brand;
+    -fx-focus-color:       -c-brand;
+    -fx-faint-focus-color: rgba(227, 6, 19, 0.25);
+
+    -fx-font-family: "Segoe UI", "Roboto", "Sans-Serif";
+    -fx-background-color: -c-bg;
+}
+
+/* Grundlayout des Detailfensters */
+.vbox {
+    -fx-background-color: -c-bg;
+}
+
+/* ============================================
+   Detailkarte (BorderPane mit styleClass="detail-card")
+   ============================================ */
+.detail-card {
+    -fx-background-color: -c-surface;
+    -fx-background-radius: 16;
+    -fx-border-color: -c-border;
+    -fx-border-radius: 16;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, -c-shadow, 20, 0.35, 0, 4);
+}
+
+/* Abstand im Inneren der Karte – FXML macht bereits padding auf dem inneren VBox,
+   dieser Eintrag hält die äußere Karte "clean". */
+.detail-card > * {
+    -fx-background-color: transparent;
+}
+
+/* ============================================
+   Klickbare Boxen (styleClass="clickable-box")
+   Sender / Empfänger / Betrag / Verwendungszweck
+   ============================================ */
+.clickable-box {
+    -fx-background-color: linear-gradient(to bottom, -c-surface, -c-surface-alt);
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: -c-border;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+    -fx-alignment: CENTER_LEFT;
+    -fx-min-height: 40;
+}
+
+/* Hover/Pressed-Feedback */
+.clickable-box:hover {
+    -fx-background-color: -c-surface-alt;
+    -fx-border-color: -c-brand;
+}
+
+.clickable-box:pressed {
+    -fx-background-color: -c-brand;
+    -fx-border-color: -c-brand-dark;
+}
+
+/* Labels in klickbaren Boxen leicht hervorheben */
+.clickable-box .label {
+    -fx-text-fill: -c-text;
+    -fx-font-size: 14px;
+}
+
+/* Spezifische Akzente pro Bereich */
+#senderLabel,
+#empfaengerLabel {
+    -fx-font-weight: 600;
+}
+
+/* Betrag größer und prominenter */
+#betragLabel {
+    -fx-font-size: 20px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -c-brand-dark;
+}
+
+/* Verwendungszweck als Fließtext */
+#verwendungszweckLabel {
+    -fx-font-size: 14px;
+    -fx-text-fill: -c-text-muted;
+}
+
+/* Boxen für Betrag / Verwendungszweck etwas höher */
+#betragBox,
+#verwendungszweckBox {
+    -fx-min-height: 52;
+}
+
+/* ============================================
+   Button "Wiederverwenden" (#reuseButton)
+   ============================================ */
+#reuseButton {
+    -fx-background-color: -c-brand;
+    -fx-text-fill: -c-on-brand;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: transparent;
+    -fx-padding: 8 16;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-cursor: hand;
+}
+
+#reuseButton:hover {
+    -fx-background-color: -c-brand-dark;
+}
+
+#reuseButton:pressed {
+    -fx-background-color: -c-brand-dark;
+    -fx-opacity: 0.9;
+}
+
+#reuseButton:disabled {
+    -fx-opacity: 0.6;
+    -fx-cursor: default;
+}
+
+/* ============================================
+   Typografie allgemein (Labels im Detailfenster)
+   ============================================ */
+.label {
+    -fx-text-fill: -c-text;
+    -fx-font-size: 14px;
+}
+
+/* Optional: leichte Differenzierung im Detailfenster */
+.text-muted {
+    -fx-text-fill: -c-text-muted;
+    -fx-font-size: 13px;
+}

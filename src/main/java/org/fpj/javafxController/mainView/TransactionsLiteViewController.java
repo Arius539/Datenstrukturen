@@ -5,6 +5,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -15,6 +17,8 @@ import lombok.Setter;
 import org.controlsfx.control.textfield.TextFields;
 import org.fpj.Data.UiHelpers;
 import org.fpj.Exceptions.TransactionException;
+import org.fpj.javafxController.ChatWindowController;
+import org.fpj.javafxController.TransactionDetailController;
 import org.fpj.payments.domain.TransactionResult;
 import org.fpj.payments.domain.TransactionRow;
 import org.fpj.payments.application.TransactionService;
@@ -29,8 +33,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static org.fpj.Data.UiHelpers.parseAmountTolerant;
-import static org.fpj.Data.UiHelpers.safe;
+import static org.fpj.Data.UiHelpers.*;
 
 @Getter
 @Setter
@@ -125,10 +128,16 @@ public class TransactionsLiteViewController {
 
                     title.setText(counterparty);
                     subtitle.setText(UiHelpers.formatInstant(item.createdAt()) + "  •  " + UiHelpers.truncate(item.description(), 20));
-                    amount.setText(UiHelpers.formatSignedEuro(!outgoing ? item.amount():new BigDecimal("0").subtract(item.amount())));
+                    amount.setText(item.amountString(currentUser.getId()));
                     setGraphic(root);
                     int index = getIndex();
                     ensureNextPageLoaded(index);
+
+                    setOnMouseClicked(ev -> {
+                        if (ev.getClickCount() == 2) {
+                            openTransactionDetails(item);
+                        }
+                    });
                 }
             }
         });
@@ -171,7 +180,7 @@ public class TransactionsLiteViewController {
         task.setOnSucceeded(ev -> onLitePageLoaded(task.getValue(), pageToLoad));
         task.setOnFailed(ev -> onLitePageFailed(task.getException()));
 
-        startBackgroundTask(task, pageToLoad);
+        startBackgroundTask(task, "trx-page-loader-" + pageToLoad);
     }
 
 
@@ -207,12 +216,6 @@ public class TransactionsLiteViewController {
         System.out.print(ex.toString());
         showError("Transaktionen konnten nicht geladen werden: " +
                 (ex != null ? ex.getMessage() : "Unbekannter Fehler"));
-    }
-
-    private void startBackgroundTask(Task<?> task, int pageToLoad) {
-        Thread t = new Thread(task, "trx-page-loader-" + pageToLoad);
-        t.setDaemon(true);
-        t.start();
     }
     // </editor-fold>
 
@@ -270,12 +273,50 @@ public class TransactionsLiteViewController {
         }
     }
 
+    private void openTransactionDetails(TransactionRow row){
+        try {
+            var url = getClass().getResource("/fxml/transaction_detail.fxml");
+            if (url == null) {
+                throw new IllegalStateException("chat_window.fxml nicht gefunden!");
+            }
+
+            FXMLLoader loader = new FXMLLoader(url);
+            loader.setControllerFactory(applicationContext::getBean);
+
+            Parent root = loader.load();
+            TransactionDetailController detailController = loader.getController();
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle("Transaktionsdetails");
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.show();
+
+            detailController.initialize(row, currentUser, null, null, this::useTransactionAsTemplate, null, null);
+        } catch (Exception e) {
+            showError("Fehler beim laden der Transaktionsdetails. Versuche es erneut oder starte die Anwendung neu: " + e.getMessage());
+        }
+    }
+
     @FXML
     private void onReloadTransaction() {
         this.loadingNextPageLiteList = false;
         this.lastPageLoadedLiteList = false;
         this.currentPageLiteList = 0;
         loadTransactionsFirstPageLite();
+    }
+
+    private void useTransactionAsTemplate(TransactionRow row) {
+        tfBetrag.setText(row.amountStringUnsigned());
+        tfBetreff.setText(row.description());
+        switch (row.type()) {
+            case UEBERWEISUNG:
+                rbTransfer.setSelected(true);
+                tfEmpfaenger.setText(row.recipientUsername());
+                break;
+            case AUSZAHLUNG: rbWithdraw.setSelected(true);
+                break;
+            case EINZAHLUNG: rbDeposit.setSelected(true);
+        }
+        onTypeChanged();
     }
 
     private void showError(String message) {
