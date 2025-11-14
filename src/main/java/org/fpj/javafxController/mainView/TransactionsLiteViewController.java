@@ -111,11 +111,12 @@ public class TransactionsLiteViewController {
                     setGraphic(null);
                     setText(null);
                 } else {
+                    boolean outgoing = item.senderId() == currentUser.getId();
 
-                    boolean outgoing = item.senderId() != currentUser.getId();
                     String name = outgoing
                             ? (item.recipientUsername() != null ? item.recipientUsername() : "Empfänger unbekannt")
                             : (item.senderUsername() != null ? item.senderUsername() : "Sender unbekannt");
+
                     String counterparty = switch (item.type()) {
                         case EINZAHLUNG   -> "Einzahlung";
                         case AUSZAHLUNG   -> "Auszahlung";
@@ -124,13 +125,7 @@ public class TransactionsLiteViewController {
 
                     title.setText(counterparty);
                     subtitle.setText(UiHelpers.formatInstant(item.createdAt()) + "  •  " + UiHelpers.truncate(item.description(), 20));
-                    amount.setText(UiHelpers.formatSignedEuro(item.amount()));
-                    amount.getStyleClass().removeAll("amt-pos", "amt-neg");
-                    if (item.amount().signum() >= 0) {
-                        amount.getStyleClass().add("amt-pos");
-                    } else {
-                        amount.getStyleClass().add("amt-neg");
-                    }
+                    amount.setText(UiHelpers.formatSignedEuro(!outgoing ? item.amount():new BigDecimal("0").subtract(item.amount())));
                     setGraphic(root);
                     int index = getIndex();
                     ensureNextPageLoaded(index);
@@ -273,6 +268,14 @@ public class TransactionsLiteViewController {
         } catch (Exception ex) {
             error("Unerwarteter Fehler: " + ex.getMessage());
         }
+    }
+
+    @FXML
+    private void onReloadTransaction() {
+        this.loadingNextPageLiteList = false;
+        this.lastPageLoadedLiteList = false;
+        this.currentPageLiteList = 0;
+        loadTransactionsFirstPageLite();
     }
 
     private void showError(String message) {

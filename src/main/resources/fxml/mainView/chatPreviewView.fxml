@@ -17,7 +17,12 @@
 
     <StackPane styleClass="card" VBox.vgrow="ALWAYS">
         <VBox spacing="8">
-            <Label text="Chats" styleClass="card-title"/>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Label text="Chats" styleClass="card-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="↻" onAction="#onReloadChats" styleClass="button-small"/>
+            </HBox>
+
             <TextField fx:id="chatsUsernameSearch" promptText="Username"/>
             <ListView fx:id="lvChats" VBox.vgrow="ALWAYS"/>
         </VBox>

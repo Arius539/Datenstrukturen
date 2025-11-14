@@ -254,12 +254,19 @@ public class ChatPreviewController {
         Parent root = loader.load();
         ChatWindowController controller = loader.getController();
 
-        // Fenster öffnen
         javafx.stage.Stage stage = new javafx.stage.Stage();
         stage.setTitle("Chat mit " + username);
         stage.setScene(new javafx.scene.Scene(root));
         stage.show();
         return   controller;
+    }
+
+    @FXML
+    private void onReloadChats() {
+        this.loadingNextPageChatPreviews = false;
+        this.lastPageLoadedChatPreviews = false;
+        this.currentPageChatPreviews = 0;
+        loadChatPreviewsFirstPage();
     }
 
     private void showError(String message) {

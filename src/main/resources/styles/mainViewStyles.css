@@ -54,7 +54,7 @@
 
 .label {
     -fx-text-fill: -c-text;
-    -fx-font-size: 14px;
+    -fx-font-size: 16px;
 }
 
 
@@ -98,6 +98,19 @@
 
 .button.primary:hover {
     -fx-background-color: -c-brand-dark;
+}
+
+.button-small {
+    -fx-font-size: 11px;
+    -fx-padding: 3 10;
+    -fx-min-width: 22px;
+    -fx-min-height: 22px;
+    -fx-background-radius: 7;
+    -fx-border-radius: 7;
+}
+
+.button-small .graphic {
+    -fx-padding: 0 2 0 0;
 }
 
 .text-field,
@@ -182,7 +195,6 @@
     -fx-padding: 4 0 0 0;
 }
 
-/* Container-ListView des Popups */
 .auto-complete-popup > .list-view {
     -fx-background-color: -c-surface;        /* Weiß, wie Cards/Textfelder */
     -fx-control-inner-background: -c-surface;
@@ -195,7 +207,6 @@
     -fx-pref-width: 240;
 }
 
-/* Zellen im Popup – Basiszustand */
 .auto-complete-popup .list-cell {
     -fx-background-color: -c-surface;        /* Weiß */
     -fx-text-fill: -c-text;
@@ -204,20 +215,17 @@
     -fx-border-width: 0 0 1 0;
 }
 
-/* Hover: Blau wie Selection, Text weiß */
 .auto-complete-popup .list-cell:filled:hover {
     -fx-background-color: -c-brand;
     -fx-text-fill: -c-on-brand;
     -fx-cursor: hand;
 }
 
-/* Selected: ebenfalls Blau, Text weiß */
 .auto-complete-popup .list-cell:filled:selected {
     -fx-background-color: -c-brand;
     -fx-text-fill: -c-on-brand;
 }
 
-/* Fokus explizit an Selection-Hervorhebung anpassen */
 .auto-complete-popup .list-cell:filled:focused {
     -fx-background-color: -c-brand-dark;
     -fx-text-fill: -c-on-brand;

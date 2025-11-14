@@ -83,9 +83,8 @@ public class ChatWindowController {
 
         chatMessages.clear();
         vbMessages.getChildren().clear();
-
-        this.scrollToBottom();
         loadNextPageChatMessages();
+        this.scrollToBottom();
     }
 
     // <editor-fold defaultstate="collapsed" desc="Infinite Scroll Messages">
@@ -141,16 +140,17 @@ public class ChatWindowController {
                 addMessageNode(msg, true);
             }
 
-
             int afterCount = this.chatMessages.size();
             if (afterCount > 0 && beforeCount > 0) {
                 double r = (double) beforeCount / (double) afterCount;
-                double newV = r * oldV + (1.0 - r);     // gleiche Sichtposition relativ zum unteren Rand
+                double newV = r * oldV + (1.0 - r);
                 this.scrollPane.setVvalue(newV);
             }
+
+        } finally {
+            if(currentPageChatMessages==0)this.scrollToBottom();
             lastPageLoadedChatMessages = page.isLast();
             currentPageChatMessages = pageToLoad + 1;
-        } finally {
             loadingNextPageChatMessages = false;
         }
     }
@@ -242,6 +242,16 @@ public class ChatWindowController {
     @FXML
     private void exportChat() {
 
+    }
+
+    @FXML
+    private void onReloadChat() {
+        this.chatMessages.clear();
+        vbMessages.getChildren().clear();
+        this.loadingNextPageChatMessages = false;
+        this.lastPageLoadedChatMessages = false;
+        this.currentPageChatMessages = 0;
+        loadNextPageChatMessages();
     }
 
 

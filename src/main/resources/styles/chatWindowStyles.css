@@ -2,8 +2,10 @@
 
 .root {
     -c-brand:        #0F61A8;
+    -c-brand-dark:   #0B4C84;
     -c-bg:           #FFFFFF;
     -c-surface:      #F4F6F8;
+    -c-surface-alt:  #E5E7EB;
     -c-on-brand:     #FFFFFF;
     -c-text:         #1A1A1A;
     -c-text-muted:   #6B7280;
@@ -132,7 +134,6 @@
     -fx-text-fill: rgba(255, 255, 255, 0.75);
 }
 
-/* Eingabebereich unten */
 .chat-input-wrapper {
     -fx-background-color: -c-surface;
     -fx-spacing: 8;
@@ -147,7 +148,6 @@
     -fx-alignment: CENTER_LEFT;
 }
 
-/* Textarea für Eingabe */
 .text-area,
 .chat-input-area {
     -fx-font-size: 14px;
@@ -170,49 +170,55 @@
     -fx-background-insets: 0;
 }
 
-/* Dark-Mode für Eingabe */
-.root.dark .text-area,
-.root.dark .chat-input-area {
-    -fx-background-color: #1E222B;
-    -fx-border-color: -c-border;
-    -fx-text-fill: -c-text;
-    -fx-prompt-text-fill: -c-text-muted;
-}
-
-/* Senden-Button (z. B. rechts neben Textarea) */
 .chat-send-button {
     -fx-min-width: 96;
 }
 
-/* Dark-Mode: Hintergrund und Bubbles */
-.root.dark .chat-root {
-    -fx-background-color: #05070B;
+.button {
+    -fx-background-color: linear-gradient(to bottom, -c-surface, -c-surface-alt);
+    -fx-text-fill: -c-text;
+    -fx-padding: 8 14;
+    -fx-background-radius: 10;
+    -fx-border-color: -c-border;
+    -fx-border-radius: 10;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
 }
 
-.root.dark .chat-scroll > .viewport {
-    -fx-background-color: #05070B;
-}
-
-.root.dark .message-bubble {
-    -fx-background-color: #171A21;
-    -fx-border-color: #2B303B;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.8), 20, 0.25, 0, 2);
-}
-
-.root.dark .message-bubble.incoming {
-    -fx-background-color: #171A21;
-}
-
-.root.dark .message-bubble.outgoing {
+.button:hover {
     -fx-background-color: -c-brand;
-    -fx-border-color: derive(-c-brand, -10%);
+    -fx-text-fill: -c-on-brand;
 }
 
-.root.dark .message-text {
-    -fx-text-fill: #F5F5F7;
+.button:pressed {
+    -fx-background-color: -c-brand-dark;
+    -fx-text-fill: -c-on-brand;
 }
 
-.root.dark .message-meta {
-    -fx-text-fill: rgba(255, 255, 255, 0.55);
+.button:disabled {
+    -fx-opacity: 0.6;
+    -fx-cursor: default;
 }
 
+.button.primary {
+    -fx-background-color: -c-brand;
+    -fx-text-fill: -c-on-brand;
+    -fx-border-color: transparent;
+}
+
+.button.primary:hover {
+    -fx-background-color: -c-brand-dark;
+}
+
+.button-small {
+    -fx-font-size: 11px;
+    -fx-padding: 3 10;
+    -fx-min-width: 22px;
+    -fx-min-height: 22px;
+    -fx-background-radius: 7;
+    -fx-border-radius: 7;
+}
+
+.button-small .graphic {
+    -fx-padding: 0 2 0 0;
+}

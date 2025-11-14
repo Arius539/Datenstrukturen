@@ -43,7 +43,7 @@ public class TransactionService {
     @Transactional
     public TransactionResult deposit(User user, BigDecimal amount, String subject) {
         BigDecimal a = normalizeAmount(amount);
-        requirePositive(a, "Betrag muss > 0 sein.");
+        requirePositive(a, "Der Betrag muss größer als 0 sein.");
 
         Transaction tx = new Transaction();
         tx.setTransactionType(EINZAHLUNG);
@@ -60,7 +60,7 @@ public class TransactionService {
     @Transactional
     public TransactionResult withdraw(User user, BigDecimal amount, String subject) {
         BigDecimal a = normalizeAmount(amount);
-        requirePositive(a, "Betrag muss > 0 sein.");
+        requirePositive(a, "Der Betrag muss größer als 0 sein.");
         ensureSufficientFunds(user.getId(), a, "Nicht genügend Guthaben für Auszahlung.");
 
         Transaction tx = new Transaction();
@@ -91,7 +91,7 @@ public class TransactionService {
         }
 
         BigDecimal a = normalizeAmount(amount);
-        requirePositive(a, "Betrag muss > 0 sein.");
+        requirePositive(a, "Der Betrag muss größer als 0 sein.");
         ensureSufficientFunds(sender.getId(), a, "Nicht genügend Guthaben für Überweisung.");
 
         Transaction tx = new Transaction();
@@ -104,7 +104,6 @@ public class TransactionService {
         txRepo.save(tx);
 
         BigDecimal newBalance = computeBalance(sender.getId());
-        String cp = "Überweisung an " + recipient.getUsername();
         return new TransactionResult(tx, newBalance);
     }
 

@@ -17,8 +17,18 @@ public class UiHelpers {
 
     public static String truncate(String s, int max) {
         if (s == null) return "";
-        return s.length() <= max ? s : s.substring(0, max) + "…";
+        StringBuilder sb = new StringBuilder();
+        String[] lines = s.split("\\R");
+        for (String line : lines) {
+            if (!line.trim().isEmpty()) {
+                if (sb.length() > 0) sb.append(System.lineSeparator());
+                sb.append(line);
+            }
+        }
+        String result = sb.toString();
+        return result.length() <= max ? result : result.substring(0, max) + "…";
     }
+
 
     public static String formatEuro(BigDecimal amt) {
         BigDecimal v = (amt != null ? amt : BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);

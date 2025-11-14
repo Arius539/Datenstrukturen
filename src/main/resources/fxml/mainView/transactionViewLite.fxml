@@ -62,7 +62,11 @@
 
     <StackPane styleClass="card" VBox.vgrow="ALWAYS">
         <VBox spacing="8">
-            <Label text="Letzte Transaktionen" styleClass="card-title"/>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Label text="Letzte Transaktionen" styleClass="card-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="↻" onAction="#onReloadTransaction" styleClass="button-small"/>
+            </HBox>
             <ListView fx:id="lvTransactions" VBox.vgrow="ALWAYS"/>
         </VBox>
     </StackPane>
