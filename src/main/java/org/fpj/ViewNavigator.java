@@ -25,20 +25,6 @@ public class ViewNavigator {
         this.mainController = mainController;
     }
 
-    public void showMenu() throws IOException {
-        loadView("main.fxml", "Menü");
-        mainController.hideLogin();
-    }
-
-    public void showAccount() throws IOException {
-        loadView("account.fxml", "Konto");
-    }
-
-    public void showMain() throws IOException {
-        loadView("main.fxml", "Main");
-        mainController.showLogin();
-    }
-
     private void loadView(String fxml, String title) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/" + fxml));
         loader.setControllerFactory(context::getBean);

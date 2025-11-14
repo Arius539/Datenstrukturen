@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/23"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.fpj.javafxController.mainView.TransactionsLiteViewController"
+      spacing="12">
+
+    <StackPane styleClass="card">
+        <VBox spacing="10">
+
+            <fx:define>
+                <ToggleGroup fx:id="txTypeGroup"/>
+            </fx:define>
+
+            <Label text="Transaktion ausführen" styleClass="card-title"/>
+
+            <HBox spacing="12">
+                <RadioButton fx:id="rbDeposit"
+                             text="Einzahlen"
+                             toggleGroup="$txTypeGroup"
+                             onAction="#onTypeChanged"/>
+
+                <RadioButton fx:id="rbTransfer"
+                             text="Überweisen"
+                             toggleGroup="$txTypeGroup"
+                             onAction="#onTypeChanged"
+                             selected="true"/>
+
+                <RadioButton fx:id="rbWithdraw"
+                             text="Auszahlen"
+                             toggleGroup="$txTypeGroup"
+                             onAction="#onTypeChanged"/>
+            </HBox>
+
+            <GridPane hgap="8" vgap="6">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="60"/>
+                    <ColumnConstraints percentWidth="40"/>
+                </columnConstraints>
+
+                <TextField fx:id="tfEmpfaenger"
+                           promptText="Empfänger"
+                           GridPane.columnIndex="0"/>
+
+                <TextField fx:id="tfBetrag"
+                           promptText="Betrag (z. B. 12,34)"
+                           GridPane.columnIndex="1"/>
+            </GridPane>
+
+            <TextField fx:id="tfBetreff"
+                       promptText="Verwendungszweck"/>
+
+            <HBox spacing="8">
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Senden" onAction="#sendTransfers"/>
+            </HBox>
+        </VBox>
+    </StackPane>
+
+    <StackPane styleClass="card" VBox.vgrow="ALWAYS">
+        <VBox spacing="8">
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Label text="Letzte Transaktionen" styleClass="card-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="↻" onAction="#onReloadTransaction" styleClass="button-small"/>
+            </HBox>
+            <ListView fx:id="lvTransactions" VBox.vgrow="ALWAYS"/>
+        </VBox>
+    </StackPane>
+</VBox>

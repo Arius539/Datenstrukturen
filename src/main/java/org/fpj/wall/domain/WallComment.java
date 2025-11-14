@@ -1,32 +1,40 @@
 package org.fpj.wall.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import org.fpj.users.domain.User;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Comment;
 import org.fpj.users.domain.User;
 
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
 @Entity
+@Table(
+        name = "pinboard_comments",
+        indexes = {
+                @Index(name = "pb_owner_ctime", columnList = "wall_owner_id,created_at"),
+                @Index(name = "pb_author_ctime", columnList = "author_id,created_at")
+        }
+)
+@Comment("Comments on user pinboards (owner vs. author).")
 public class WallComment {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String content;
-    @ManyToOne
-    @JoinColumn(name = "users")
-    private User wallOwner;
-    @ManyToOne
-    @JoinColumn(name = "users")
-    private User author;
-    private LocalDateTime createdAt;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "wall_owner_id", nullable = false)
+    private User wallOwner;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "author_id")
+    private User author;
+
+    @Column(nullable = false)
+    private String content;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
 }

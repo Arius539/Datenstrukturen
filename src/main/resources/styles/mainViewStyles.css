@@ -1,0 +1,232 @@
+/* wurde KI erstellt erstelle mir eine passende css zu dieser fxml: main_view.fxml, und ein passendes Farbkonzept (Blau, Weiß, Grau) */
+.root {
+    -c-brand:        #0F61A8;
+    -c-brand-dark:   #094272;
+    -c-bg:           #F3F6FA;
+    -c-surface:      #FFFFFF;
+    -c-surface-alt:  #E7EDF5;
+    -c-on-brand:     #FFFFFF;
+    -c-text:         #1A1A1A;
+    -c-text-muted:   #6B7280;
+    -c-border:       #CBD5E1;
+    -c-shadow:       rgba(0, 0, 0, 0.08);
+
+    -fx-accent:            -c-brand;
+    -fx-focus-color:       -c-brand;
+    -fx-faint-focus-color: rgba(227, 6, 19, 0.25);
+
+    -fx-font-family: "Segoe UI", "Roboto", "Sans-Serif";
+    -fx-background-color: -c-bg;
+}
+
+.grid-pane,
+.vbox,
+.hbox {
+    -fx-background-color: -c-bg;
+}
+
+.card {
+    -fx-background-color: -c-surface;
+    -fx-background-radius: 12;
+    -fx-padding: 12;
+    -fx-border-color: -c-border;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, -c-shadow, 16, 0.3, 0, 3);
+}
+
+.card-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -c-brand;
+}
+
+.balance {
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -c-brand-dark;
+}
+
+.app-logo {
+    -fx-font-size: 18px;
+    -fx-font-weight: 800;
+    -fx-text-fill: -c-brand;
+}
+
+.label {
+    -fx-text-fill: -c-text;
+    -fx-font-size: 16px;
+}
+
+
+.text-verySmall { -fx-font-size: 11px; }
+.text-small     { -fx-font-size: 13px; }
+.text-default   { -fx-font-size: 14px; }
+.text-large     { -fx-font-size: 18px; }
+.text-veryLarge { -fx-font-size: 32px; }
+
+.button {
+    -fx-background-color: linear-gradient(to bottom, -c-surface, -c-surface-alt);
+    -fx-text-fill: -c-text;
+    -fx-padding: 8 14;
+    -fx-background-radius: 10;
+    -fx-border-color: -c-border;
+    -fx-border-radius: 10;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+}
+
+.button:hover {
+    -fx-background-color: -c-brand;
+    -fx-text-fill: -c-on-brand;
+}
+
+.button:pressed {
+    -fx-background-color: -c-brand-dark;
+    -fx-text-fill: -c-on-brand;
+}
+
+.button:disabled {
+    -fx-opacity: 0.6;
+    -fx-cursor: default;
+}
+
+.button.primary {
+    -fx-background-color: -c-brand;
+    -fx-text-fill: -c-on-brand;
+    -fx-border-color: transparent;
+}
+
+.button.primary:hover {
+    -fx-background-color: -c-brand-dark;
+}
+
+.button-small {
+    -fx-font-size: 11px;
+    -fx-padding: 3 10;
+    -fx-min-width: 22px;
+    -fx-min-height: 22px;
+    -fx-background-radius: 7;
+    -fx-border-radius: 7;
+}
+
+.button-small .graphic {
+    -fx-padding: 0 2 0 0;
+}
+
+.text-field,
+.password-field {
+    -fx-font-size: 14px;
+    -fx-background-color: -c-surface;
+    -fx-text-fill: -c-text;
+    -fx-prompt-text-fill: -c-text-muted;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: -c-border;
+    -fx-padding: 8 10;
+}
+
+.text-field:focused,
+.password-field:focused {
+    -fx-border-color: -c-brand;
+    -fx-background-insets: 0;
+}
+
+.radio-button {
+    -fx-text-fill: -c-text;
+}
+
+.radio-button > .radio {
+    -fx-background-color: -c-surface;
+    -fx-border-color: -c-border;
+    -fx-border-width: 2;
+    -fx-background-radius: 100;
+    -fx-border-radius: 100;
+    -fx-padding: 2;
+}
+
+.radio-button:selected > .radio {
+    -fx-border-color: -c-brand;
+    -fx-background-color: -c-surface;
+}
+
+.radio-button > .radio > .dot {
+    -fx-background-radius: 100;
+    -fx-background-color: transparent;
+}
+
+.radio-button:selected > .radio > .dot {
+    -fx-background-color: -c-brand;
+}
+
+.list-view {
+    -fx-background-color: transparent;
+    -fx-control-inner-background: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -c-text;
+    -fx-padding: 8 10;
+    -fx-border-color: transparent transparent -c-border transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.list-cell:filled:hover {
+    -fx-background-color: -c-surface-alt;
+}
+
+.list-cell:selected {
+    -fx-background-color: -c-brand;
+    -fx-text-fill: -c-on-brand;
+}
+
+.region {
+    -fx-background-color: transparent;
+}
+
+.card .vbox {
+    -fx-spacing: 8;
+}
+.auto-complete-popup {
+    -fx-background-color: transparent;
+    -fx-font-size: 13px;
+    -fx-padding: 4 0 0 0;
+}
+
+.auto-complete-popup > .list-view {
+    -fx-background-color: -c-surface;        /* Weiß, wie Cards/Textfelder */
+    -fx-control-inner-background: -c-surface;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: -c-border;
+    -fx-border-width: 1;
+    -fx-padding: 4;
+    -fx-effect: dropshadow(gaussian, -c-shadow, 16, 0.3, 0, 4);
+    -fx-pref-width: 240;
+}
+
+.auto-complete-popup .list-cell {
+    -fx-background-color: -c-surface;        /* Weiß */
+    -fx-text-fill: -c-text;
+    -fx-padding: 8 10;
+    -fx-border-color: transparent transparent -c-border transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.auto-complete-popup .list-cell:filled:hover {
+    -fx-background-color: -c-brand;
+    -fx-text-fill: -c-on-brand;
+    -fx-cursor: hand;
+}
+
+.auto-complete-popup .list-cell:filled:selected {
+    -fx-background-color: -c-brand;
+    -fx-text-fill: -c-on-brand;
+}
+
+.auto-complete-popup .list-cell:filled:focused {
+    -fx-background-color: -c-brand-dark;
+    -fx-text-fill: -c-on-brand;
+}

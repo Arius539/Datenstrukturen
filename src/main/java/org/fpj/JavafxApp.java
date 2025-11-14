@@ -1,42 +1,41 @@
+// src/main/java/org/fpj/ui/FxApp.java
 package org.fpj;
 
 import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.stage.Stage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
-
-import java.io.IOException;
-
+import org.springframework.boot.builder.SpringApplicationBuilder;
 
 public class JavafxApp extends Application {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JavafxApp.class);
-    private ConfigurableApplicationContext springContext;
+    private ConfigurableApplicationContext context;
 
     @Override
-    public void init(){
-        springContext = new SpringApplicationBuilder(App.class).run();
+    public void init() {
+        context = new SpringApplicationBuilder(App.class).run();
     }
 
     @Override
-    public void start(Stage stage){
-        springContext.getBeanFactory().registerSingleton("stage", stage);
+    public void start(Stage stage) throws Exception {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/mainView/main_view.fxml"));
+        loader.setControllerFactory(context::getBean);
 
-        ViewNavigator viewNavigator = springContext.getBean(ViewNavigator.class);
-        viewNavigator.setStage(stage);
-        try {
-            viewNavigator.showMain();
-        }
-        catch (IOException e){
-            LOGGER.error("App konnte nicht gestartet werden.", e);
-            System.exit(0);
-        }
+        Parent root = loader.load();
+        Scene scene = new Scene(root, 1280, 860);
+        stage.setTitle("Bezahlplattform");
+        stage.setScene(scene);
+        stage.show();
     }
 
     @Override
-    public void stop(){
-        springContext.close();
+    public void stop() {
+        context.close();
+    }
+
+    public static void main(String[] args) {
+        launch(args);
     }
 }
