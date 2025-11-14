@@ -17,11 +17,11 @@ public record TransactionRow(
 ) {
 
     public String amountString(long currentUserId) {
-        boolean outgoing = this.senderId() ==null? false : this.senderId == currentUserId;
+        boolean outgoing = this.senderId() ==null? false : this.senderId() == currentUserId;
        return UiHelpers.formatSignedEuro(!outgoing ? this.amount():new BigDecimal("0").subtract(this.amount()));
     }
 
     public String amountStringUnsigned() {
-        return UiHelpers.formatSignedEuro( this.amount());
+        return UiHelpers.formatEuro( this.amount());
     }
 }

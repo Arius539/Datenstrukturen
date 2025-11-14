@@ -81,12 +81,12 @@ public class TransactionDetailController {
             return;
         }
 
-        String sender= (transaction.senderUsername()==null || transaction.senderUsername().isEmpty())? "Sender Unbekannt": transaction.senderUsername();
-        String recipient= (transaction.recipientUsername()==null || transaction.recipientUsername().isEmpty())? "Empfänger Unbekannt": transaction.recipientUsername();
+        String sender= (transaction.senderUsername()==null || transaction.senderUsername().isEmpty())? "Sender Unbekannt": transaction.senderUsername().equals(currentUser.getUsername())? "Du":transaction.senderUsername();
+        String recipient= (transaction.recipientUsername()==null || transaction.recipientUsername().isEmpty())? "Empfänger Unbekannt": transaction.recipientUsername().equals(currentUser.getUsername())? "Du": transaction.recipientUsername();
         String description = (transaction.description() == null || transaction.description().isBlank()) ? "Keine Verwendungszweck" : transaction.description();
         senderLabel.setText(sender);
         empfaengerLabel.setText(recipient);
-        betragLabel.setText(transaction.amountString(currentUser.getId()));
+        betragLabel.setText(transaction.amountStringUnsigned());
         verwendungszweckLabel.setText(description);
     }
 
