@@ -73,7 +73,7 @@
                                 </StackPane>
 
                                 <Button fx:id="reuseButton"
-                                        text="Wiederverwenden"
+                                        text="als Vorlage verwenden"
                                         minWidth="140"
                                         onAction="#onReuseClicked"/>
                             </children>
