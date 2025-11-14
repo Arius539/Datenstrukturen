@@ -1,5 +1,6 @@
 package org.fpj.payments.application;
 
+import org.fpj.Exceptions.DataNotPresentException;
 import org.fpj.Exceptions.TransactionException;
 import org.fpj.payments.domain.Transaction;
 import org.fpj.payments.domain.TransactionRepository;
@@ -14,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Optional;
+import java.util.Objects;
 
 import static org.fpj.payments.domain.TransactionType.*;
 
@@ -80,13 +81,16 @@ public class TransactionService {
         if (recipientUsername == null || recipientUsername.isBlank()) {
             throw new TransactionException("Empfänger ist erforderlich.");
         }
-       Optional<User> optRecipient = userService.findByUsername(recipientUsername);
-        if (!optRecipient.isPresent()) {
+
+        final User recipient;
+        try {
+            recipient = userService.findByUsername(recipientUsername);
+        }
+        catch (DataNotPresentException e){
             throw new TransactionException("Der angegebene Empfänger existiert nicht.");
         }
-        User recipient = optRecipient.get();
 
-        if (recipient.getId() == sender.getId()) {
+        if (Objects.equals(recipient.getId(), sender.getId())) {
             throw new TransactionException("Überweisung an sich selbst ist nicht erlaubt.");
         }
 

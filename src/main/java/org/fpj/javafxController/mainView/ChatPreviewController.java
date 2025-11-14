@@ -15,10 +15,10 @@ import javafx.scene.layout.VBox;
 import org.controlsfx.control.textfield.AutoCompletionBinding;
 import org.controlsfx.control.textfield.TextFields;
 import org.fpj.Data.UiHelpers;
+import org.fpj.Exceptions.DataNotPresentException;
 import org.fpj.javafxController.ChatWindowController;
 import org.fpj.messaging.application.ChatPreview;
 import org.fpj.messaging.application.DirectMessageService;
-import org.fpj.payments.application.TransactionService;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +30,6 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
 
 @Component
 public class ChatPreviewController {
@@ -227,15 +226,17 @@ public class ChatPreviewController {
         }
 
 
-        Optional<User> optUser = userService.findByUsername(username);
-
-        if (optUser.isEmpty()) {
+        final User chatPartner;
+        try {
+            chatPartner = userService.findByUsername(username);
+        }
+        catch (DataNotPresentException e){
             error("Benutzer für Chat nicht gefunden: " + username);
             return;
         }
+
         try {
-            ChatWindowController controller= loadChatWindow(username);
-            User chatPartner = optUser.get();
+            ChatWindowController controller = loadChatWindow(username);
             controller.openChat(currentUser, chatPartner);
         } catch (Exception e){
             error("Fehler beim laden des Chats aufgetreten. Versuche es bitte erneut.");
@@ -245,7 +246,7 @@ public class ChatPreviewController {
     private ChatWindowController loadChatWindow(String username) throws IOException {
         var url = getClass().getResource("/fxml/chat_window.fxml");
         if (url == null) {
-            throw new IllegalStateException("chat_window.fxml nicht gefunden!");
+            throw new IllegalStateException("chat_window.fxml nicht gefunden!"); //wieso ist das nötig wir wissen doch dass die Datei existiert
         }
 
         FXMLLoader loader = new FXMLLoader(url);

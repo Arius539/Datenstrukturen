@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.fpj.javafxController.LoginController"
+            spacing="10" alignment="CENTER">
+
+    <TextField fx:id="usernameInput" promptText="Username" alignment="CENTER"/>
+    <PasswordField fx:id="passwordInput" promptText="Passwort" alignment="CENTER"/>
+    <PasswordField fx:id="passwordCheck" promptText="Passwort wiederholen" alignment="CENTER"/>
+    <Button fx:id="loginButton" text="Anmelden" onAction="#submit" alignment="CENTER"/>
+    <Button fx:id="toggleButton" text="noch kein Konto?" onAction="#toggleLoginAndRegister" alignment="CENTER"/>
+
+</VBox>

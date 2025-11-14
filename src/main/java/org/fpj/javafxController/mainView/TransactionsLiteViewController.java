@@ -17,7 +17,6 @@ import lombok.Setter;
 import org.controlsfx.control.textfield.TextFields;
 import org.fpj.Data.UiHelpers;
 import org.fpj.Exceptions.TransactionException;
-import org.fpj.javafxController.ChatWindowController;
 import org.fpj.javafxController.TransactionDetailController;
 import org.fpj.payments.domain.TransactionResult;
 import org.fpj.payments.domain.TransactionRow;

@@ -3,8 +3,8 @@ package org.fpj.javafxController.mainView;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import org.fpj.payments.application.TransactionService;
-import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
+import org.fpj.users.application.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -14,19 +14,25 @@ import java.time.format.DateTimeFormatter;
 
 @Component
 public class MainViewController {
-    @Autowired
-    private ApplicationContext applicationContext;
 
-    @Autowired
-    private TransactionsLiteViewController transactionsLiteController;
+    private final ApplicationContext applicationContext;
 
-    @Autowired
-    private ChatPreviewController chatPreviewController;
+    private final TransactionsLiteViewController transactionsLiteController;
 
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private TransactionService transactionService;
+    private final ChatPreviewController chatPreviewController;
+
+    private final UserService userService;
+
+    private final TransactionService transactionService;
+
+    public MainViewController(ApplicationContext context, TransactionsLiteViewController transactionsLiteController, ChatPreviewController chatPreviewController,
+                              UserService userService, TransactionService transactionService){
+        this.applicationContext = context;
+        this.transactionsLiteController = transactionsLiteController;
+        this.chatPreviewController = chatPreviewController;
+        this.userService = userService;
+        this.transactionService = transactionService;
+    }
 
     // Profil/Saldo
     @FXML private Label lblEmail;
@@ -38,12 +44,14 @@ public class MainViewController {
 
     @FXML
     public void initialize() {
+        //TODO: Produktiv sollte folgendens ausgeführt werden:
+        currentUser = applicationContext.getBean("loggedInUser", User.class);
+
         currentUser = userService.currentUser();
         lblEmail.setText(currentUser.getUsername());
 
         transactionsLiteController.initialize(currentUser, this::updateBalanceLabel);
         chatPreviewController.initialize(currentUser);
-
     }
 
     @FXML public void actionTransactions()    { }

@@ -1,6 +1,7 @@
 package org.fpj;
 
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import lombok.Setter;
@@ -15,22 +16,30 @@ import java.io.IOException;
 public class ViewNavigator {
 
     private final ApplicationContext context;
-    private final MainController mainController;
     @Setter
     private Stage stage;
 
     @Autowired
     public ViewNavigator(ApplicationContext context, MainController mainController){
         this.context = context;
-        this.mainController = mainController;
     }
 
-    private void loadView(String fxml, String title) throws IOException {
+    private void loadView(String fxml, String title, double width, double height) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/" + fxml));
         loader.setControllerFactory(context::getBean);
-        stage.setScene(new Scene(loader.load()));
+        Parent root = loader.load();
+
         stage.setTitle(title);
+        stage.setScene(new Scene(root, width, height));
         stage.show();
+    }
+
+    public void loadMain() throws IOException{
+        loadView("/mainView/main_view.fxml", "Bezahlplatform", 1280, 860);
+    }
+
+    public void loadLogin() throws IOException{
+        loadView("/login.fxml", "Login", 600, 400);
     }
 
 }
