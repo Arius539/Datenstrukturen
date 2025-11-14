@@ -5,14 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.fpj.wall.domain.WallComment;
-import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -45,6 +40,12 @@ public class User {
     sollten wir doch lieber dynamisch laden, immer 100 am Stück, erst wenn der Nutzer es will oder?
     @OneToMany(mappedBy = "wallComment", cascade = CascadeType.ALL)
     private List<WallComment> wallComments;*/
+    //--> ja
+
+    public User(final String username, final String passwordHash){
+        this.username = username;
+        this.passwordHash = passwordHash;
+    }
 
     @PrePersist
     @PreUpdate
