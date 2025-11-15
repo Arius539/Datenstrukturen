@@ -15,6 +15,7 @@ import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
 import org.controlsfx.control.textfield.TextFields;
+import org.fpj.Data.InfinitePager;
 import org.fpj.Data.UiHelpers;
 import org.fpj.Exceptions.TransactionException;
 import org.fpj.javafxController.ChatWindowController;
@@ -60,9 +61,9 @@ public class TransactionsLiteViewController {
 
     private final ObservableList<TransactionRow> liteTransactionList = FXCollections.observableArrayList();
     private static final int PAGE_SIZE_Lite_List = 100;
-    private int currentPageLiteList = 0;
-    private boolean lastPageLoadedLiteList = false;
-    private boolean loadingNextPageLiteList = false;
+    private static final int PAGE_PRE_FETCH_THRESHOLD = 50;
+
+    private InfinitePager<TransactionRow> transactionPager;
 
     private User currentUser;
     private Consumer<String> balanceRefreshCallback;
@@ -72,20 +73,34 @@ public class TransactionsLiteViewController {
         this.balanceRefreshCallback = balanceRefreshCallback;
         updateBalance();
         initTransactionList();
-        loadTransactionsFirstPageLite();
+        initPager();
     }
 
-    private void addLiteTransaction(TransactionRow  transactionItem) {
-        this.liteTransactionList.add(0,transactionItem);
+    private void initPager() {
+        long userId = currentUser.getId();
+
+        this.transactionPager = new InfinitePager<>(
+                PAGE_SIZE_Lite_List,
+                (pageIndex, pageSize) -> transactionService.findLiteItemsForUser(
+                        userId,
+                        pageIndex,
+                        pageSize
+                ),
+                page -> liteTransactionList.addAll(page.getContent()),
+                ex -> showError("Transaktionen konnten nicht geladen werden: " +
+                        (ex != null ? ex.getMessage() : "Unbekannter Fehler")),
+                "trx-page-loader-"
+        );
+
+        liteTransactionList.clear();
+        transactionPager.resetAndLoadFirstPage();
+        setUpAutoCompletion();
     }
 
     private void loadTransactionsFirstPageLite() {
-        currentPageLiteList = 0;
-        lastPageLoadedLiteList = false;
         liteTransactionList.clear();
-        loadNextPageLite();
-
         setUpAutoCompletion();
+        this.transactionPager.resetAndLoadFirstPage();
     }
 
     private void updateBalance(){
@@ -130,8 +145,13 @@ public class TransactionsLiteViewController {
                     subtitle.setText(UiHelpers.formatInstant(item.createdAt()) + "  •  " + UiHelpers.truncate(item.description(), 20));
                     amount.setText(item.amountString(currentUser.getId()));
                     setGraphic(root);
+
                     int index = getIndex();
-                    ensureNextPageLoaded(index);
+                    transactionPager.ensureLoadedForIndex(
+                            index,
+                            liteTransactionList.size(),
+                            PAGE_PRE_FETCH_THRESHOLD
+                    );
 
                     setOnMouseClicked(ev -> {
                         if (ev.getClickCount() == 2) {
@@ -150,74 +170,6 @@ public class TransactionsLiteViewController {
             return userService.usernameContaining(term);
         });
     }
-
-    // <editor-fold defaultstate="collapsed" desc="Infinite Scroll Transactions">
-    private void ensureNextPageLoaded(int visibleIndex) {
-        if (loadingNextPageLiteList || lastPageLoadedLiteList) {
-            return;
-        }
-
-        int prefetchThreshold = 100;
-        int size = liteTransactionList.size();
-
-        if (visibleIndex >= size - prefetchThreshold) {
-            loadNextPageLite();
-        }
-    }
-
-    private void loadNextPageLite() {
-        if (!canLoadNextLitePage()) {
-            return;
-        }
-
-        loadingNextPageLiteList = true;
-
-        int pageToLoad = currentPageLiteList;
-        long userId = currentUser.getId();
-
-        Task<Page<TransactionRow>> task = createPageTask(userId, pageToLoad);
-
-        task.setOnSucceeded(ev -> onLitePageLoaded(task.getValue(), pageToLoad));
-        task.setOnFailed(ev -> onLitePageFailed(task.getException()));
-
-        startBackgroundTask(task, "trx-page-loader-" + pageToLoad);
-    }
-
-
-    private boolean canLoadNextLitePage() {
-        return !loadingNextPageLiteList && !lastPageLoadedLiteList;
-    }
-
-    private Task<Page<TransactionRow>> createPageTask(long userId, int pageToLoad) {
-        return new Task<>() {
-            @Override
-            protected Page<TransactionRow> call() {
-                return transactionService.findLiteItemsForUser(
-                        userId,
-                        pageToLoad,
-                        PAGE_SIZE_Lite_List
-                );
-            }
-        };
-    }
-
-    private void onLitePageLoaded(Page<TransactionRow> page, int pageToLoad) {
-        try {
-            liteTransactionList.addAll(page.getContent());
-            lastPageLoadedLiteList = page.isLast();
-            currentPageLiteList = pageToLoad + 1;
-        } finally {
-            loadingNextPageLiteList = false;
-        }
-    }
-
-    private void onLitePageFailed(Throwable ex) {
-        loadingNextPageLiteList = false;
-        System.out.print(ex.toString());
-        showError("Transaktionen konnten nicht geladen werden: " +
-                (ex != null ? ex.getMessage() : "Unbekannter Fehler"));
-    }
-    // </editor-fold>
 
     @FXML
     private void onTypeChanged() {
@@ -274,6 +226,15 @@ public class TransactionsLiteViewController {
         }
     }
 
+    @FXML
+    private void onReloadTransaction() {
+        liteTransactionList.clear();
+        if (transactionPager != null) {
+            transactionPager.resetAndLoadFirstPage();
+        }
+        updateBalance();
+    }
+
     private void openTransactionDetails(TransactionRow row){
         try {
             var url = getClass().getResource("/fxml/transaction_detail.fxml");
@@ -297,15 +258,6 @@ public class TransactionsLiteViewController {
         }
     }
 
-    @FXML
-    private void onReloadTransaction() {
-        this.loadingNextPageLiteList = false;
-        this.lastPageLoadedLiteList = false;
-        this.currentPageLiteList = 0;
-        loadTransactionsFirstPageLite();
-        updateBalance();
-    }
-
     private void useTransactionAsTemplate(TransactionRow row) {
         tfBetrag.setText(row.amountStringUnsigned());
         tfBetreff.setText(row.description());
@@ -319,6 +271,10 @@ public class TransactionsLiteViewController {
             case EINZAHLUNG: rbDeposit.setSelected(true);
         }
         onTypeChanged();
+    }
+
+    private void addLiteTransaction(TransactionRow  transactionItem) {
+        this.liteTransactionList.add(0,transactionItem);
     }
 
     private void showError(String message) {

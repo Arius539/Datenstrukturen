@@ -161,11 +161,11 @@ public class TransactionViewController {
                     amount.setText(item.amountString(currentUser.getId()));
                     setGraphic(root);
                     int index = getIndex();
-                    ensureNextPageLoaded(index);
+                    //ensureNextPageLoaded(index);
 
                     setOnMouseClicked(ev -> {
                         if (ev.getClickCount() == 2) {
-                            openTransactionDetails(item);
+                           // openTransactionDetails(item);
                         }
                     });
                 }
