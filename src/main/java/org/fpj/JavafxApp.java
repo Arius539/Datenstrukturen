@@ -25,7 +25,7 @@ public class JavafxApp extends Application {
 
         Parent root = loader.load();
         Scene scene = new Scene(root, 1280, 860);
-        stage.setTitle("Bezahlplattform");
+        stage.setTitle("PayTalk");
         stage.setScene(scene);
         stage.show();
     }

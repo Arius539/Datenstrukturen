@@ -264,6 +264,7 @@ public class TransactionsLiteViewController {
             tfBetrag.clear();
             tfBetreff.clear();
             tfEmpfaenger.clear();
+            updateBalance();
         } catch (TransactionException ex) {
             error("Transaktion fehlgeschlagen: " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
@@ -302,6 +303,7 @@ public class TransactionsLiteViewController {
         this.lastPageLoadedLiteList = false;
         this.currentPageLiteList = 0;
         loadTransactionsFirstPageLite();
+        updateBalance();
     }
 
     private void useTransactionAsTemplate(TransactionRow row) {

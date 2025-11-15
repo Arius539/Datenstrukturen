@@ -18,6 +18,8 @@ import java.util.Optional;
 
 import static org.fpj.payments.domain.TransactionType.*;
 
+//TODO Bei Überweisungen sichstellen dass die Tabelle kurz gesperrt wird dass zwischendurch keine Transaktionen für den Benutzer ausgeführt werden könne => Kontostand sicherstellen
+
 @Service
 public class TransactionService {
     @Autowired
