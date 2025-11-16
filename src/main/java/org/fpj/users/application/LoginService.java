@@ -43,21 +43,21 @@ public class LoginService {
     }
 
     public void register(final String username, final String password, final String passwordCheck){
-        if (username.matches(REGEX_USERNAME_VALIDATOR) && passwordCheck.equals(password)){
+        final String message;
+
+        if(!username.matches(REGEX_USERNAME_VALIDATOR)){
+            message = "Username erfüllt nicht die Anforderungen";
+        }
+        else if (!passwordCheck.equals(password)){
+            message = "Passwörter stimmen nicht überein";
+        }
+        else {
             final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
             final String hashedPassword = passwordEncoder.encode(password);
             final User newUser = new User(username, hashedPassword);
             final User savedUser = userService.save(newUser);
+            return;
         }
-        else {
-            final String message;
-            if (!passwordCheck.equals(password)){
-                message = "Passwörter stimmen nicht überein";
-            }
-            else {
-                message = "Username erfüllt nicht die Anforderungen";
-            }
-            throw new LoginFailedException(message);
-        }
+        throw new LoginFailedException(message);
     }
 }
