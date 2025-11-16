@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.Optional;
 
 import static org.fpj.Data.UiHelpers.parseAmountTolerant;
@@ -38,6 +39,10 @@ public class TransactionService {
     public BigDecimal computeBalance(long userId) {
         BigDecimal b = txRepo.computeBalance(userId);
         return b != null ? b : BigDecimal.ZERO;
+    }
+
+    public List<TransactionRow> transactionsForUserAsList(long userId) {
+       return this.txRepo.findRowsForUserList(userId);
     }
 
     /* =================== Commands (neu) =================== */

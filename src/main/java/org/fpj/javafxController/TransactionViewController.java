@@ -13,15 +13,19 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.stage.Window;
 import org.controlsfx.control.textfield.AutoCompletionBinding;
 import org.controlsfx.control.textfield.TextFields;
 import org.fpj.Data.InfinitePager;
 import org.fpj.Data.UiHelpers;
 import org.fpj.Exceptions.TransactionException;
+import org.fpj.exportImport.FileHandling;
 import org.fpj.exportImport.application.MassTransferCsvReader;
+import org.fpj.exportImport.application.TransactionCsvExporter;
 import org.fpj.payments.application.TransactionService;
 import org.fpj.payments.domain.*;
 import org.fpj.users.application.UserService;
+import org.fpj.users.domain.ConversationMessageView;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -38,6 +42,8 @@ import static org.fpj.Data.UiHelpers.safe;
 
 @Component
 public class TransactionViewController {
+    TransactionCsvExporter  transactionCsvExporter = new TransactionCsvExporter();
+
     @FXML
     public Label balanceLabelBatch;
 
@@ -647,6 +653,28 @@ public class TransactionViewController {
     // ---------------------------------------------------------------
     // Aktionen: Buttons rechts
     // ---------------------------------------------------------------
+    @FXML
+    private void exportTransactions(){
+        try {
+            if(transactionCsvExporter.isRunning()) {
+                showError("Ein andere Exporter instanz läuft noch. Warte bitte bis diese abgeschlossen ist.");
+                return;
+            }
+            Window window = importCsvButton.getScene().getWindow();
+            String path = FileHandling.openFileChooserAndGetPath(window);
+            if (path == null) {
+                showError("Das auswählen des Paths ist fehlgeschlagen");
+                return;
+            }
+            List<TransactionRow> messages = transactionService.transactionsForUserAsList(currentUser.getId());
+            transactionCsvExporter.export(messages.iterator(),FileHandling.openFileAsOutStream(path));
+            info("Der Export der Transaktionen war erfolgreich. Du findest die Einträge in: "+path);
+        }catch (IllegalArgumentException e){
+            showError("Fehler beim exportieren der Nachrichten: " + e.getMessage());
+        } catch (Exception e) {
+            showError("Ein Unbekannter Fehler ist aufgetreten: " + e.getMessage());
+        }
+    }
 
     @FXML
     private void onImportCsv(ActionEvent event) {

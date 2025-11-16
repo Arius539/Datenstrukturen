@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.fpj.payments.domain.TransactionRow;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
     Page<Transaction> findBySender_IdOrderByCreatedAtDesc(Long senderId, Pageable pageable);
@@ -33,8 +34,29 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         where (s.id = :partyId or r.id = :partyId)
     """
     )
-    Page<TransactionRow> findRowsForUser(@Param("partyId") long partyId, Pageable pageable);
+    Page<TransactionRow> findRowsForUser(@Param("partyId") long partyId, Pageable pr);
 
+    @Query(
+            value = """
+        select new org.fpj.payments.domain.TransactionRow(
+            t.id, t.amount, t.createdAt, t.transactionType,
+            s.id, s.username, r.id, r.username, t.description
+        )
+        from Transaction t
+        left join t.sender s
+        left join t.recipient r
+        where (s.id = :partyId or r.id = :partyId)
+        order by t.createdAt desc
+    """,
+            countQuery = """
+        select count(t)
+        from Transaction t
+        left join t.sender s
+        left join t.recipient r
+        where (s.id = :partyId or r.id = :partyId)
+    """
+    )
+    List<TransactionRow> findRowsForUserList(@Param("partyId") long partyId);
 
     @Query(value = """
         SELECT

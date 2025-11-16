@@ -123,7 +123,20 @@
                         <Label text="Transaktionen"
                                styleClass="card-title"/>
                         <Region HBox.hgrow="ALWAYS"/>
-                        <Button text="↻" onAction="#onReloadTransactions"  styleClass="button-small"/>
+                        <Button text="↻"
+                                onAction="#onReloadTransactions">
+                            <tooltip>
+                                <Tooltip text="Transaktionen neu laden"/>
+                            </tooltip>
+                        </Button>
+
+                        <Button fx:id="btnExport"
+                                text="📂"
+                                onAction="#exportTransactions">
+                            <tooltip>
+                                <Tooltip text="Transaktionen exportieren als csv"/>
+                            </tooltip>
+                        </Button>
                     </HBox>
                     <ListView fx:id="transactionTable"
                               VBox.vgrow="ALWAYS"
@@ -185,7 +198,11 @@
                                   styleClass="button-row">
                                 <Button fx:id="importCsvButton"
                                         text="von CSV"
-                                        onAction="#onImportCsv"/>
+                                        onAction="#onImportCsv">
+                                    <tooltip>
+                                        <Tooltip text="Transaktionen aus einer CSV-Datei importieren"/>
+                                    </tooltip>
+                                </Button>
                                 <Button fx:id="executeSingleButton"
                                         text="ausführen"
                                         onAction="#onExecuteSingle"/>
@@ -203,7 +220,13 @@
                                 <Label text="gesammelte Transaktionen"
                                        styleClass="card-title"/>
                                 <Region HBox.hgrow="ALWAYS"/>
-                                <Button text="↻" onAction="#onReloadBatches" styleClass="button-small"/>
+                                <Button text="↻"
+                                        onAction="#onReloadBatches"
+                                        styleClass="button-small">
+                                    <tooltip>
+                                        <Tooltip text="Transaktionsspeicher neuladen"/>
+                                    </tooltip>
+                                </Button>
                             </HBox>
                             <ListView fx:id="batchTransactionTable"
                                       VBox.vgrow="ALWAYS"

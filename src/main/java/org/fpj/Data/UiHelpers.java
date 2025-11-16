@@ -57,13 +57,21 @@ public class UiHelpers {
         String result = sb.toString();
         return result.length() <= max ? result : result.substring(0, max) + "…";
     }
+    /**Punkt als Decimal Trennzeichen, kein Währungszeichen und kein Vorzeichen*/
+    public static String formatBigDecimal(BigDecimal amt) {
+        BigDecimal v = (amt != null ? amt : BigDecimal.ZERO)
+                .setScale(2, RoundingMode.HALF_UP);
+        return v.toPlainString();
+    }
 
 
+    /**Komma als Decimal Trennzeichen und kein Währungszeichen und kein Vorzeichen*/
     public static String formatEuro(BigDecimal amt) {
         BigDecimal v = (amt != null ? amt : BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
         return EUR.format(v);
     }
 
+    /**Komma als Decimal Trennzeichen und Währungszeichen und Vorzeichen*/
     public static String formatSignedEuro(BigDecimal amt) {
         BigDecimal v = (amt != null ? amt : BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
         String s = EUR.format(v.abs());

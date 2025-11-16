@@ -1,6 +1,7 @@
 package org.fpj.users.application;
 
 import org.fpj.Exceptions.DataNotPresentException;
+import org.fpj.users.domain.ConversationMessageView;
 import org.fpj.users.domain.User;
 import org.fpj.users.domain.UserRepository;
 import org.fpj.users.domain.UsernameOnly;
@@ -42,5 +43,9 @@ public class UserService {
         return userRepository.findTop10ByUsernameContainingIgnoreCaseOrderByUsernameAsc(username).stream()
                 .map(UsernameOnly::getUsername)
                 .toList();
+    }
+
+    public List<ConversationMessageView> getConversationMessageView(Long userId1, Long userId2){
+       return this.userRepository.findConversationBetweenUsers(userId1, userId2);
     }
 }

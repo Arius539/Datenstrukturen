@@ -3,18 +3,22 @@ package org.fpj.javafxController;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.stage.Window;
 import org.fpj.Data.InfinitePager;
 import org.fpj.Data.UiHelpers;
+import org.fpj.exportImport.FileHandling;
+import org.fpj.exportImport.application.DirectMessagePinBoardCsvExporter;
 import org.fpj.messaging.application.DirectMessageRow;
 import org.fpj.messaging.application.DirectMessageService;
 import org.fpj.messaging.domain.DirectMessage;
+import org.fpj.users.application.UserService;
+import org.fpj.users.domain.ConversationMessageView;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -22,8 +26,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
@@ -31,6 +33,10 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 @Component
 @Scope(SCOPE_PROTOTYPE)
 public class ChatWindowController {
+    DirectMessagePinBoardCsvExporter directMessagePinBoardCsvExporter = new DirectMessagePinBoardCsvExporter();
+    @Autowired
+    UserService userService;
+
     @Autowired
     private DirectMessageService directMessageService;
 
@@ -42,6 +48,10 @@ public class ChatWindowController {
 
     private User currentUser;
     private User currentChatPartner;
+
+    private boolean showedExportWarning = false;
+    @FXML
+    private VBox chatWindowVBox;
 
     @FXML
     private Label lblContact;
@@ -60,6 +70,8 @@ public class ChatWindowController {
 
     @FXML
     private Button btnSend;
+
+    private int exportMessagesCurrentPage=0;
 
     @FXML
     public void initialize() {
@@ -199,7 +211,25 @@ public class ChatWindowController {
 
     @FXML
     private void exportChat() {
-
+        try {
+            if(directMessagePinBoardCsvExporter.isRunning()) {
+                showError("Ein andere Exporter instanz läuft noch. Warte bitte bis diese abgeschlossen ist.");
+                return;
+            }
+            Window window = btnExport.getScene().getWindow();
+            String path = FileHandling.openFileChooserAndGetPath(window);
+            if (path == null) {
+                showError("Das auswählen des Paths ist fehlgeschlagen");
+                return;
+            }
+            List<ConversationMessageView> messages = userService.getConversationMessageView(this.currentUser.getId(), this.currentChatPartner.getId());
+            directMessagePinBoardCsvExporter.export(messages.iterator(),FileHandling.openFileAsOutStream(path));
+            info("Der Export der Nachrichten war erfolgreich. Du findest die Einträge in: "+path);
+        }catch (IllegalArgumentException e){
+            showError("Fehler beim exportieren der Nachrichten: " + e.getMessage());
+        } catch (Exception e) {
+            showError("Ein Unbekannter Fehler ist aufgetreten: " + e.getMessage());
+        }
     }
 
     @FXML
@@ -220,5 +250,12 @@ public class ChatWindowController {
             alert.setContentText(message);
             alert.showAndWait();
         });
+    }
+
+    private void info(String text) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION, text, ButtonType.OK);
+        a.setHeaderText(null);
+        a.setTitle("Info");
+        a.showAndWait();
     }
 }

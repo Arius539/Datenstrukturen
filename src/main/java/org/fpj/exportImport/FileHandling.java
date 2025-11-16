@@ -3,11 +3,7 @@ package org.fpj.exportImport;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -23,17 +19,8 @@ public class FileHandling {
         }
     }
 
-    /**
-     * Liefert einen InputStream für die zuvor ausgewählte Datei.
-     *
-     * @throws IllegalStateException    wenn noch keine Datei ausgewählt wurde
-     * @throws FileNotFoundException    wenn die Datei nicht (mehr) existiert
-     */
-    public static InputStream getSelectedFileInputStream(File selectedFile) throws FileNotFoundException {
-        if (selectedFile == null) {
-            throw new IllegalStateException("Es wurde noch keine Datei über den File-Chooser ausgewählt.");
-        }
-        return new FileInputStream(selectedFile);
+    public static OutputStream openFileAsOutStream(String filePath) throws IOException {
+        return Files.newOutputStream(Path.of(filePath));
     }
 
     public static InputStream openFileAsStream(String filePath) throws IOException {
