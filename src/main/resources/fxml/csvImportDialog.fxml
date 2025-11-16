@@ -7,7 +7,7 @@
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="org.fpj.javafxController.CsvImportDialogController"
-            prefWidth="600.0" prefHeight="320.0"
+            prefWidth="800.0" prefHeight="520.0"
             minWidth="480.0" minHeight="260.0"
             styleClass="transaction-root"
             stylesheets="@../styles/transactionView.css">
