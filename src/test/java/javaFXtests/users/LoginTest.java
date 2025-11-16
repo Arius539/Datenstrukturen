@@ -6,6 +6,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import org.fpj.AlertService;
+import org.fpj.Exceptions.LoginFailedException;
 import org.fpj.ViewNavigator;
 import org.fpj.javafxController.LoginController;
 import org.fpj.users.application.LoginService;
@@ -30,8 +31,6 @@ public class LoginTest {
 
     private static final String REGISTER_STRING = "registrieren";
     private static final String LOGIN_STRING = "anmelden";
-    private static final String NO_ACCOUNT = "noch kein Konto?";
-    private static final String ACCOUNT_EXISTENT = "du hast bereits ein Konto?";
 
     private Button loginBtn;
     private Button toggleBtn;
@@ -47,6 +46,8 @@ public class LoginTest {
     GenericApplicationContext context;
     @Mock
     ViewNavigator viewNavigator;
+    @Mock
+    LoginFailedException loginFailedException;
 
     private LoginController underTest;
 
@@ -71,11 +72,13 @@ public class LoginTest {
         underTest.setPasswordCheck(passwordCheck);
         underTest.setToggleButton(toggleBtn);
 
-        loginBtn.setText(REGISTER_STRING);
+        lenient().doNothing().when(alertService).info(anyString(), anyString(), anyString());
+        lenient().doNothing().when(alertService).warn(anyString(), anyString(), anyString());
     }
 
     @Test
-    void testSubmitRegister() throws Exception {
+    public void testSubmitRegister() throws Exception {
+        loginBtn.setText(REGISTER_STRING);
         usernameInput.setText(USERNAME);
         passwordInput.setText(RAW_PASSWORD);
         passwordCheck.setText(RAW_PASSWORD);
@@ -95,6 +98,88 @@ public class LoginTest {
         latch.await();
 
         verify(loginService, times(1)).register(USERNAME, RAW_PASSWORD, RAW_PASSWORD);
+        verify(alertService, times(1)).info(anyString(), anyString(), anyString());
+
+        Assertions.assertEquals(LOGIN_STRING, loginBtn.getText());
+    }
+
+    @Test
+    public void testSubmitRegisterFailed() throws InterruptedException {
+        loginBtn.setText(REGISTER_STRING);
+        usernameInput.setText(USERNAME);
+        passwordInput.setText(RAW_PASSWORD);
+        passwordCheck.setText(RAW_PASSWORD);
+
+        doThrow(loginFailedException).when(loginService).register(USERNAME, RAW_PASSWORD, RAW_PASSWORD);
+        when(loginFailedException.getMessage()).thenReturn("Login fehlgeschlagen");
+
+        CountDownLatch latch = new CountDownLatch(1);
+        Platform.runLater(() -> {
+            try {
+                underTest.submit(new ActionEvent(loginBtn, null));
+            } catch (Exception e){
+                throw new RuntimeException(e);
+            }
+            latch.countDown();
+        });
+
+        latch.await();
+
+        verify(loginService, times(1)).register(USERNAME, RAW_PASSWORD, RAW_PASSWORD);
+        verify(alertService, times(1)).warn(anyString(), anyString(), anyString());
+
+        Assertions.assertEquals(REGISTER_STRING, loginBtn.getText());
+    }
+
+    @Test
+    public void testSubmitLogin() throws Exception{
+        loginBtn.setText(LOGIN_STRING);
+        usernameInput.setText(USERNAME);
+        passwordInput.setText(RAW_PASSWORD);
+
+        doNothing().when(loginService).login(USERNAME, RAW_PASSWORD);
+        doNothing().when(viewNavigator).loadMain();
+
+        CountDownLatch latch = new CountDownLatch(1);
+        Platform.runLater(() -> {
+            try {
+                underTest.submit(new ActionEvent(loginBtn, null));
+            } catch (Exception e){
+                throw new RuntimeException(e);
+            }
+            latch.countDown();
+        });
+
+        latch.await();
+
+        verify(loginService, times(1)).login(USERNAME, RAW_PASSWORD);
+        verify(alertService, times(1)).info(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    public void testSubmitLoginFailed() throws InterruptedException {
+        loginBtn.setText(LOGIN_STRING);
+        usernameInput.setText(USERNAME);
+        passwordInput.setText(RAW_PASSWORD);
+        passwordCheck.setText(RAW_PASSWORD);
+
+        doThrow(loginFailedException).when(loginService).login(USERNAME, RAW_PASSWORD);
+        when(loginFailedException.getMessage()).thenReturn("Login fehlgeschlagen");
+
+        CountDownLatch latch = new CountDownLatch(1);
+        Platform.runLater(() -> {
+            try {
+                underTest.submit(new ActionEvent(loginBtn, null));
+            } catch (Exception e){
+                throw new RuntimeException(e);
+            }
+            latch.countDown();
+        });
+
+        latch.await();
+
+        verify(loginService, times(1)).login(USERNAME, RAW_PASSWORD);
+        verify(alertService, times(1)).warn(anyString(), anyString(), anyString());
 
         Assertions.assertEquals(LOGIN_STRING, loginBtn.getText());
     }
