@@ -20,10 +20,8 @@ import org.fpj.Data.UiHelpers;
 import org.fpj.Exceptions.TransactionException;
 import org.fpj.javafxController.ChatWindowController;
 import org.fpj.javafxController.TransactionDetailController;
-import org.fpj.payments.domain.TransactionResult;
-import org.fpj.payments.domain.TransactionRow;
+import org.fpj.payments.domain.*;
 import org.fpj.payments.application.TransactionService;
-import org.fpj.payments.domain.Transaction;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,10 +72,11 @@ public class TransactionsLiteViewController {
         updateBalance();
         initTransactionList();
         initPager();
+        setUpAutoCompletion();
     }
 
     private void initPager() {
-        long userId = currentUser.getId();
+        long userId =this.currentUser.getId();
 
         this.transactionPager = new InfinitePager<>(
                 PAGE_SIZE_Lite_List,
@@ -94,13 +93,6 @@ public class TransactionsLiteViewController {
 
         liteTransactionList.clear();
         transactionPager.resetAndLoadFirstPage();
-        setUpAutoCompletion();
-    }
-
-    private void loadTransactionsFirstPageLite() {
-        liteTransactionList.clear();
-        setUpAutoCompletion();
-        this.transactionPager.resetAndLoadFirstPage();
     }
 
     private void updateBalance(){
@@ -129,7 +121,7 @@ public class TransactionsLiteViewController {
                     setGraphic(null);
                     setText(null);
                 } else {
-                    boolean outgoing = item.senderId() == currentUser.getId();
+                    boolean outgoing = item.senderId() ==currentUser.getId();
 
                     String name = outgoing
                             ? (item.recipientUsername() != null ? item.recipientUsername() : "Empfänger unbekannt")
@@ -187,31 +179,32 @@ public class TransactionsLiteViewController {
     @FXML
     private void sendTransfers() {
         try {
-            BigDecimal amount = parseAmountTolerant(tfBetrag.getText());
-            String subject = safe(tfBetreff.getText());
+            String amount = tfBetrag.getText();
+            String subject = tfBetreff.getText();
+            String recipient = tfEmpfaenger.getText();
 
-            TransactionResult result;
+            String sender= null;
+            TransactionType type;
             if (rbDeposit.isSelected()) {
-                result = transactionService.deposit(currentUser, amount, subject);
+                sender= null;
+                recipient =this.currentUser.getUsername();
+                type = TransactionType.EINZAHLUNG;
             } else if (rbWithdraw.isSelected()) {
-                result = transactionService.withdraw(currentUser, amount, subject);
+                sender =this.currentUser.getUsername();
+                recipient = null;
+                type = TransactionType.AUSZAHLUNG;
             } else if (rbTransfer.isSelected()) {
-                String recipient = safe(tfEmpfaenger.getText());
-                result = transactionService.transfer(currentUser, recipient, amount, subject);
+                sender =this.currentUser.getUsername();
+                UiHelpers.isValidEmail(recipient);
+                type = TransactionType.UEBERWEISUNG;
             } else {
                 throw new IllegalStateException("Kein Transaktionstyp ausgewählt.");
             }
-
+            TransactionLite transactionLite= transactionService.transactionInfosToTransactionLite(amount, sender, recipient, subject, type);
+            TransactionResult result= transactionService.sendTransfers(transactionLite,this.currentUser);
             this.balanceRefreshCallback.accept(UiHelpers.formatEuro(result.newBalance()));
 
-            Transaction t= result.transaction();
-            Long sId = t.getSender()== null ? null : t.getSender().getId();
-            Long rId = t.getRecipient()== null ? null : t.getRecipient().getId();
-
-            String sName = t.getSender()== null ? null : t.getSender().getUsername();
-            String rName = t.getRecipient()== null ? null : t.getRecipient().getUsername();
-
-            TransactionRow row= new TransactionRow(t.getId(),t.getAmount(),t.getCreatedAt(), t.getTransactionType(),sId, sName, rId, rName, t.getDescription());
+            TransactionRow row= TransactionRow.fromTransaction(result.transaction());
             addLiteTransaction(row);
             tfBetrag.clear();
             tfBetreff.clear();
@@ -238,9 +231,6 @@ public class TransactionsLiteViewController {
     private void openTransactionDetails(TransactionRow row){
         try {
             var url = getClass().getResource("/fxml/transaction_detail.fxml");
-            if (url == null) {
-                throw new IllegalStateException("chat_window.fxml nicht gefunden!");
-            }
 
             FXMLLoader loader = new FXMLLoader(url);
             loader.setControllerFactory(applicationContext::getBean);
@@ -252,13 +242,13 @@ public class TransactionsLiteViewController {
             stage.setScene(new javafx.scene.Scene(root));
             stage.show();
 
-            detailController.initialize(row, currentUser, null, null, this::useTransactionAsTemplate, null, null);
+            detailController.initialize(TransactionLite.fromTransactionRow(row),this.currentUser, null, null, this::useTransactionAsTemplate, null, null);
         } catch (Exception e) {
             showError("Fehler beim laden der Transaktionsdetails. Versuche es erneut oder starte die Anwendung neu: " + e.getMessage());
         }
     }
 
-    private void useTransactionAsTemplate(TransactionRow row) {
+    private void useTransactionAsTemplate(TransactionLite row) {
         tfBetrag.setText(row.amountStringUnsigned());
         tfBetreff.setText(row.description());
         switch (row.type()) {

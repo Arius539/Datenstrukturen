@@ -77,7 +77,7 @@ public class ChatWindowController {
     }
 
     private void setUpContactLabel(){
-        lblContact.setText(currentChatPartner.getUsername().equals(currentUser.getUsername())? "Du": currentChatPartner.getUsername());
+        lblContact.setText(this.currentChatPartner.getUsername().equals(currentUser.getUsername())? "Du": this.currentChatPartner.getUsername());
     }
 
     private void initChatMessages() {
@@ -88,7 +88,7 @@ public class ChatWindowController {
                 PAGE_SIZE_CHAT_Messages,
                 (pageIndex, pageSize) -> {
                     PageRequest pageRequest = PageRequest.of(pageIndex, pageSize);
-                    return directMessageService.getConversation(currentUser, currentChatPartner, pageRequest);
+                    return directMessageService.getConversation(currentUser, this.currentChatPartner, pageRequest);
                 },
                 page -> {
                     List<DirectMessage> desc = page.getContent();

@@ -10,164 +10,219 @@
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="org.fpj.javafxController.TransactionViewController"
             prefWidth="1280.0" prefHeight="720.0"
-            minWidth="1280.0" minHeight="720.0">
+            minWidth="1280.0" minHeight="720.0"
+            styleClass="transaction-root"
+            stylesheets="@../styles/transactionView.css">
 
     <fx:define>
         <ContextMenu fx:id="transactionContextMenu">
             <items>
-                <MenuItem fx:id="deleteMenuItem" text="löschen"
+                <MenuItem fx:id="deleteMenuItem"
+                          text="löschen"
                           onAction="#onDeleteTransaction"/>
-                <MenuItem fx:id="useAsTemplateMenuItem" text="als Vorlage verwenden"
-                          onAction="#onUseAsTemplate"/>
-                <MenuItem fx:id="executeMenuItem" text="ausführen"
+                <MenuItem fx:id="executeMenuItem"
+                          text="ausführen"
                           onAction="#onExecuteSingleFromContext"/>
             </items>
         </ContextMenu>
+
         <ToggleGroup fx:id="transactionTypeToggleGroup"/>
     </fx:define>
 
     <center>
-        <GridPane hgap="10.0" vgap="10.0" BorderPane.alignment="CENTER">
+        <GridPane hgap="12.0" vgap="12.0"
+                  BorderPane.alignment="CENTER"
+                  styleClass="transaction-main-grid">
+            <padding>
+                <Insets top="12.0" right="12.0" bottom="12.0" left="12.0"/>
+            </padding>
+
             <columnConstraints>
                 <ColumnConstraints percentWidth="66.0"/>
                 <ColumnConstraints percentWidth="34.0"/>
             </columnConstraints>
+
             <rowConstraints>
+                <RowConstraints vgrow="NEVER"/>
                 <RowConstraints vgrow="ALWAYS"/>
             </rowConstraints>
 
-            <VBox spacing="10.0" GridPane.columnIndex="0" padding="10.0">
-                <children>
+            <StackPane GridPane.columnIndex="0"
+                       GridPane.rowIndex="0">
+                <GridPane hgap="10.0" vgap="6.0">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="30.0"/>
+                        <ColumnConstraints percentWidth="70.0"/>
+                    </columnConstraints>
+                    <VBox GridPane.columnIndex="0"
+                          spacing="6.0">
 
-                    <GridPane hgap="10.0" vgap="5.0">
-                        <columnConstraints>
-                            <ColumnConstraints percentWidth="50.0"/>
-                            <ColumnConstraints percentWidth="50.0"/>
-                        </columnConstraints>
-
-                        <VBox spacing="2.0" GridPane.rowIndex="0" GridPane.columnIndex="0">
-                            <children>
-                                <Label text="Aktueller Kontostand"/>
-                                <Label fx:id="currentBalanceLabel" text="0,00 EUR"/>
-                            </children>
+                        <VBox spacing="2.0"
+                              styleClass="card">
+                            <Label text="Aktueller Kontostand"
+                                   styleClass="card-title"/>
+                            <Label fx:id="currentBalanceLabel"
+                                   text="0,00 EUR"
+                                   styleClass="balance"
+                            />
                         </VBox>
 
-                        <VBox spacing="2.0" GridPane.rowIndex="0" GridPane.columnIndex="1">
-                            <children>
-                                <Label text="Filter"/>
-                                <TextField fx:id="filterTextField" promptText="Filterwert eingeben"/>
-                            </children>
+                        <VBox spacing="2.0"
+                              styleClass="card">
+                            <Label text="Kontostand"
+                                   wrapText="true"
+                                   styleClass="card-title"/>
+                            <Label fx:id="selectedTransactionBalanceLabel"
+                                   text="0,00 EUR"
+                                   styleClass="balance"/>
                         </VBox>
+                    </VBox>
+                    <VBox GridPane.columnIndex="1"
+                          spacing="6.0"
+                          styleClass="card">
 
-                        <VBox spacing="2.0" GridPane.rowIndex="1" GridPane.columnIndex="0">
-                            <children>
-                                <Label text="Kontostand zum Zeitpunkt der aktuell ausgewählten Transaktion"/>
-                                <Label fx:id="selectedTransactionBalanceLabel" text="0,00 EUR"/>
-                            </children>
+                        <VBox spacing="2.0">
+                            <Label text="Filter"
+                                   styleClass="card-title"/>
+                            <TextField fx:id="filterTextField"
+                                       promptText="Filterwert eingeben"/>
                         </VBox>
+                        <HBox spacing="5.0">
+                            <ComboBox fx:id="filterFieldComboBox"
+                                      prefWidth="170.0"
+                                      onAction="#onFilterChanged">
+                                <items>
+                                    <FXCollections fx:factory="observableArrayList">
+                                        <String fx:value="Verwendungszweck"/>
+                                        <String fx:value="Empfänger, Sender"/>
+                                        <String fx:value="Created at von"/>
+                                        <String fx:value="Created at bis"/>
+                                        <String fx:value="Betrag ab"/>
+                                        <String fx:value="Betrag bis"/>
+                                    </FXCollections>
+                                </items>
+                            </ComboBox>
 
-                        <HBox spacing="5.0" GridPane.rowIndex="1" GridPane.columnIndex="1">
-                            <children>
-                                <ComboBox fx:id="filterFieldComboBox" prefWidth="170.0">
-                                    <items>
-                                        <FXCollections fx:factory="observableArrayList">
-                                            <String fx:value="Verwendungszweck"/>
-                                            <String fx:value="Empfänger, Sender"/>
-                                            <String fx:value="Created at von"/>
-                                            <String fx:value="Created at bis"/>
-                                            <String fx:value="Betrag ab"/>
-                                            <String fx:value="Betrag bis"/>
-                                        </FXCollections>
-                                    </items>
-                                </ComboBox>
-
-                                <Button fx:id="clearFilterButton" text="Filter löschen"
-                                        onAction="#onClearFilter"/>
-                                <Button fx:id="searchButton" text="Suchen"
-                                        onAction="#onSearch"/>
-                            </children>
+                            <Button fx:id="clearFilterButton"
+                                    text="Filter löschen"
+                                    onAction="#onClearFilter"/>
+                            <Button fx:id="searchButton"
+                                    text="Suchen"
+                                    onAction="#onSearch"/>
                         </HBox>
-                    </GridPane>
+                    </VBox>
+                </GridPane>
+            </StackPane>
 
-                    <ListView fx:id="transactionTable" VBox.vgrow="ALWAYS">
-                    </ListView>
 
-                </children>
-            </VBox>
+            <StackPane GridPane.columnIndex="0"
+                       GridPane.rowIndex="1"
+                       styleClass="card">
+                <VBox spacing="8.0">
+                    <HBox spacing="8" alignment="CENTER_LEFT">
+                        <Label text="Transaktionen"
+                               styleClass="card-title"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="↻" onAction="#onReloadTransactions"  styleClass="button-small"/>
+                    </HBox>
+                    <ListView fx:id="transactionTable"
+                              VBox.vgrow="ALWAYS"
+                              styleClass="transaction-list"/>
+                </VBox>
+            </StackPane>
 
-            <VBox spacing="10.0" GridPane.columnIndex="1" padding="10.0">
-
-                <TitledPane text="Transaktion ausführen" expanded="true">
-                    <content>
-                        <GridPane hgap="10.0" vgap="10.0" padding="10.0">
+            <StackPane GridPane.columnIndex="1"
+                       GridPane.rowIndex="0"
+                       GridPane.rowSpan="2"
+                       styleClass="transactions-right-container">
+                <VBox spacing="12.0">
+                    <TitledPane text="Transaktion erstellen"
+                                expanded="true"
+                                VBox.vgrow="NEVER"
+                                styleClass="card">
+                        <GridPane hgap="10.0" vgap="10.0"
+                                  styleClass="transaction-form-grid">
+                            <padding>
+                                <Insets top="10.0" right="10.0" bottom="10.0" left="10.0"/>
+                            </padding>
                             <columnConstraints>
                                 <ColumnConstraints halignment="RIGHT"/>
                                 <ColumnConstraints hgrow="ALWAYS"/>
                             </columnConstraints>
+                            <TextField fx:id="receiverUsernameField"
+                                       promptText="Empfänger"
+                                       GridPane.rowIndex="0"
+                                       GridPane.columnIndex="1"/>
+                            <TextField fx:id="amountField"
+                                       promptText="Betrag (z. B. 12,34)"
+                                       GridPane.rowIndex="1"
+                                       GridPane.columnIndex="1"/>
 
-                            <children>
-                                <Label text="Empfänger (Username)" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                                <TextField fx:id="receiverUsernameField"
-                                           GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-
-                                <Label text="Betrag" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                                <TextField fx:id="amountField"
-                                           GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-
-                                <Label text="Verwendungszweck" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                                <TextField fx:id="purposeField"
-                                           GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-
-                                <Label text="Art" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                                <HBox spacing="10.0" GridPane.rowIndex="3" GridPane.columnIndex="1">
-                                    <children>
-                                        <RadioButton fx:id="depositRadio"
-                                                     text="Einzahlung"
-                                                     toggleGroup="$transactionTypeToggleGroup"
-                                                     onAction="#onTransactionTypeChanged"/>
-
-                                        <RadioButton fx:id="withdrawRadio"
-                                                     text="Auszahlung"
-                                                     toggleGroup="$transactionTypeToggleGroup"
-                                                     onAction="#onTransactionTypeChanged"/>
-
-                                        <RadioButton fx:id="transferRadio"
-                                                     text="Überweisung"
-                                                     toggleGroup="$transactionTypeToggleGroup"
-                                                     onAction="#onTransactionTypeChanged"/>
-                                    </children>
-                                </HBox>
-                            </children>
+                            <TextField fx:id="purposeField"
+                                       promptText="Verwendungszweck"
+                                       GridPane.rowIndex="2"
+                                       GridPane.columnIndex="1"/>
+                            <HBox spacing="10.0"
+                                  GridPane.rowIndex="3"
+                                  GridPane.columnIndex="1"
+                                  styleClass="transaction-type-row">
+                                <RadioButton fx:id="depositRadio"
+                                             text="Einzahlung"
+                                             toggleGroup="$transactionTypeToggleGroup"
+                                             onAction="#onTransactionTypeChanged"/>
+                                <RadioButton fx:id="withdrawRadio"
+                                             text="Auszahlung"
+                                             toggleGroup="$transactionTypeToggleGroup"
+                                             onAction="#onTransactionTypeChanged"/>
+                                <RadioButton fx:id="transferRadio"
+                                             text="Überweisung"
+                                             toggleGroup="$transactionTypeToggleGroup"
+                                             onAction="#onTransactionTypeChanged"/>
+                            </HBox>
+                            <HBox spacing="10.0"
+                                  GridPane.rowIndex="4"
+                                  GridPane.columnIndex="1"
+                                  styleClass="button-row">
+                                <Button fx:id="importCsvButton"
+                                        text="von CSV"
+                                        onAction="#onImportCsv"/>
+                                <Button fx:id="executeSingleButton"
+                                        text="ausführen"
+                                        onAction="#onExecuteSingle"/>
+                                <Button fx:id="addToBatchButton"
+                                        text="hinzufügen"
+                                        onAction="#onAddToBatch"/>
+                            </HBox>
                         </GridPane>
-                    </content>
-                </TitledPane>
+                    </TitledPane>
 
-                <HBox spacing="10.0">
-                    <children>
-                        <Button fx:id="importCsvButton" text="von CSV"
-                                onAction="#onImportCsv"/>
-                        <Button fx:id="executeSingleButton" text="ausführen"
-                                onAction="#onExecuteSingle"/>
-                        <Button fx:id="addToBatchButton" text="hinzufügen"
-                                onAction="#onAddToBatch"/>
-                    </children>
-                </HBox>
+                    <StackPane styleClass="card"
+                               VBox.vgrow="ALWAYS">
+                        <VBox spacing="10.0">
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <Label text="gesammelte Transaktionen"
+                                       styleClass="card-title"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button text="↻" onAction="#onReloadBatches" styleClass="button-small"/>
+                            </HBox>
+                            <ListView fx:id="batchTransactionTable"
+                                      VBox.vgrow="ALWAYS"
+                                      styleClass="transaction-list">
+                                <contextMenu>
+                                    <fx:reference source="transactionContextMenu"/>
+                                </contextMenu>
+                            </ListView>
+                            <HBox spacing="8" alignment="CENTER" >
+                                <Label fx:id="balanceLabelBatch" text="Saldo nach Transaktionen" styleClass="label-button-like "/>
+                                <Button fx:id="executeAllButton"
+                                        text="alle ausführen"
+                                        onAction="#onExecuteAll"/>
+                            </HBox>
+                        </VBox>
+                    </StackPane>
 
-                <Label text="gesammelte Transaktionen"/>
-                <TableView fx:id="batchTransactionTable" VBox.vgrow="ALWAYS">
-                    <contextMenu>
-                        <fx:reference source="transactionContextMenu"/>
-                    </contextMenu>
-                </TableView>
-
-                <Button fx:id="executeAllButton"
-                        text="alle ausführen"
-                        maxWidth="Infinity"
-                        onAction="#onExecuteAll"/>
-
-            </VBox>
-
+                </VBox>
+            </StackPane>
         </GridPane>
     </center>
-
 </BorderPane>

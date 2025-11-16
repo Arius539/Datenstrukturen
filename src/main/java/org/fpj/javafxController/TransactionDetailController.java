@@ -8,6 +8,7 @@ import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import org.fpj.payments.domain.TransactionLite;
 import org.fpj.payments.domain.TransactionRow;
 import org.fpj.users.domain.User;
 import org.springframework.context.annotation.Scope;
@@ -45,22 +46,22 @@ public class TransactionDetailController {
     @FXML
     private Button reuseButton;
 
-    private TransactionRow transaction;
+    private TransactionLite transaction;
 
-    private Consumer<TransactionRow> onSenderClicked;
+    private Consumer<TransactionLite> onSenderClicked;
 
-    private Consumer<TransactionRow> onRecipientClicked;
+    private Consumer<TransactionLite> onRecipientClicked;
 
-    private Consumer<TransactionRow> onReuseClicked;
+    private Consumer<TransactionLite> onReuseClicked;
 
-    private Consumer<TransactionRow> onDescriptionClicked;
+    private Consumer<TransactionLite> onDescriptionClicked;
 
-    private Consumer<TransactionRow> onValueClicked;
+    private Consumer<TransactionLite> onValueClicked;
 
     private User currentUser;
 
 
-    public void initialize(TransactionRow transaction, User currentUser, Consumer<TransactionRow> onSenderClicked, Consumer<TransactionRow> onRecipientClicked, Consumer<TransactionRow> onReuseClicked, Consumer<TransactionRow> onDescriptionClicked, Consumer<TransactionRow> onValueClicked ) {
+    public void initialize(TransactionLite transaction, User currentUser, Consumer<TransactionLite> onSenderClicked, Consumer<TransactionLite> onRecipientClicked, Consumer<TransactionLite> onReuseClicked, Consumer<TransactionLite> onDescriptionClicked, Consumer<TransactionLite> onValueClicked ) {
         this.currentUser = currentUser;
         this.transaction = transaction;
         this.onSenderClicked = onSenderClicked;

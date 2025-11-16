@@ -4,7 +4,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
+import org.fpj.payments.domain.TransactionRow;
 import java.math.BigDecimal;
 import java.time.Instant;
 
@@ -93,42 +93,44 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         """,
             nativeQuery = true
     )
-    BigDecimal findUserBalanceAfterTransaction(@Param("userId") long userId, @Param("transactionId") long transactionId);
+    BigDecimal findUserBalanceAfterTransaction(@Param("userId") long userId, @Param("tId") long transactionId);
 
     @Query("""
-        SELECT t
-        FROM Transaction t
-        LEFT JOIN t.sender s
-        LEFT JOIN t.recipient r
-        WHERE
-            ( t.sender.id = :currentUserId
-              OR
-              t.recipient.id = :currentUserId
-            )
-            AND (:createdFrom IS NULL OR t.createdAt >= :createdFrom)
+    SELECT new org.fpj.payments.domain.TransactionRow(
+        t.id, t.amount, t.createdAt, t.transactionType,
+        s.id, s.username, r.id, r.username, t.description
+    )
+    FROM Transaction t
+    LEFT JOIN t.sender s
+    LEFT JOIN t.recipient r
+    WHERE
+        (t.sender.id = :currentUserId OR t.recipient.id = :currentUserId)
 
-            AND (:createdTo IS NULL OR t.createdAt <= :createdTo)
+        AND t.createdAt >= COALESCE(:createdFrom, t.createdAt)
+        AND t.createdAt <= COALESCE(:createdTo,   t.createdAt)
 
-            AND (:senderUsername IS NULL OR  LOWER(s.username) LIKE LOWER(CONCAT('%', :senderUsername, '%')))
+        AND t.amount     >= COALESCE(:amountFrom, t.amount)
+        AND t.amount     <= COALESCE(:amountTo,   t.amount)
 
-            AND (:recipientUsername IS NULL OR  LOWER(r.username) LIKE LOWER(CONCAT('%', :recipientUsername, '%')))
+        AND (s.username   LIKE COALESCE(:senderRecipientPattern,   s.username)
+        OR r.username   LIKE COALESCE(:senderRecipientPattern, r.username))
 
-            AND (:amountFrom IS NULL OR t.amount >= :amountFrom)
+        AND LOWER(t.description) LIKE COALESCE(:descriptionPattern, LOWER(t.description))
 
-            AND (:amountTo IS NULL OR t.amount <= :amountTo)
-
-            AND (:description IS NULL OR LOWER(t.description) LIKE LOWER(CONCAT('%', :description, '%')))
-        """)
-    Page<Transaction> searchTransactions(
+    ORDER BY t.createdAt DESC
+    """)
+    Page<TransactionRow> searchTransactions(
             @Param("currentUserId") Long currentUserId,
             @Param("createdFrom") Instant createdFrom,
             @Param("createdTo") Instant createdTo,
-            @Param("senderUsername") String senderUsername,
-            @Param("recipientUsername") String recipientUsername,
+            @Param("senderRecipientPattern") String senderRecipientPattern,
             @Param("amountFrom") BigDecimal amountFrom,
             @Param("amountTo") BigDecimal amountTo,
-            @Param("description") String description,
+            @Param("descriptionPattern") String descriptionPattern,
             Pageable pageable
     );
+
+
+
 
 }

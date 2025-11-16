@@ -23,7 +23,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public User currentUser() {
-      Optional<User> user= userRepository.findByUsername("test2@test.com");
+      Optional<User> user= userRepository.findByUsername("testuser@gmail.de");
       if(user.isPresent()) {
           return user.get();
       }

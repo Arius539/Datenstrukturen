@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.fpj.javafxController.CsvImportDialogController"
+            prefWidth="600.0" prefHeight="320.0"
+            minWidth="480.0" minHeight="260.0"
+            styleClass="transaction-root"
+            stylesheets="@../styles/transactionView.css">
+
+    <center>
+        <StackPane BorderPane.alignment="CENTER"
+                   styleClass="card">
+            <VBox spacing="12.0">
+                <padding>
+                    <Insets top="12.0" right="12.0" bottom="12.0" left="12.0"/>
+                </padding>
+
+                <Label text="CSV-Import"
+                       styleClass="card-title"/>
+
+                <GridPane hgap="10.0" vgap="10.0"
+                          styleClass="transaction-form-grid">
+                    <columnConstraints>
+                        <ColumnConstraints halignment="RIGHT"/>
+                        <ColumnConstraints hgrow="ALWAYS"/>
+                    </columnConstraints>
+
+                    <Label text="CSV-Datei:"
+                           GridPane.rowIndex="0"
+                           GridPane.columnIndex="0"/>
+
+                    <HBox spacing="8.0"
+                          GridPane.rowIndex="0"
+                          GridPane.columnIndex="1"
+                          styleClass="button-row">
+                        <Button fx:id="chooseFileButton"
+                                text="Datei auswählen"
+                                onAction="#onChooseFile"/>
+                        <Label fx:id="selectedFileLabel"
+                               text="Keine Datei ausgewählt"
+                               wrapText="true"/>
+                    </HBox>
+
+                    <Label text=""
+                           GridPane.rowIndex="1"
+                           GridPane.columnIndex="0"/>
+
+                    <HBox spacing="8.0"
+                          GridPane.rowIndex="1"
+                          GridPane.columnIndex="1"
+                          styleClass="button-row">
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button fx:id="startImportButton"
+                                text="Start"
+                                onAction="#onStartImport"/>
+                    </HBox>
+                    <Label text="Lesefehler:"
+                           GridPane.rowIndex="2"
+                           GridPane.columnIndex="0"
+                    />
+
+                    <ListView fx:id="errorListView"
+                              GridPane.rowIndex="2"
+                              GridPane.columnIndex="1"
+                              prefHeight="150.0"
+                              VBox.vgrow="ALWAYS"
+                              styleClass="transaction-list"/>
+                </GridPane>
+            </VBox>
+        </StackPane>
+    </center>
+</BorderPane>

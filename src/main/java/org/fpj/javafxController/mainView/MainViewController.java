@@ -2,8 +2,12 @@ package org.fpj.javafxController.mainView;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
+import org.fpj.javafxController.TransactionDetailController;
+import org.fpj.javafxController.TransactionViewController;
 import org.fpj.payments.application.TransactionService;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
@@ -34,8 +38,6 @@ public class MainViewController {
     @FXML private Label lblEmail;
     @FXML private Label lblBalance;
 
-    private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
-
     private User currentUser;
 
     @FXML
@@ -62,9 +64,26 @@ public class MainViewController {
         return true;
     }
 
-    @FXML public void actionTransactions()    { }
+    @FXML public void actionTransactions()    {
+        try {
+            var url = getClass().getResource("/fxml/transactionView.fxml");
+            FXMLLoader loader = new FXMLLoader(url);
+            loader.setControllerFactory(applicationContext::getBean);
+
+            Parent root = loader.load();
+            TransactionViewController detailController = loader.getController();
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle("Transaktionen");
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.show();
+            detailController.initialize(currentUser, null);
+        } catch(Exception e) {
+            error("Fehler beim laden des Transaktionsfensters. Versuche es erneut oder starte die Anwendung neu: ");
+            e.printStackTrace();
+            System.out.println(e.getMessage());
+        }
+    }
     @FXML public void actionWallComments()    { info("Navigation: Wall Kommentare (Placeholder)."); }
-    @FXML public void actionDirectMessages()  { info("Navigation: Massen Transaktion (Placeholder)."); }
 
     private void updateBalanceLabel(String balance) {
         lblBalance.setText(balance);

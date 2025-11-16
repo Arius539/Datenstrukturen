@@ -1,0 +1,229 @@
+package org.fpj.exportImport.application;
+
+
+import com.univocity.parsers.common.TextParsingException;
+import com.univocity.parsers.common.record.Record;
+import com.univocity.parsers.csv.CsvParser;
+import com.univocity.parsers.csv.CsvParserSettings;
+import lombok.Setter;
+import org.fpj.Data.UiHelpers;
+import org.fpj.exportImport.CsvError;
+import org.fpj.exportImport.CsvImportResult;
+import org.fpj.payments.application.TransactionService;
+import org.fpj.payments.domain.MassTransfer;
+import org.fpj.users.application.UserService;
+import org.fpj.users.domain.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.regex.Pattern;
+
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
+@Component
+@Scope(SCOPE_PROTOTYPE)
+@Setter
+public class MassTransferCsvReader implements CsvReader {
+    UserService userService;
+
+    User currentUser;
+
+
+    @Override
+    public CsvImportResult<MassTransfer> parse(InputStream in) {
+        CsvParserSettings settings = createBaseSettings();
+        CsvParser parser = new CsvParser(settings);
+
+        List<CsvError> errors = new ArrayList<>();
+        List<MassTransfer> records = new ArrayList<>();
+
+        try (Reader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
+
+            parser.beginParsing(reader);
+
+            long line = 1L; // Header ist Zeile 1
+
+            String[] actualHeaders = parser.getContext().headers();
+            String[] expectedHeaders = new String[]{"Empfänger", "Betrag", "Beschreibung"};
+
+            if (!Arrays.equals(actualHeaders, expectedHeaders)) {
+                String msg = "Unerwarteter Header. Erwartet: "
+                        + String.join(";", expectedHeaders)
+                        + " aber gefunden: "
+                        + String.join(";", actualHeaders != null ? actualHeaders : new String[0]);
+
+                CsvError fatal = new CsvError(
+                        line,
+                        null,
+                        null,
+                        null,
+                        msg,
+                        CsvError.Severity.FATAL
+                );
+                return new CsvImportResult<>(List.of(), List.of(fatal), true);
+            }
+
+            Record record;
+            while ((record = parser.parseNextRecord()) != null) {
+                line++;
+
+                try {
+                    MassTransfer eintrag =
+                            mapMassenUeberweisung(record, line, errors);
+                    records.add(eintrag);
+                } catch (Exception ex) {
+                    errors.add(new CsvError(
+                            line,
+                            null,
+                            null,
+                            null,
+                            "Unerwarteter Fehler in dieser Zeile: " + ex.getMessage(),
+                            CsvError.Severity.ERROR
+                    ));
+                }
+            }
+
+            boolean fatal = false;
+            return new CsvImportResult<>(records, errors, fatal);
+
+        } catch (TextParsingException tpe) {
+            CsvError fatalError = new CsvError(
+                    tpe.getLineIndex() + 1L,
+                    null,
+                    null,
+                    null,
+                    "CSV-Strukturfehler: " + tpe.getMessage(),
+                    CsvError.Severity.FATAL
+            );
+            return new CsvImportResult<>(List.of(), List.of(fatalError), true);
+        } catch (IOException ioe) {
+            CsvError fatalError = new CsvError(
+                    0,
+                    null,
+                    null,
+                    null,
+                    "CSV konnte nicht gelesen werden: " + ioe.getMessage(),
+                    CsvError.Severity.FATAL
+            );
+            return new CsvImportResult<>(List.of(), List.of(fatalError), true);
+        } finally {
+            parser.stopParsing();
+        }
+    }
+
+    private CsvParserSettings createBaseSettings() {
+        CsvParserSettings settings = new CsvParserSettings();
+        settings.setHeaderExtractionEnabled(true);
+        settings.setLineSeparatorDetectionEnabled(true);
+        settings.getFormat().setDelimiter(';');
+        settings.setSkipEmptyLines(true);
+        settings.setAutoConfigurationEnabled(false);
+        return settings;
+    }
+
+    private MassTransfer mapMassenUeberweisung(
+            Record r,
+            long line,
+            List<CsvError> errors
+    ) {
+        String empfaenger = r.getString("Empfänger");
+        String rawBetrag = r.getString("Betrag");
+        String beschreibung = r.getString("Beschreibung");
+
+        validateEmpfaenger(empfaenger, line, errors);
+
+        BigDecimal betrag = parseBigDecimal(rawBetrag, "Betrag", line, errors);
+
+        if (betrag != null && betrag.compareTo(BigDecimal.ZERO) <= 0) {
+            errors.add(new CsvError(
+                    line,
+                    "Betrag",
+                    null,
+                    rawBetrag,
+                    "Betrag muss größer als 0 sein",
+                    CsvError.Severity.ERROR
+            ));
+        }
+
+        return new MassTransfer(empfaenger, betrag, beschreibung);
+    }
+
+    private void validateEmpfaenger(String empfaenger, long line, List<CsvError> errors) {
+        empfaenger = empfaenger.trim();
+        if (empfaenger == null || empfaenger.isBlank()) {
+            errors.add(new CsvError(
+                    line,
+                    "Empfänger",
+                    null,
+                    empfaenger,
+                    "Empfänger darf nicht leer sein",
+                    CsvError.Severity.ERROR
+            ));
+            return;
+        }
+        String message= "Empfänger ist keine gültige E-Mail-Adresse";
+        try{
+            if(this.currentUser.getUsername().equals(empfaenger)){
+                throw new IllegalArgumentException(message);
+            }
+            UiHelpers.isValidEmail(empfaenger);
+           Optional<User> user= userService.findByUsername(empfaenger);
+           if(user.isEmpty()) {
+               message = "Der angegebene Benutzername existiert nicht";
+               throw new IllegalArgumentException(message);
+           }
+        }catch (IllegalArgumentException e){
+            errors.add(new CsvError(
+                    line,
+                    "Empfänger",
+                    null,
+                    empfaenger,
+                    message,
+                    CsvError.Severity.ERROR
+            ));
+        }
+    }
+
+    private BigDecimal parseBigDecimal(
+            String raw,
+            String column,
+            long line,
+            List<CsvError> errors
+    ) {
+        if (raw == null || raw.isBlank()) {
+            errors.add(new CsvError(
+                    line,
+                    column,
+                    null,
+                    raw,
+                    "Betrag darf nicht leer sein",
+                    CsvError.Severity.ERROR
+            ));
+            return null;
+        }
+        try {
+            return UiHelpers.parseAmountTolerant(raw);
+        } catch (NumberFormatException ex) {
+            errors.add(new CsvError(
+                    line,
+                    column,
+                    null,
+                    raw,
+                    "Ungültiger Betrag: " + raw,
+                    CsvError.Severity.ERROR
+            ));
+            return null;
+        }
+    }
+}
