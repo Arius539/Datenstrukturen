@@ -14,6 +14,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import org.controlsfx.control.textfield.AutoCompletionBinding;
 import org.controlsfx.control.textfield.TextFields;
+import org.fpj.AlertService;
 import org.fpj.Data.UiHelpers;
 import org.fpj.Exceptions.DataNotPresentException;
 import org.fpj.javafxController.ChatWindowController;
@@ -43,6 +44,9 @@ public class ChatPreviewController {
 
     @Autowired
     private DirectMessageService directMessageService;
+
+    @Autowired
+    private AlertService alertService;
 
     private final ObservableList<ChatPreview> chatPreviews = FXCollections.observableArrayList();
     private static final int PAGE_SIZE_CHAT_PREVIEWS = 50;
@@ -221,7 +225,7 @@ public class ChatPreviewController {
     private void openChatForUsername(String username) {
 
         if (username == null || username.isBlank()) {
-            this.error("Kein Benutzername für den Chat ausgewählt.");
+            alertService.error("Fehler", "Fehler", "Kein Benutzername für den Chat ausgewählt.");
             return;
         }
 
@@ -231,7 +235,7 @@ public class ChatPreviewController {
             chatPartner = userService.findByUsername(username);
         }
         catch (DataNotPresentException e){
-            error("Benutzer für Chat nicht gefunden: " + username);
+            alertService.error("Fehler", "Fehler", "Benutzer für Chat nicht gefunden: " + username);
             return;
         }
 
@@ -239,7 +243,7 @@ public class ChatPreviewController {
             ChatWindowController controller = loadChatWindow(username);
             controller.openChat(currentUser, chatPartner);
         } catch (Exception e){
-            error("Fehler beim laden des Chats aufgetreten. Versuche es bitte erneut.");
+            alertService.error("Fehler", "Fehler", "Fehler beim laden des Chats aufgetreten. Versuche es bitte erneut.");
         }
     }
 
@@ -272,25 +276,8 @@ public class ChatPreviewController {
 
     private void showError(String message) {
         Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Fehler");
-            alert.setHeaderText(null);
-            alert.setContentText(message);
-            alert.showAndWait();
+            alertService.error("Fehler", "Fehler", message);
         });
     }
 
-    private void info(String text) {
-        Alert a = new Alert(Alert.AlertType.INFORMATION, text, ButtonType.OK);
-        a.setHeaderText(null);
-        a.setTitle("Info");
-        a.showAndWait();
-    }
-
-    private void error(String text) {
-        Alert a = new Alert(Alert.AlertType.ERROR, text, ButtonType.OK);
-        a.setHeaderText("Fehler");
-        a.setTitle("Fehler");
-        a.showAndWait();
-    }
 }

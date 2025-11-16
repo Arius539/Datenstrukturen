@@ -6,6 +6,8 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import lombok.Setter;
+import org.fpj.AlertService;
 import org.fpj.Exceptions.LoginFailedException;
 import org.fpj.ViewNavigator;
 import org.fpj.users.application.LoginService;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 @Component
+@Setter
 public class LoginController {
 
     private static final String REGISTER_STRING = "registrieren";
@@ -28,12 +31,14 @@ public class LoginController {
     private final GenericApplicationContext context;
     private final ViewNavigator viewNavigator;
     private final LoginService loginService;
+    private final AlertService alertService;
 
     @Autowired
-    public LoginController(GenericApplicationContext context, ViewNavigator viewNavigator, LoginService loginService){
+    public LoginController(GenericApplicationContext context, ViewNavigator viewNavigator, LoginService loginService, AlertService alertService){
         this.context = context;
         this.viewNavigator = viewNavigator;
         this.loginService = loginService;
+        this.alertService = alertService;
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoginController.class);
@@ -50,7 +55,7 @@ public class LoginController {
     private Button toggleButton;
 
     @FXML
-    private void submit(ActionEvent event){
+    public void submit(ActionEvent event){
         Button button = (Button) event.getSource();
         final String username = usernameInput.getText();
         final String password = passwordInput.getText();
@@ -66,42 +71,24 @@ public class LoginController {
         final String check = passwordCheck.getText();
         try {
             loginService.register(username, password, check);
-
-            final Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Info");
-            alert.setHeaderText("Registrierung erfolgreich");
-            alert.setContentText("Für Benutzer " + username + " wurde erfolgreich ein Account erstellt. Bitte melde dich im nächsten Schritt an.");
-            alert.showAndWait();
-
+            alertService.info("Info", "Registrierung erfolgreich",
+                    "Für Benutzer " + username + " wurde erfolgreich ein Account erstellt. Bitte melde dich im nächsten Schritt an.");
             toggleLoginAndRegister();
         }
         catch (LoginFailedException e){
-            final Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Info");
-            alert.setHeaderText("Login fehlgeschlagen");
-            alert.setContentText(e.getMessage());
-            alert.showAndWait();
+            alertService.warn("Warnung", "Login fehlgeschlagen", e.getMessage());
         }
     }
 
     private void doLogin(String username, String password) {
         try {
             loginService.login(username, password);
-
-            final Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Info");
-            alert.setHeaderText("Login erfolgreich");
-            alert.setContentText("Mit Benutzer " + username + " eingelogged.");
-            alert.showAndWait();
-
+            alertService.info("Info", "Login erfolgreich",
+                    "Mit Benutzer " + username + " eingelogged.");
             viewNavigator.loadMain();
         }
         catch (LoginFailedException e){
-            final Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Info");
-            alert.setHeaderText("Login fehlgeschlagen");
-            alert.setContentText(e.getMessage());
-            alert.showAndWait();
+            alertService.warn("Warnung", "Login fehlgeschlagen", e.getMessage());
         }
         catch (IOException e){
             LOGGER.error("Fenster konnte nicht geladen werden", e);
@@ -110,7 +97,7 @@ public class LoginController {
     }
 
     @FXML
-    private void toggleLoginAndRegister(){
+    public void toggleLoginAndRegister(){
         if (loginButton.getText().equals(LOGIN_STRING)){
             loginButton.setText(REGISTER_STRING);
             toggleButton.setText(ACCOUNT_EXISTENT);

@@ -10,6 +10,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import org.fpj.AlertService;
 import org.fpj.Data.UiHelpers;
 import org.fpj.messaging.application.DirectMessageRow;
 import org.fpj.messaging.application.DirectMessageService;
@@ -32,6 +33,8 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 public class ChatWindowController {
     @Autowired
     private DirectMessageService directMessageService;
+    @Autowired
+    private AlertService alertService;
 
     private final ObservableList<DirectMessage> chatMessages = FXCollections.observableArrayList();
     private static final int PAGE_SIZE_CHAT_Messages = 20;
@@ -256,11 +259,7 @@ public class ChatWindowController {
 
     private void showError(String message) {
         Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Fehler");
-            alert.setHeaderText(null);
-            alert.setContentText(message);
-            alert.showAndWait();
+            alertService.error("Fehler", "Fehler", message);
         });
     }
 }

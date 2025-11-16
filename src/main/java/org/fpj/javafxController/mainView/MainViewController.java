@@ -2,6 +2,7 @@ package org.fpj.javafxController.mainView;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import org.fpj.AlertService;
 import org.fpj.payments.application.TransactionService;
 import org.fpj.users.domain.User;
 import org.fpj.users.application.UserService;
@@ -24,14 +25,16 @@ public class MainViewController {
     private final UserService userService;
 
     private final TransactionService transactionService;
+    private final AlertService alertService;
 
     public MainViewController(ApplicationContext context, TransactionsLiteViewController transactionsLiteController, ChatPreviewController chatPreviewController,
-                              UserService userService, TransactionService transactionService){
+                              UserService userService, TransactionService transactionService, AlertService alertService){
         this.applicationContext = context;
         this.transactionsLiteController = transactionsLiteController;
         this.chatPreviewController = chatPreviewController;
         this.userService = userService;
         this.transactionService = transactionService;
+        this.alertService = alertService;
     }
 
     // Profil/Saldo
@@ -47,6 +50,7 @@ public class MainViewController {
         //TODO: Produktiv sollte folgendens ausgeführt werden:
         currentUser = applicationContext.getBean("loggedInUser", User.class);
 
+        //folgendes nur vorübergehend
         currentUser = userService.currentUser();
         lblEmail.setText(currentUser.getUsername());
 
@@ -55,24 +59,13 @@ public class MainViewController {
     }
 
     @FXML public void actionTransactions()    { }
-    @FXML public void actionWallComments()    { info("Navigation: Wall Kommentare (Placeholder)."); }
-    @FXML public void actionDirectMessages()  { info("Navigation: Massen Transaktion (Placeholder)."); }
+    @FXML public void actionWallComments()    {alertService.info("Info", "Info",
+            "Navigation: Wall Kommentare (Placeholder).");}
+    @FXML public void actionDirectMessages()  { alertService.error("Fehler", "Fehler",
+            "Navigation: Massen Transaktion (Placeholder).");}
 
     private void updateBalanceLabel(String balance) {
         lblBalance.setText(balance);
     }
 
-    private void info(String text) {
-        Alert a = new Alert(Alert.AlertType.INFORMATION, text, ButtonType.OK);
-        a.setHeaderText(null);
-        a.setTitle("Info");
-        a.showAndWait();
-    }
-
-    private void error(String text) {
-        Alert a = new Alert(Alert.AlertType.ERROR, text, ButtonType.OK);
-        a.setHeaderText("Fehler");
-        a.setTitle("Fehler");
-        a.showAndWait();
-    }
 }

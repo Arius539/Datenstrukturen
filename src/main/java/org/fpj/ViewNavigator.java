@@ -6,6 +6,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import lombok.Setter;
 import org.fpj.javafxController.MainController;
+import org.fpj.javafxController.mainView.MainViewController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -16,12 +17,14 @@ import java.io.IOException;
 public class ViewNavigator {
 
     private final ApplicationContext context;
+    private final MainViewController mainViewController;
     @Setter
     private Stage stage;
 
     @Autowired
-    public ViewNavigator(ApplicationContext context, MainController mainController){
+    public ViewNavigator(ApplicationContext context, MainViewController mainViewController){
         this.context = context;
+        this.mainViewController = mainViewController;
     }
 
     private void loadView(String fxml, String title, double width, double height) throws IOException {
@@ -35,6 +38,7 @@ public class ViewNavigator {
     }
 
     public void loadMain() throws IOException{
+        mainViewController.initialize();
         loadView("/mainView/main_view.fxml", "Bezahlplatform", 1280, 860);
     }
 
