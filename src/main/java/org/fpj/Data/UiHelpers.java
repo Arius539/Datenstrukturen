@@ -142,6 +142,14 @@ public class UiHelpers {
         return fmt.format(t);
     }
 
+    public static String formatInstantToDate(Instant instant) {
+        DateTimeFormatter dateFormatter = DateTimeFormatter
+                .ofPattern("yyyy-MM-dd")
+                .withZone(ZoneId.of("Europe/Berlin"));
+
+        return dateFormatter.format(instant);
+    }
+
     public static void startBackgroundTask(Task<?> task, String threadName) {
         Thread t = new Thread(task, threadName);
         t.setDaemon(true);

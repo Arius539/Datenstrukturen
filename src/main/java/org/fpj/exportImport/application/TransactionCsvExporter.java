@@ -39,7 +39,7 @@ public class TransactionCsvExporter {
             Iterable<TransactionRow> iterable = () -> transactions;
             for (TransactionRow t : iterable) {
                 writer.writeRow(
-                        formatInstant(t.createdAt()),
+                        UiHelpers.formatInstantToDate(t.createdAt()),
                         UiHelpers.safe(t.recipientUsername()),
                         UiHelpers.safe(t.senderUsername()),
                         UiHelpers.safe(t.description()),

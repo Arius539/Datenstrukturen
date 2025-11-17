@@ -1,4 +1,4 @@
-package org.fpj.exportImport;
+package org.fpj.exportImport.adapter;
 
 import lombok.Getter;
 import lombok.Setter;

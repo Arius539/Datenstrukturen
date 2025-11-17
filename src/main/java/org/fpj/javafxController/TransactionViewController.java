@@ -19,25 +19,24 @@ import org.controlsfx.control.textfield.TextFields;
 import org.fpj.Data.InfinitePager;
 import org.fpj.Data.UiHelpers;
 import org.fpj.Exceptions.TransactionException;
-import org.fpj.exportImport.FileHandling;
+import org.fpj.exportImport.adapter.FileHandling;
 import org.fpj.exportImport.application.MassTransferCsvReader;
 import org.fpj.exportImport.application.TransactionCsvExporter;
 import org.fpj.payments.application.TransactionService;
 import org.fpj.payments.domain.*;
 import org.fpj.users.application.UserService;
-import org.fpj.users.domain.ConversationMessageView;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-
-import static org.fpj.Data.UiHelpers.parseAmountTolerant;
-import static org.fpj.Data.UiHelpers.safe;
 
 
 @Component
@@ -469,47 +468,85 @@ public class TransactionViewController {
         applyTypeVisibility();
     }
 
-    private void parseValuesFromSearchField( String selected ){
-        if(this.filterTextField.getText().isEmpty())return;
-        switch (selected) {
-            case "Verwendungszweck":
-                this.searchParameter.setDescription(this.filterTextField.getText());
-                break;
-            case "Empfänger, Sender":
-                this.searchParameter.setSenderRecipientUsername((this.filterTextField.getText()));
-                break;
-            case "Created at von":
-                try {
+    private boolean parseValuesFromSearchField( String selected ){
+        try {
+            switch (selected) {
+                case "Verwendungszweck":
+                    if(this.filterTextField.getText().isEmpty()) this.searchParameter.setDescription(null);
+                    this.searchParameter.setDescription(this.filterTextField.getText());
+                    break;
+                case "Empfänger, Sender":
+                    if(this.filterTextField.getText().isEmpty()) this.searchParameter.setSenderRecipientUsername(null);
+                    this.searchParameter.setSenderRecipientUsername(this.filterTextField.getText());
+                    break;
+                case "Created at von":
+                    if(this.filterTextField.getText().isEmpty()) this.searchParameter.setCreatedFrom(null);
                     this.searchParameter.setCreatedFrom(
                             UiHelpers.parseDateTolerant(this.filterTextField.getText())
                     );
-                } catch (Exception e) {
-                    error("Bitte gebe das Datum im richtigen Format ein, z.B. 16.11.2025 oder 2025-11-16");
-                }
-                break;
-            case "Created at bis":
-                try {
+                    break;
+                case "Created at bis":
+                    if(this.filterTextField.getText().isEmpty()) this.searchParameter.setCreatedTo(null);
                     this.searchParameter.setCreatedTo(
                             UiHelpers.parseDateTolerant(this.filterTextField.getText())
                     );
-                } catch (Exception e) {
-                    error("Bitte gebe das Datum im richtigen Format ein, z.B. 16.11.2025 oder 2025-11-16");
-                }
-                break;
-            case "Betrag ab":
-                try {
-                    this.searchParameter.setAmountFrom( UiHelpers.parseAmountTolerant(this.filterTextField.getText()).abs());
-                }catch (Exception e){
-                    error("Bitte gebe den Betrag im richtigen Format ein wie z.B. 12.329,99 oder 123");
-                }
-                break;
-            case "Betrag bis":
-                try {
-                    this.searchParameter.setAmountTo( UiHelpers.parseAmountTolerant(this.filterTextField.getText()).abs());
-                }catch (Exception e){
-                    error("Bitte gebe den Betrag im richtigen Format ein wie z.B. 12.329,99 oder 123");
-                }
-                break;
+                    break;
+                case "Betrag ab":
+                    if(this.filterTextField.getText().isEmpty()) this.searchParameter.setAmountFrom(null);
+                    this.searchParameter.setAmountFrom(
+                            UiHelpers.parseAmountTolerant(this.filterTextField.getText()).abs()
+                    );
+                    break;
+                case "Betrag bis":
+                    if(this.filterTextField.getText().isEmpty()) this.searchParameter.setAmountTo(null);
+                    this.searchParameter.setAmountTo(
+                            UiHelpers.parseAmountTolerant(this.filterTextField.getText()).abs()
+                    );
+                    break;
+            }
+        } catch (Exception e) {
+            if(!this.filterTextField.getText().isEmpty())error("Es ist ein Fehler beim Lesen des Filterwertes aufgetreten: " + e.getMessage());
+            return false;
+        }
+        return true;
+    }
+
+    private String getTextValueSelectedFilter(String selected){
+        try {
+            if (this.searchParameter == null) {
+                return "";
+            }
+            switch (selected) {
+                case "Verwendungszweck":
+                    String description = this.searchParameter.getDescription();
+                    return description != null ? description : "";
+
+                case "Empfänger, Sender":
+                    String senderRecipient = this.searchParameter.getSenderRecipientUsername();
+                    return senderRecipient != null ? senderRecipient : "";
+
+                case "Created at von":
+                    Instant createdFrom = this.searchParameter.getCreatedFrom();
+                    return createdFrom != null ? UiHelpers.formatInstantToDate(createdFrom) : "";
+
+                case "Created at bis":
+                    Instant createdTo = this.searchParameter.getCreatedTo();
+                    return createdTo != null ? UiHelpers.formatInstantToDate(createdTo) : "";
+
+                case "Betrag ab":
+                    BigDecimal amountFrom = this.searchParameter.getAmountFrom();
+                    return amountFrom != null ? UiHelpers.formatBigDecimal(amountFrom) : "";
+
+                case "Betrag bis":
+                    BigDecimal amountTo = this.searchParameter.getAmountTo();
+                    return amountTo != null ? UiHelpers.formatBigDecimal(amountTo) : "";
+
+                default:
+                    return "";
+            }
+        } catch (Exception e) {
+            throw new RuntimeException();
+            //return "";
         }
     }
 
@@ -555,7 +592,9 @@ public class TransactionViewController {
     @FXML
     private void onFilterChanged(ActionEvent event) {
         String selected = filterFieldComboBox.getValue();
-       if(beforeActionComboBoxValue!= null) parseValuesFromSearchField(beforeActionComboBoxValue);
+        if(beforeActionComboBoxValue!= null) parseValuesFromSearchField(beforeActionComboBoxValue);
+        String filterText= getTextValueSelectedFilter(selected);
+       filterTextField.setText(filterText);
        beforeActionComboBoxValue = selected;
        updateAutoCompletion(selected.equals("Empfänger, Sender"));
     }

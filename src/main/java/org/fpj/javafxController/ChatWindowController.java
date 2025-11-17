@@ -12,7 +12,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Window;
 import org.fpj.Data.InfinitePager;
 import org.fpj.Data.UiHelpers;
-import org.fpj.exportImport.FileHandling;
+import org.fpj.exportImport.adapter.FileHandling;
 import org.fpj.exportImport.application.DirectMessagePinBoardCsvExporter;
 import org.fpj.messaging.application.DirectMessageRow;
 import org.fpj.messaging.application.DirectMessageService;
@@ -22,7 +22,6 @@ import org.fpj.users.domain.ConversationMessageView;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 

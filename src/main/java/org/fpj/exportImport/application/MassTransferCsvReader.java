@@ -7,13 +7,12 @@ import com.univocity.parsers.csv.CsvParser;
 import com.univocity.parsers.csv.CsvParserSettings;
 import lombok.Setter;
 import org.fpj.Data.UiHelpers;
-import org.fpj.exportImport.CsvError;
-import org.fpj.exportImport.CsvImportResult;
-import org.fpj.payments.application.TransactionService;
+import org.fpj.exportImport.adapter.CsvError;
+import org.fpj.exportImport.adapter.CsvImportResult;
+import org.fpj.exportImport.adapter.CsvReader;
 import org.fpj.payments.domain.MassTransfer;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -27,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
