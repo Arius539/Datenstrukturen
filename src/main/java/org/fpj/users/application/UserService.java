@@ -23,7 +23,6 @@ public class UserService {
         this.userRepo = userRepo;
     }
 
-    //TODO: wir sollten meiner Meinung nach das Optional-Handling schon hier machen und die Exception im Service/ Controller behandeln
     public User findByUsername(final String username){
         Optional<User> user = userRepo.findByUsername(username);
         if (user.isPresent()){

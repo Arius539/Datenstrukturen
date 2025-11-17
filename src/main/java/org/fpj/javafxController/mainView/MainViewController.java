@@ -27,6 +27,7 @@ public class MainViewController {
     private final TransactionService transactionService;
     private final AlertService alertService;
 
+    @Autowired
     public MainViewController(ApplicationContext context, TransactionsLiteViewController transactionsLiteController, ChatPreviewController chatPreviewController,
                               UserService userService, TransactionService transactionService, AlertService alertService){
         this.applicationContext = context;
