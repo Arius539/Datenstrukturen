@@ -1,8 +1,8 @@
 package org.fpj.users.application;
 
+import org.fpj.Exceptions.DataNotPresentException;
 import org.fpj.Exceptions.LoginFailedException;
 import org.fpj.users.domain.User;
-import org.fpj.users.domain.UserManagingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -12,17 +12,27 @@ import org.springframework.stereotype.Service;
 @Service
 public class LoginService {
 
+    private static final String REGEX_USERNAME_VALIDATOR =
+            "^(?!.*\\.\\.)(?=.{8,255})[A-Za-z0-9_%.+-]{2,64}@[A-Za-z0-9.-]{2,}\\.[A-Za-z]{2,}$";
+
     private final GenericApplicationContext context;
-    private final UserManagingService userManagingService;
+    private final UserService userService;
 
     @Autowired
-    public LoginService(GenericApplicationContext context, UserManagingService userManagingService){
+    public LoginService(GenericApplicationContext context, UserService userService){
         this.context = context;
-        this.userManagingService = userManagingService;
+        this.userService = userService;
     }
 
     public void login(final String username, final String password) {
-        final User user = userManagingService.getUserByUsername(username);
+        final User user;
+        try {
+            user = userService.findByUsername(username);
+        }
+        catch (DataNotPresentException e){
+            throw new LoginFailedException("Kein User mit Username " + username + " vorhanden.");
+        }
+
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         if (passwordEncoder.matches(password, user.getPasswordHash())){
             context.registerBean("loggedInUser", User.class, user);
@@ -33,14 +43,21 @@ public class LoginService {
     }
 
     public void register(final String username, final String password, final String passwordCheck){
-        if (passwordCheck.equals(password)){
+        final String message;
+
+        if(!username.matches(REGEX_USERNAME_VALIDATOR)){
+            message = "Username erfüllt nicht die Anforderungen";
+        }
+        else if (!passwordCheck.equals(password)){
+            message = "Passwörter stimmen nicht überein";
+        }
+        else {
             final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
             final String hashedPassword = passwordEncoder.encode(password);
             final User newUser = new User(username, hashedPassword);
-            final User savedUser = userManagingService.save(newUser);
+            final User savedUser = userService.save(newUser);
+            return;
         }
-        else {
-            throw new LoginFailedException("Passwörter stimmen nicht überein");
-        }
+        throw new LoginFailedException(message);
     }
 }

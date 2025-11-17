@@ -15,9 +15,9 @@ import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
 import org.controlsfx.control.textfield.TextFields;
+import org.fpj.AlertService;
 import org.fpj.Data.UiHelpers;
 import org.fpj.Exceptions.TransactionException;
-import org.fpj.javafxController.ChatWindowController;
 import org.fpj.javafxController.TransactionDetailController;
 import org.fpj.payments.domain.TransactionResult;
 import org.fpj.payments.domain.TransactionRow;
@@ -46,6 +46,8 @@ public class TransactionsLiteViewController {
     private UserService userService;
     @Autowired
     private TransactionService transactionService;
+    @Autowired
+    private AlertService alertService;
 
     @FXML
     private RadioButton rbDeposit;
@@ -265,11 +267,11 @@ public class TransactionsLiteViewController {
             tfBetreff.clear();
             tfEmpfaenger.clear();
         } catch (TransactionException ex) {
-            error("Transaktion fehlgeschlagen: " + ex.getMessage());
+            alertService.error("Fehler", "Fehler", "Transaktion fehlgeschlagen: " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
-            error("Eingabe ungültig: " + ex.getMessage());
+            alertService.error("Fehler", "Fehler", "Eingabe ungültig: " + ex.getMessage());
         } catch (Exception ex) {
-            error("Unerwarteter Fehler: " + ex.getMessage());
+            alertService.error("Fehler", "Fehler", "Unerwarteter Fehler: " + ex.getMessage());
         }
     }
 
@@ -321,25 +323,8 @@ public class TransactionsLiteViewController {
 
     private void showError(String message) {
         Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Fehler");
-            alert.setHeaderText(null);
-            alert.setContentText(message);
-            alert.showAndWait();
+            alertService.error("Fehler", "Fehler", message);
         });
     }
 
-    private void info(String text) {
-        Alert a = new Alert(Alert.AlertType.INFORMATION, text, ButtonType.OK);
-        a.setHeaderText(null);
-        a.setTitle("Info");
-        a.showAndWait();
-    }
-
-    private void error(String text) {
-        Alert a = new Alert(Alert.AlertType.ERROR, text, ButtonType.OK);
-        a.setHeaderText("Fehler");
-        a.setTitle("Fehler");
-        a.showAndWait();
-    }
 }

@@ -20,22 +20,14 @@ public class JavafxApp extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/mainView/main_view.fxml"));
-        loader.setControllerFactory(context::getBean);
+        ViewNavigator viewNavigator = context.getBean(ViewNavigator.class);
+        viewNavigator.setStage(stage);
 
-        Parent root = loader.load();
-        Scene scene = new Scene(root, 1280, 860);
-        stage.setTitle("Bezahlplattform");
-        stage.setScene(scene);
-        stage.show();
+        viewNavigator.loadLogin();
     }
 
     @Override
     public void stop() {
         context.close();
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 }

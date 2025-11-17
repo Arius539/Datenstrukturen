@@ -4,6 +4,7 @@ import org.fpj.Exceptions.DataNotPresentException;
 import org.fpj.users.domain.User;
 import org.fpj.users.domain.UserRepository;
 import org.fpj.users.domain.UsernameOnly;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,32 +16,41 @@ import java.util.Optional;
 @Service
 public class UserService {
 
-    private final UserRepository userRepository;
+    private final UserRepository userRepo;
 
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    @Autowired
+    public UserService(UserRepository userRepo){
+        this.userRepo = userRepo;
     }
 
-    @Transactional(readOnly = true)
-    public User currentUser() {
-      Optional<User> user= userRepository.findByUsername("test2@test.com");
-      if(user.isPresent()) {
-          return user.get();
-      }
-        throw new DataNotPresentException("User not found");
+    public User findByUsername(final String username){
+        Optional<User> user = userRepo.findByUsername(username);
+        if (user.isPresent()){
+            return user.get();
+        }
+        throw new DataNotPresentException("Kein User mit Username " + username + " gefunden.");
     }
 
-    public Optional<User> findByUsername(String username){
-       return userRepository.findByUsername(username);
+    public User save(final User user){
+        return userRepo.save(user);
     }
 
     public Page<User> findContacts(User user, Pageable pageable){
-       return userRepository.findContactsOrderByLastMessageDesc(user.getId(), pageable);
+        return userRepo.findContactsOrderByLastMessageDesc(user.getId(), pageable);
     }
 
     public List<String> usernameContaining(String username){
-        return userRepository.findTop10ByUsernameContainingIgnoreCaseOrderByUsernameAsc(username).stream()
-                .map(UsernameOnly::getUsername)
-                .toList();
+        return userRepo.findTop10ByUsernameContainingIgnoreCaseOrderByUsernameAsc(
+                username).stream().map(UsernameOnly::getUsername).toList();
+    }
+
+    //nur zu Testzwecken
+    @Transactional(readOnly = true)
+    public User currentUser() {
+        Optional<User> user= userRepo.findByUsername("test1@test.com");
+        if(user.isPresent()) {
+            return user.get();
+        }
+        throw new DataNotPresentException("User not found");
     }
 }
