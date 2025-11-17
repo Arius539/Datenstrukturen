@@ -66,7 +66,7 @@ public class MainViewController {
         try {
             currentUser = userService.currentUser();
         }catch(Exception e) {
-            this.error("Wir konnten deine Benuterdaten nicht laden, bitte starte die Anwendung neu");
+            alertService.error("Fehler", "Fehler", "Wir konnten deine Benuterdaten nicht laden, bitte starte die Anwendung neu");
             Platform.runLater(() -> {
                 Stage stage = (Stage) lblEmail.getScene().getWindow();
                 stage.close();
