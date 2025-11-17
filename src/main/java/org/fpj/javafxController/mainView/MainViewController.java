@@ -1,8 +1,10 @@
 package org.fpj.javafxController.mainView;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import org.fpj.AlertService;
+import javafx.stage.Stage;
 import org.fpj.payments.application.TransactionService;
 import org.fpj.users.domain.User;
 import org.fpj.users.application.UserService;
@@ -52,11 +54,26 @@ public class MainViewController {
         currentUser = applicationContext.getBean("loggedInUser", User.class);
 
         //folgendes nur vorübergehend
-        currentUser = userService.currentUser();
+        if(!loadCurrentUser()) return;
+
         lblEmail.setText(currentUser.getUsername());
 
         transactionsLiteController.initialize(currentUser, this::updateBalanceLabel);
         chatPreviewController.initialize(currentUser);
+    }
+
+    public boolean loadCurrentUser(){
+        try {
+            currentUser = userService.currentUser();
+        }catch(Exception e) {
+            this.error("Wir konnten deine Benuterdaten nicht laden, bitte starte die Anwendung neu");
+            Platform.runLater(() -> {
+                Stage stage = (Stage) lblEmail.getScene().getWindow();
+                stage.close();
+            });
+            return false;
+        }
+        return true;
     }
 
     @FXML public void actionTransactions()    { }

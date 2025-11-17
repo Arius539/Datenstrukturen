@@ -28,4 +28,6 @@ public class MainController {
         this.springContext = springContext;
     }
 
+    public void hideLogin() {
+    }
 }
