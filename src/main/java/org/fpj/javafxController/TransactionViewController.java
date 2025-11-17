@@ -165,10 +165,10 @@ public class TransactionViewController {
     public void initialize(User currentUser, TransactionViewSearchParameter searchParameter) {
         this.currentUser = currentUser;
         this.searchParameter = searchParameter;
+        processSearchParameter();
         initUiElements();
         initTransactionList();
         initBatchTransactionList();
-        processSearchParameter();
         initPager();
         updateBalances();
         setUpAutoCompletion();

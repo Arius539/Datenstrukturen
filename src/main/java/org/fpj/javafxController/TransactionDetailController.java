@@ -114,24 +114,36 @@ public class TransactionDetailController {
     @FXML
     private void onSenderClicked(MouseEvent event) {
         if (onSenderClicked != null && transaction != null) {
+            this.onSenderClicked.accept(transaction);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.close();
         }
     }
 
     @FXML
     private void onRecipientClicked(MouseEvent event) {
         if (onRecipientClicked != null && transaction != null) {
+            this.onRecipientClicked.accept(transaction);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.close();
         }
     }
 
     @FXML
     private void onValueClicked(MouseEvent event) {
         if (onValueClicked != null && transaction != null) {
+            this.onValueClicked.accept(transaction);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.close();
         }
     }
 
     @FXML
     private void onDescriptionClicked(MouseEvent event) {
         if (onDescriptionClicked != null && transaction != null) {
+            this.onDescriptionClicked.accept(transaction);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.close();
         }
     }
 

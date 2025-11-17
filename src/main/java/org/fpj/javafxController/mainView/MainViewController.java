@@ -9,6 +9,7 @@ import javafx.stage.Stage;
 import org.fpj.javafxController.TransactionDetailController;
 import org.fpj.javafxController.TransactionViewController;
 import org.fpj.payments.application.TransactionService;
+import org.fpj.payments.domain.TransactionViewSearchParameter;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,8 +64,7 @@ public class MainViewController {
         }
         return true;
     }
-
-    @FXML public void actionTransactions()    {
+    public void openTransactionsWindow(TransactionViewSearchParameter transactionViewSearchParameter){
         try {
             var url = getClass().getResource("/fxml/transactionView.fxml");
             FXMLLoader loader = new FXMLLoader(url);
@@ -76,12 +76,16 @@ public class MainViewController {
             stage.setTitle("Transaktionen");
             stage.setScene(new javafx.scene.Scene(root));
             stage.show();
-            detailController.initialize(currentUser, null);
+            detailController.initialize(currentUser, transactionViewSearchParameter);
         } catch(Exception e) {
             error("Fehler beim laden des Transaktionsfensters. Versuche es erneut oder starte die Anwendung neu: ");
             e.printStackTrace();
             System.out.println(e.getMessage());
         }
+    }
+
+    @FXML public void actionTransactions()    {
+        openTransactionsWindow(null);
     }
     @FXML public void actionWallComments()    { info("Navigation: Wall Kommentare (Placeholder)."); }
 

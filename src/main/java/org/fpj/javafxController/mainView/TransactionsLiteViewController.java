@@ -20,6 +20,7 @@ import org.fpj.Data.UiHelpers;
 import org.fpj.Exceptions.TransactionException;
 import org.fpj.javafxController.ChatWindowController;
 import org.fpj.javafxController.TransactionDetailController;
+import org.fpj.javafxController.TransactionViewController;
 import org.fpj.payments.domain.*;
 import org.fpj.payments.application.TransactionService;
 import org.fpj.users.application.UserService;
@@ -29,6 +30,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -242,7 +244,7 @@ public class TransactionsLiteViewController {
             stage.setScene(new javafx.scene.Scene(root));
             stage.show();
 
-            detailController.initialize(TransactionLite.fromTransactionRow(row),this.currentUser, null, null, this::useTransactionAsTemplate, null, null);
+            detailController.initialize(TransactionLite.fromTransactionRow(row),this.currentUser, this::onTransactionDetailSenderClicked, this::onTransactionDetailRecipientClicked, this::useTransactionAsTemplate, this::onTransactionDetailDescriptionClicked, this::onTransactionDetailAmountClicked);
         } catch (Exception e) {
             showError("Fehler beim laden der Transaktionsdetails. Versuche es erneut oder starte die Anwendung neu: " + e.getMessage());
         }
@@ -261,6 +263,49 @@ public class TransactionsLiteViewController {
             case EINZAHLUNG: rbDeposit.setSelected(true);
         }
         onTypeChanged();
+    }
+
+    private void onTransactionDetailDescriptionClicked(TransactionLite row) {
+        TransactionViewSearchParameter sp= new TransactionViewSearchParameter(null, row.description(), null, null, null, null, null);
+        this.openTransactionViewWindow(sp);
+    }
+
+    private void onTransactionDetailSenderClicked(TransactionLite row) {
+        TransactionViewSearchParameter sp= new TransactionViewSearchParameter(null, null, null, null, row.senderUsername(), null, null);
+        this.openTransactionViewWindow(sp);
+    }
+
+    private void onTransactionDetailRecipientClicked(TransactionLite row) {
+        TransactionViewSearchParameter sp= new TransactionViewSearchParameter(null, null, null, null, row.recipientUsername(), null, null);
+        this.openTransactionViewWindow(sp);
+    }
+
+
+    private void onTransactionDetailAmountClicked(TransactionLite row) {
+        TransactionViewSearchParameter sp = new TransactionViewSearchParameter(
+                null, null, null, null, null,row.amount().setScale(0, RoundingMode.CEILING.FLOOR), row.amount().setScale(0, RoundingMode.CEILING)
+        );
+        this.openTransactionViewWindow(sp);
+    }
+
+    private void openTransactionViewWindow(TransactionViewSearchParameter transactionViewSearchParameter){
+        try {
+            var url = getClass().getResource("/fxml/transactionView.fxml");
+            FXMLLoader loader = new FXMLLoader(url);
+            loader.setControllerFactory(applicationContext::getBean);
+
+            Parent root = loader.load();
+            TransactionViewController detailController = loader.getController();
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle("Transaktionen");
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.show();
+            detailController.initialize(currentUser, transactionViewSearchParameter);
+        } catch(Exception e) {
+            error("Fehler beim laden des Transaktionsfensters. Versuche es erneut oder starte die Anwendung neu: ");
+            e.printStackTrace();
+            System.out.println(e.getMessage());
+        }
     }
 
     private void addLiteTransaction(TransactionRow  transactionItem) {
