@@ -13,7 +13,7 @@
 
     <TextField fx:id="usernameInput" promptText="Username" alignment="CENTER"/>
     <PasswordField fx:id="passwordInput" promptText="Passwort" alignment="CENTER"/>
-    <PasswordField fx:id="passwordCheck" promptText="Passwort wiederholen" alignment="CENTER"/>
+    <PasswordField fx:id="passwordCheck" promptText="Passwort wiederholen" alignment="CENTER" visible="false"/>
     <Button fx:id="loginButton" text="Anmelden" onAction="#submit" alignment="CENTER"/>
     <Button fx:id="toggleButton" text="noch kein Konto?" onAction="#toggleLoginAndRegister" alignment="CENTER"/>
 

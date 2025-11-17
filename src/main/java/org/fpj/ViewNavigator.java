@@ -43,7 +43,7 @@ public class ViewNavigator {
     }
 
     public void loadLogin() throws IOException{
-        loadView("/login.fxml", "Login", 600, 400);
+        loadView("/login.fxml", "Login", 400, 400);
     }
 
 }
