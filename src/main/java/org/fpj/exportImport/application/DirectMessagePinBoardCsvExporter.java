@@ -17,14 +17,7 @@ import java.util.Iterator;
 @Getter
 public class DirectMessagePinBoardCsvExporter {
     boolean isRunning = false;
-    /**
-     * Exportiert Direktnachrichten im Format:
-     * Zeitpunkt der Nachricht;Sender;Empfänger;Nachricht
-     *
-     * WICHTIG:
-     * - Der übergebene OutputStream wird NICHT geschlossen.
-     *   Das macht der Aufrufer (z. B. der Controller mit HttpServletResponse).
-     */
+
     public void export(Iterator<ConversationMessageView> messages, OutputStream out) {
         isRunning = true;
         CsvWriterSettings settings = new CsvWriterSettings();
@@ -54,7 +47,7 @@ public class DirectMessagePinBoardCsvExporter {
     private String formatInstant(Instant instant) {
         DateTimeFormatter formatter = DateTimeFormatter
                 .ofPattern("yyyy-MM-dd HH:mm:ss")
-                .withZone(ZoneId.of("Europe/Berlin")); // oder ZoneId.systemDefault()
+                .withZone(ZoneId.of("Europe/Berlin"));
         return formatter.format(instant);
     }
 }

@@ -18,13 +18,7 @@ import java.util.List;
 @Getter
 public class TransactionCsvExporter {
     boolean isRunning = false;
-    /**
-     * Exportiert Transaktionen im Format:
-     * Transaktionsdatum;Empfänger;Sender;Beschreibung;Betrag;Transaktionstyp
-     *
-     * Betrag wird als positiver Wert ausgegeben (keine Benutzer-spezifische
-     * Vorzeichenlogik).
-     */
+
     public void export(Iterator<TransactionRow> transactions, OutputStream out) {
         this.isRunning = true;
         CsvWriterSettings settings = new CsvWriterSettings();
@@ -53,13 +47,6 @@ public class TransactionCsvExporter {
             this.isRunning = false;
             throw new RuntimeException("Fehler beim Export der Transaktionen als CSV", e);
         }
-    }
-    private String formatInstant(Instant instant) {
-        DateTimeFormatter dateFormatter = DateTimeFormatter
-                .ofPattern("yyyy-MM-dd")
-                .withZone(ZoneId.of("Europe/Berlin"));
-
-        return dateFormatter.format(instant);
     }
 }
 

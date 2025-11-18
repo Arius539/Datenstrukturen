@@ -158,18 +158,11 @@ public class ChatPreviewController {
     }
     // </editor-fold>
 
-    private void addChatPreview(ChatPreview  chatPreview) {
-        this.chatPreviews.add(0,chatPreview);
-    }
-
-
     private void openChatForPreview(ChatPreview preview) {
         if (preview == null) {
             return;
         }
-
         String username = preview.name();
-
         openChatForUsername(username);
     }
 

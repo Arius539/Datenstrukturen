@@ -165,9 +165,8 @@ public class TransactionViewController {
 
     private TransactionResult executeTransactionByList(List<TransactionLite> transactionList){
         try{
-            List<TransactionResult> results= transactionService.sendBulkTransfers(transactionList, currentUser);
-            return results.getLast();
-        } catch (TransactionException e) {
+            return transactionService.sendBulkTransfers(transactionList, currentUser);
+        } catch (TransactionException | IllegalArgumentException e) {
             error("Transaktionsfehler: "+e.getMessage());
         } catch (Exception e){
             error("Unerwarteter Fehler: "+ e.getMessage());
@@ -207,11 +206,8 @@ public class TransactionViewController {
                         pageSize
                 ),
                 page -> transactionList.addAll(page.getContent()),
-                ex ->  {showError("Transaktionen konnten nicht geladen werden: " +
-                        (ex != null ? ex.getMessage() : "Unbekannter Fehler"));
-                    System.out.println(ex.getMessage());
-                    ex.printStackTrace();
-                    },
+                ex -> showError("Transaktionen konnten nicht geladen werden: " +
+                    (ex != null ? ex.getMessage() : "Unbekannter Fehler")),
                 "trx-page-loader-"
         );
 
@@ -241,7 +237,7 @@ public class TransactionViewController {
                     setGraphic(null);
                     setText(null);
                 } else {
-                    boolean outgoing = Objects.equals(item.senderUsername(), currentUser.getUsername());
+                    boolean outgoing =item.isOutgoing(currentUser.getUsername());
 
                     String name = outgoing
                             ? (item.recipientUsername() != null ? item.recipientUsername() : "Empfänger unbekannt")
@@ -260,9 +256,6 @@ public class TransactionViewController {
 
 
                     setOnMouseClicked(ev -> {
-                        if (ev.getClickCount() == 1) {
-                        }
-
                         if (ev.getClickCount() == 2) {
                             openTransactionDetails(item);
                         }
@@ -294,7 +287,7 @@ public class TransactionViewController {
                     setGraphic(null);
                     setText(null);
                 } else {
-                    boolean outgoing = item.senderId() == currentUser.getId();
+                    boolean outgoing = item.isOutgoing(currentUser.getId());
 
                     String name = outgoing
                             ? (item.recipientUsername() != null ? item.recipientUsername() : "Empfänger unbekannt")
@@ -359,12 +352,10 @@ public class TransactionViewController {
             String sender= null;
             TransactionType type = null;
             if (depositRadio.isSelected()) {
-                sender= null;
                 recipient = currentUser.getUsername();
                 type = TransactionType.EINZAHLUNG;
             } else if (withdrawRadio.isSelected()) {
                 sender = currentUser.getUsername();
-                recipient = null;
                 type = TransactionType.AUSZAHLUNG;
             } else if (transferRadio.isSelected()) {
                 sender = currentUser.getUsername();
@@ -382,21 +373,6 @@ public class TransactionViewController {
             error("Unerwarteter Fehler: " + ex.getMessage());
         }
         return null;
-    }
-
-    private void sendTransfers(TransactionLite transactionLite) {
-        try {
-            TransactionResult result= transactionService.sendTransfers(transactionLite, currentUser);
-            TransactionRow row= TransactionRow.fromTransaction(result.transaction());
-            this.transactionList.add(0, row);
-            updateBalances();
-        } catch (TransactionException ex) {
-            error("Transaktion fehlgeschlagen: " + ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            error("Eingabe ungültig: " + ex.getMessage());
-        } catch (Exception ex) {
-            error("Unerwarteter Fehler: " + ex.getMessage());
-        }
     }
 
     private void useTransactionAsTemplate(TransactionLite row) {
@@ -462,37 +438,35 @@ public class TransactionViewController {
             if (this.searchParameter == null) {
                 return "";
             }
-            switch (selected) {
-                case "Verwendungszweck":
+            return switch (selected) {
+                case "Verwendungszweck" -> {
                     String description = this.searchParameter.getDescription();
-                    return description != null ? description : "";
-
-                case "Empfänger, Sender":
+                    yield description != null ? description : "";
+                }
+                case "Empfänger, Sender" -> {
                     String senderRecipient = this.searchParameter.getSenderRecipientUsername();
-                    return senderRecipient != null ? senderRecipient : "";
-
-                case "Created at von":
+                    yield senderRecipient != null ? senderRecipient : "";
+                }
+                case "Created at von" -> {
                     Instant createdFrom = this.searchParameter.getCreatedFrom();
-                    return createdFrom != null ? UiHelpers.formatInstantToDate(createdFrom) : "";
-
-                case "Created at bis":
+                    yield createdFrom != null ? UiHelpers.formatInstantToDate(createdFrom) : "";
+                }
+                case "Created at bis" -> {
                     Instant createdTo = this.searchParameter.getCreatedTo();
-                    return createdTo != null ? UiHelpers.formatInstantToDate(createdTo) : "";
-
-                case "Betrag ab":
+                    yield createdTo != null ? UiHelpers.formatInstantToDate(createdTo) : "";
+                }
+                case "Betrag ab" -> {
                     BigDecimal amountFrom = this.searchParameter.getAmountFrom();
-                    return amountFrom != null ? UiHelpers.formatBigDecimal(amountFrom) : "";
-
-                case "Betrag bis":
+                    yield amountFrom != null ? UiHelpers.formatBigDecimal(amountFrom) : "";
+                }
+                case "Betrag bis" -> {
                     BigDecimal amountTo = this.searchParameter.getAmountTo();
-                    return amountTo != null ? UiHelpers.formatBigDecimal(amountTo) : "";
-
-                default:
-                    return "";
-            }
+                    yield amountTo != null ? UiHelpers.formatBigDecimal(amountTo) : "";
+                }
+                default -> "";
+            };
         } catch (Exception e) {
             throw new RuntimeException();
-            //return "";
         }
     }
 
@@ -564,12 +538,6 @@ public class TransactionViewController {
         reloadTransactionList();
     }
 
-
-    // ---------------------------------------------------------------
-    // Aktionen: Kontextmenü der Tabellen
-    // (transactionTable & batchTransactionTable)
-    // ---------------------------------------------------------------
-
     @FXML
     private void onDeleteTransaction(ActionEvent event) {
         List<TransactionLite> selectedTransactions = new ArrayList<>(batchTransactionTable.getSelectionModel().getSelectedItems());
@@ -624,20 +592,11 @@ public class TransactionViewController {
         this.updateBalances();
     }
 
-
-    // ---------------------------------------------------------------
-    // Aktionen: RadioButtons (Transaktionstyp)
-    // ---------------------------------------------------------------
-
     @FXML
     private void onTransactionTypeChanged(ActionEvent event) {
         applyTypeVisibility();
     }
 
-
-    // ---------------------------------------------------------------
-    // Aktionen: Buttons rechts
-    // ---------------------------------------------------------------
     @FXML
     private void exportTransactions(){
         try {

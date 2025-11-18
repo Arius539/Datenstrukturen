@@ -43,13 +43,13 @@ public class TransactionService {
     }
 
     public List<TransactionRow> transactionsForUserAsList(long userId) {
-       return this.txRepo.findRowsForUserList(userId);
+        return this.txRepo.findRowsForUserList(userId);
     }
 
     /* =================== Commands (neu) =================== */
 
     @Transactional
-    public void deposit(User user, BigDecimal amount, String subject) {
+    public Transaction deposit(User user, BigDecimal amount, String subject) {
         Transaction tx = new Transaction();
         tx.setTransactionType(EINZAHLUNG);
         tx.setRecipient(user);
@@ -57,10 +57,11 @@ public class TransactionService {
         tx.setDescription(subject);
         tx.setCreatedAt(java.time.Instant.now());
         txRepo.save(tx);
+        return tx;
     }
 
     @Transactional
-    public void withdraw(User user, BigDecimal amount, String subject) {
+    public Transaction withdraw(User user, BigDecimal amount, String subject) {
         Transaction tx = new Transaction();
         tx.setTransactionType(AUSZAHLUNG);
         tx.setSender(user);
@@ -68,14 +69,15 @@ public class TransactionService {
         tx.setDescription(subject);
         tx.setCreatedAt(java.time.Instant.now());
         txRepo.save(tx);
+        return tx;
     }
 
     @Transactional
-    public void transfer(User sender, String recipientUsername, BigDecimal amount, String subject) {
+    public Transaction transfer(User sender, String recipientUsername, BigDecimal amount, String subject) {
         if (recipientUsername == null || recipientUsername.isBlank()) {
             throw new TransactionException("Empfänger ist erforderlich.");
         }
-       Optional<User> optRecipient = userService.findByUsername(recipientUsername);
+        Optional<User> optRecipient = userService.findByUsername(recipientUsername);
         if (!optRecipient.isPresent()) {
             throw new TransactionException("Der angegebene Empfänger existiert nicht.");
         }
@@ -86,7 +88,6 @@ public class TransactionService {
         }
 
         requirePositive(amount, "Der Betrag muss größer als 0 sein.");
-        ensureSufficientFunds(sender.getId(), amount, "Nicht genügend Guthaben für Überweisung.");
 
         Transaction tx = new Transaction();
         tx.setTransactionType(UEBERWEISUNG);
@@ -96,9 +97,10 @@ public class TransactionService {
         tx.setDescription(subject);
         tx.setCreatedAt(java.time.Instant.now());
         txRepo.save(tx);
+        return tx;
     }
 
-    public  Page<TransactionRow>  searchTransactions( TransactionViewSearchParameter parameter,  int page, int size) {
+    public Page<TransactionRow> searchTransactions(TransactionViewSearchParameter parameter, int page, int size) {
         String senderRecipientPattern = parameter.getSenderRecipientUsername() == null ? null : "%" + parameter.getSenderRecipientUsername().toLowerCase() + "%";
         String descriptionPattern = parameter.getDescription() == null ? null : "%" + parameter.getDescription().toLowerCase() + "%";
         Pageable pr = PageRequest.of(page, size);
@@ -114,39 +116,46 @@ public class TransactionService {
         );
     }
 
-    public TransactionLite transactionInfosToTransactionLite(String amountIn, String senderUsername, String recipientUsername, String description , TransactionType type) {
-            BigDecimal amount = parseAmountTolerant(amountIn);
-            String recipient = safe(recipientUsername);
-            if (type == TransactionType.EINZAHLUNG) {
+    public TransactionLite transactionInfosToTransactionLite(String amountIn, String senderUsername, String recipientUsername, String description, TransactionType type) {
+        BigDecimal amount = parseAmountTolerant(amountIn);
+        String recipient = safe(recipientUsername);
+        if (type == TransactionType.EINZAHLUNG) {
 
-            } else if (type == TransactionType.AUSZAHLUNG) {
-            } else if (type == TransactionType.UEBERWEISUNG) {
-                if(recipient.equals(senderUsername))throw  new TransactionException("Der angegebene Empfänger existiert nicht.");
-                if(userService.findByUsername(recipient).isEmpty()) throw  new TransactionException(String.format( "Der Empfänger mit dem Benutzernamen %s  ist kein Benutzer unserer Plattform", recipient));
-            } else {
-                throw new IllegalStateException("Kein Transaktionstyp ausgewählt.");
-            }
-            return new  TransactionLite(amount, type, senderUsername, recipientUsername, description);
+        } else if (type == TransactionType.AUSZAHLUNG) {
+        } else if (type == TransactionType.UEBERWEISUNG) {
+            if (recipient.equals(senderUsername))
+                throw new TransactionException("Der angegebene Empfänger existiert nicht.");
+            if (userService.findByUsername(recipient).isEmpty())
+                throw new TransactionException(String.format("Der Empfänger mit dem Benutzernamen %s  ist kein Benutzer unserer Plattform", recipient));
+        } else {
+            throw new IllegalStateException("Kein Transaktionstyp ausgewählt.");
+        }
+        return new TransactionLite(amount, type, senderUsername, recipientUsername, description);
     }
 
-    public TransactionResult sendTransfers(TransactionLite transactionLite,User currentUser) {
-        TransactionResult result;
-            if (transactionLite.type() == TransactionType.EINZAHLUNG) {
-                this.deposit(currentUser, transactionLite.amount(), transactionLite.description());
-            } else if (transactionLite.type()== TransactionType.AUSZAHLUNG) {
-                ensureSufficientFunds(currentUser.getId(), transactionLite.amount(), "Nicht genügend Guthaben für die Auszahlung.");
-                this.withdraw(currentUser, transactionLite.amount(), transactionLite.description());
-            } else if (transactionLite.type()== TransactionType.UEBERWEISUNG) {
-                ensureSufficientFunds(currentUser.getId(), transactionLite.amount(), "Nicht genügend Guthaben für die Überweisung.");
-                this.transfer(currentUser, transactionLite.recipientUsername(), transactionLite.amount(), transactionLite.description());
-            } else {
-                throw new IllegalStateException("Kein Transaktionstyp ausgewählt.");
-            }
-            return result;
+    public TransactionResult sendTransfers(TransactionLite transactionLite, User currentUser) {
+        BigDecimal currentBalance = this.computeBalance(currentUser.getId());
+        if (transactionLite.type() == TransactionType.EINZAHLUNG) {
+            this.deposit(currentUser, transactionLite.amount(), transactionLite.description());
+            currentBalance = currentBalance.add(transactionLite.amount());
+        } else if (transactionLite.type() == TransactionType.AUSZAHLUNG) {
+            if (currentBalance.compareTo(transactionLite.amount()) < 0) throw new TransactionException("Nicht genügend Guthaben für die Auszahlung.");
+            currentBalance = currentBalance.subtract(transactionLite.amount());
+            this.withdraw(currentUser, transactionLite.amount(), transactionLite.description());
+            currentBalance = currentBalance.add(transactionLite.amount());
+        } else {
+            if (currentBalance.compareTo(transactionLite.amount()) < 0) throw new TransactionException("Nicht genügend Guthaben für die Auszahlung.");
+            currentBalance = currentBalance.subtract(transactionLite.amount());
+
+            this.transfer(currentUser, transactionLite.recipientUsername(), transactionLite.amount(), transactionLite.description());
+        }
+        return new TransactionResult(new Transaction(), currentBalance);
     }
 
-    public List<TransactionResult> sendBulkTransfers(List<TransactionLite> transactionsLite, User currentUser) {
-        List<TransactionResult> results = new ArrayList<>();
+
+    public TransactionResult sendBulkTransfers(List<TransactionLite> transactionsLite, User currentUser) {
+        if(transactionsLite.isEmpty()) throw new IllegalArgumentException("Die Transaktionsliste ist leer, es können keine Transaktionen ausgeführt werden");
+        TransactionResult result = null;
         BigDecimal sum = BigDecimal.ZERO;
         for (TransactionLite lite : transactionsLite) {
             if (lite.type() == TransactionType.EINZAHLUNG) {
@@ -155,25 +164,31 @@ public class TransactionService {
                 sum = sum.add(lite.amount());
             }
         }
-        ensureSufficientFunds(currentUser.getId(), sum, "Dein Kontostand ist zu gering um die Transaktionen auszuführen");
-        for (TransactionLite lite : transactionsLite) {
-           results.add(sendTransfersWithoutBalanceCheck(lite, currentUser));
-        }
+        BigDecimal balance = this.computeBalance(currentUser.getId());
+        if(balance.compareTo(sum) < 0) throw  new TransactionException( "Dein Kontostand ist zu gering um die Transaktionen auszuführen");
 
-        return results;
+        balance = balance.subtract(sum);
+        for (int i = 0; i < transactionsLite.size(); i++) {
+            TransactionLite lite = transactionsLite.get(i);
+            Transaction transaction = sendTransfersWithoutBalanceCheck(lite, currentUser);
+            if (i == transactionsLite.size() - 1) {
+                result = new TransactionResult(transaction, balance);
+            }
+        }
+        if(result == null)throw new IllegalArgumentException("Es gab ein Problem beim ausführen deiner Transaktionen");
+        return result;
     }
 
-    private TransactionResult sendTransfersWithoutBalanceCheck(TransactionLite transactionLite,User currentUser) {
-        requirePositive(transactionLite.amount(), "Der Betrag muss größer als 0 sein.");
-        TransactionResult result;
+    private Transaction sendTransfersWithoutBalanceCheck(TransactionLite transactionLite,User currentUser) {
+        Transaction transaction;
         if (transactionLite.type() == TransactionType.EINZAHLUNG) {
-            result = this.deposit(currentUser, transactionLite.amount(), transactionLite.description());
+            transaction = this.deposit(currentUser, transactionLite.amount(), transactionLite.description());
         } else if (transactionLite.type()== TransactionType.AUSZAHLUNG) {
-            result = this.withdraw(currentUser, transactionLite.amount(), transactionLite.description());
+            transaction = this.withdraw(currentUser, transactionLite.amount(), transactionLite.description());
         } else {
-            result = this.transfer(currentUser, transactionLite.recipientUsername(), transactionLite.amount(), transactionLite.description());
+            transaction = this.transfer(currentUser, transactionLite.recipientUsername(), transactionLite.amount(), transactionLite.description());
         }
-        return result;
+        return transaction;
     }
 
     public BigDecimal findUserBalanceAfterTransaction(long userId, long transactionId){
@@ -184,9 +199,4 @@ public class TransactionService {
         if (amt.signum() <= 0) throw new TransactionException(msg);
     }
 
-    private void ensureSufficientFunds(long userId, BigDecimal amt, String msg) {
-        if (computeBalance(userId).compareTo(amt) < 0) {
-            throw new TransactionException(msg);
-        }
-    }
 }
