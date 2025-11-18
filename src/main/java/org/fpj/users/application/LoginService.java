@@ -15,6 +15,8 @@ public class LoginService {
 
     private static final String REGEX_USERNAME_VALIDATOR =
             "^(?!.*\\.\\.)(?=.{8,255})[A-Za-z0-9_%.+-]{2,64}@[A-Za-z0-9.-]{2,}\\.[A-Za-z]{2,}$";
+    private static final String REGEX_PASSWORT_VALIDATOR =
+            "^(?=.{8,127}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).+$";
 
     private final ConfigurableApplicationContext context;
     private final UserService userService;
@@ -43,14 +45,17 @@ public class LoginService {
         }
     }
 
-    public void register(final String username, final String password, final String passwordCheck){
+    public void register(final String username, final String password, final String passwordCheck) {
         final String message;
-
-        if(!username.matches(REGEX_USERNAME_VALIDATOR)){
+        if (userService.usernameExists(username)) {
+            message = "Username existiert bereits";
+        } else if (!username.matches(REGEX_USERNAME_VALIDATOR)) {
             message = "Username erfüllt nicht die Anforderungen";
-        }
-        else if (!passwordCheck.equals(password)){
+        } else if (!passwordCheck.equals(password)) {
             message = "Passwörter stimmen nicht überein";
+        }
+        else if (!password.matches(REGEX_PASSWORT_VALIDATOR)) {
+            message = "Passwort erfüllt nicht die Anforderungen";
         }
         else {
             final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
