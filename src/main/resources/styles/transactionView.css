@@ -1,6 +1,4 @@
-/************************************************************
- * Grundtheme – Farben, Typografie, Hintergrund
- ************************************************************/
+/* wurde KI erstellt erstelle mir eine passende css zu dieser fxml: main_view.fxml, und ein passendes Farbkonzept (Blau, Weiß, Grau) */
 
 .transaction-root {
     -c-brand:        #0F61A8;
@@ -172,7 +170,7 @@
 
 /* Reihen mit Buttons (Batch-Operationen) */
 .button-row {
-    -fx-alignment: CENTER_LEFT;
+    -fx-alignment: CENTER;
     -fx-spacing: 10;
 }
 
@@ -280,7 +278,7 @@
 
 /* HBox, die die Radiobuttons enthält */
 .transaction-type-row {
-    -fx-alignment: CENTER_LEFT;
+    -fx-alignment: CENTER;
     -fx-spacing: 10;
 }
 

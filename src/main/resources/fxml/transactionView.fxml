@@ -178,7 +178,8 @@
                             <HBox spacing="10.0"
                                   GridPane.rowIndex="3"
                                   GridPane.columnIndex="1"
-                                  styleClass="transaction-type-row">
+                                  styleClass="transaction-type-row"
+                                  alignment="CENTER">
                                 <RadioButton fx:id="depositRadio"
                                              text="Einzahlung"
                                              toggleGroup="$transactionTypeToggleGroup"
@@ -195,7 +196,8 @@
                             <HBox spacing="10.0"
                                   GridPane.rowIndex="4"
                                   GridPane.columnIndex="1"
-                                  styleClass="button-row">
+                                  styleClass="button-row"
+                                  alignment="CENTER">
                                 <Button fx:id="importCsvButton"
                                         text="von CSV"
                                         onAction="#onImportCsv">
