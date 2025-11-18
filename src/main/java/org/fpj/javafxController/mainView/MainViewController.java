@@ -56,9 +56,6 @@ public class MainViewController {
         //TODO: Produktiv sollte folgendens ausgeführt werden:
         currentUser = applicationContext.getBean("loggedInUser", User.class);
 
-        //folgendes nur vorübergehend
-//        if(!loadCurrentUser()) return;
-
         lblEmail.setText(currentUser.getUsername());
 
         transactionsLiteController.initialize(currentUser, this::updateBalanceLabel);

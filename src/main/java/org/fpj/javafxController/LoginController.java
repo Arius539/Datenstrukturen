@@ -82,8 +82,6 @@ public class LoginController {
     private void doLogin(String username, String password) {
         try {
             loginService.login(username, password);
-            alertService.info("Info", "Login erfolgreich",
-                    "Mit Benutzer " + username + " eingelogged.");
             viewNavigator.loadMain();
         }
         catch (LoginFailedException e){

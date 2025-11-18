@@ -215,6 +215,7 @@ public class TransactionViewController {
         transactionList.clear();
         transactionPager.resetAndLoadFirstPage();
     }
+
     private void initBatchTransactionList(){
         batchTransactionTable.setItems(batchTransactionList);
         batchTransactionTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -556,14 +557,12 @@ public class TransactionViewController {
     private void onExecuteSingleFromContext(ActionEvent event) {
         List<TransactionLite> selectedTransactions = new ArrayList<>(batchTransactionTable.getSelectionModel().getSelectedItems());
         batchTransactionTable.getSelectionModel().clearSelection();
-        ArrayList<TransactionResult> results= executeTransactionByList(selectedTransactions);
-        if(!results.isEmpty())for (TransactionLite transactionLite : selectedTransactions) {
+        ArrayList<TransactionResult> result= executeTransactionByList(selectedTransactions);
+        if(!result.isEmpty())for (TransactionLite transactionLite : selectedTransactions) {
             batchTransactionList.remove(transactionLite);
         }
         updateBalances();
-        for(TransactionResult transactionResult : results) {
-            this.transactionList.add(TransactionRow.fromTransaction(transactionResult.transaction()));
-        }
+        addTransactionsToList(result);
     }
 
     private void openCsvImportDialog(){
@@ -594,6 +593,12 @@ public class TransactionViewController {
             this.batchTransactionList.add(new TransactionLite(massTransfer.betrag(),TransactionType.UEBERWEISUNG, this.currentUser.getUsername(), massTransfer.empfaenger(), massTransfer.beschreibung()));
         }
         this.updateBalances();
+    }
+
+    private void addTransactionsToList(List< TransactionResult> transactions){
+        for(TransactionResult transactionResult : transactions) {
+            this.transactionList.add(0, TransactionRow.fromTransaction(transactionResult.transaction()));
+        }
     }
 
     @FXML
@@ -636,7 +641,8 @@ public class TransactionViewController {
         if(transactionLite==null) return;
         List<TransactionLite> list = new ArrayList<>();
         list.add(transactionLite);
-        executeTransactionByList(list);
+       ArrayList<TransactionResult> result= executeTransactionByList(list);
+        addTransactionsToList(result);
         updateBalances();
     }
 
@@ -653,9 +659,7 @@ public class TransactionViewController {
         ArrayList<TransactionResult> result= executeTransactionByList(batchTransactionList);
         if(!result.isEmpty()) batchTransactionList.clear();
         updateBalances();
-        for(TransactionResult transactionResult : result) {
-            this.transactionList.add(TransactionRow.fromTransaction(transactionResult.transaction()));
-        }
+        addTransactionsToList(result);
     }
 
     private void showError(String message) {
