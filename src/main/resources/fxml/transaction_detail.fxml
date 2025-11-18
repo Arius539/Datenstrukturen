@@ -14,7 +14,7 @@
       alignment="CENTER"
       spacing="24"
       styleClass="root"
-      stylesheets="@../styles/transactionDetail.css">
+      stylesheets="@/styles/transactionDetail.css">
 
     <padding>
         <Insets top="24" right="24" bottom="24" left="24"/>

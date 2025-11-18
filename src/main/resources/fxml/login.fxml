@@ -9,12 +9,12 @@
 <VBox xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="org.fpj.javafxController.LoginController"
-            spacing="10" alignment="CENTER">
+            spacing="10" alignment="CENTER" styleClass="login-window" stylesheets="@/styles/loginWindow.css">
 
     <TextField fx:id="usernameInput" promptText="Username" alignment="CENTER"/>
     <PasswordField fx:id="passwordInput" promptText="Passwort" alignment="CENTER"/>
     <PasswordField fx:id="passwordCheck" promptText="Passwort wiederholen" alignment="CENTER" visible="false"/>
-    <Button fx:id="loginButton" text="Anmelden" onAction="#submit" alignment="CENTER"/>
+    <Button fx:id="loginButton" text="anmelden" onAction="#submit" alignment="CENTER"/>
     <Button fx:id="toggleButton" text="noch kein Konto?" onAction="#toggleLoginAndRegister" alignment="CENTER"/>
 
 </VBox>
