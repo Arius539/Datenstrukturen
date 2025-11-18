@@ -54,7 +54,7 @@ public class MainViewController {
         currentUser = applicationContext.getBean("loggedInUser", User.class);
 
         //folgendes nur vorübergehend
-        if(!loadCurrentUser()) return;
+//        if(!loadCurrentUser()) return;
 
         lblEmail.setText(currentUser.getUsername());
 
