@@ -65,19 +65,6 @@ public class MainViewController {
         chatPreviewController.initialize(currentUser);
     }
 
-    public boolean loadCurrentUser(){
-        try {
-            currentUser = userService.currentUser();
-        }catch(Exception e) {
-            alertService.error("Fehler", "Fehler", "Wir konnten deine Benuterdaten nicht laden, bitte starte die Anwendung neu");
-            Platform.runLater(() -> {
-                Stage stage = (Stage) lblEmail.getScene().getWindow();
-                stage.close();
-            });
-            return false;
-        }
-        return true;
-    }
     public void openTransactionsWindow(TransactionViewSearchParameter transactionViewSearchParameter){
         try {
             var url = getClass().getResource("/fxml/transactionView.fxml");

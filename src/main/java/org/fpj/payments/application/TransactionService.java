@@ -148,9 +148,9 @@ public class TransactionService {
     }
 
 
-    public TransactionResult sendBulkTransfers(List<TransactionLite> transactionsLite, User currentUser) {
+    public ArrayList<TransactionResult> sendBulkTransfers(List<TransactionLite> transactionsLite, User currentUser) {
         if(transactionsLite.isEmpty()) throw new IllegalArgumentException("Die Transaktionsliste ist leer, es können keine Transaktionen ausgeführt werden");
-        TransactionResult result = null;
+        ArrayList<TransactionResult> results =  new ArrayList<>();
         BigDecimal sum = BigDecimal.ZERO;
         for (TransactionLite lite : transactionsLite) {
             if (lite.type() == TransactionType.EINZAHLUNG) {
@@ -166,12 +166,13 @@ public class TransactionService {
         for (int i = 0; i < transactionsLite.size(); i++) {
             TransactionLite lite = transactionsLite.get(i);
             Transaction transaction = sendTransfersWithoutBalanceCheck(lite, currentUser);
+            results.add(new TransactionResult(transaction, balance));
             if (i == transactionsLite.size() - 1) {
-                result = new TransactionResult(transaction, balance);
+                results.add(new TransactionResult(transaction, balance));
             }
         }
-        if(result == null)throw new IllegalArgumentException("Es gab ein Problem beim ausführen deiner Transaktionen");
-        return result;
+        if(results.isEmpty())throw new IllegalArgumentException("Es gab ein Problem beim ausführen deiner Transaktionen");
+        return results;
     }
 
     private Transaction sendTransfersWithoutBalanceCheck(TransactionLite transactionLite,User currentUser) {

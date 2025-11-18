@@ -164,7 +164,7 @@ public class TransactionViewController {
         this.balanceLabelBatch.setText(UiHelpers.formatSignedEuro(getBalanceAfterListOfItems(batchTransactionList)));
     }
 
-    private TransactionResult executeTransactionByList(List<TransactionLite> transactionList){
+    private ArrayList<TransactionResult> executeTransactionByList(List<TransactionLite> transactionList){
         try{
             return transactionService.sendBulkTransfers(transactionList, currentUser);
         } catch (TransactionException | IllegalArgumentException e) {
@@ -172,7 +172,7 @@ public class TransactionViewController {
         } catch (Exception e){
             error("Unerwarteter Fehler: "+ e.getMessage());
         }
-        return null;
+        return new ArrayList<>();
     }
 
    private void initUiElements(){
@@ -556,11 +556,14 @@ public class TransactionViewController {
     private void onExecuteSingleFromContext(ActionEvent event) {
         List<TransactionLite> selectedTransactions = new ArrayList<>(batchTransactionTable.getSelectionModel().getSelectedItems());
         batchTransactionTable.getSelectionModel().clearSelection();
-        TransactionResult result= executeTransactionByList(selectedTransactions);
-        if(result != null)for (TransactionLite transactionLite : selectedTransactions) {
+        ArrayList<TransactionResult> results= executeTransactionByList(selectedTransactions);
+        if(!results.isEmpty())for (TransactionLite transactionLite : selectedTransactions) {
             batchTransactionList.remove(transactionLite);
         }
         updateBalances();
+        for(TransactionResult transactionResult : results) {
+            this.transactionList.add(TransactionRow.fromTransaction(transactionResult.transaction()));
+        }
     }
 
     private void openCsvImportDialog(){
@@ -647,9 +650,12 @@ public class TransactionViewController {
 
     @FXML
     private void onExecuteAll(ActionEvent event) {
-        TransactionResult result= executeTransactionByList(batchTransactionList);
-        if(result!= null) batchTransactionList.clear();
+        ArrayList<TransactionResult> result= executeTransactionByList(batchTransactionList);
+        if(!result.isEmpty()) batchTransactionList.clear();
         updateBalances();
+        for(TransactionResult transactionResult : result) {
+            this.transactionList.add(TransactionRow.fromTransaction(transactionResult.transaction()));
+        }
     }
 
     private void showError(String message) {

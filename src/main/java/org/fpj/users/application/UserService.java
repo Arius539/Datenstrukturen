@@ -43,15 +43,6 @@ public class UserService {
                 username).stream().map(UsernameOnly::getUsername).toList();
     }
 
-    //nur zu Testzwecken
-    @Transactional(readOnly = true)
-    public User currentUser() {
-        Optional<User> user= userRepository.findByUsername("test1@test.com");
-        if(user.isPresent()) {
-            return user.get();
-        }
-        throw new DataNotPresentException("User not found");
-    }
     public boolean usernameExists(String username) {
         return userRepository.existsByUsername(username);
     }
