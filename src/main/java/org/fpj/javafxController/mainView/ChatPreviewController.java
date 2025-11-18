@@ -14,12 +14,13 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import org.controlsfx.control.textfield.AutoCompletionBinding;
 import org.controlsfx.control.textfield.TextFields;
-import org.fpj.AlertService;
+import org.fpj.Data.InfinitePager;
 import org.fpj.Data.UiHelpers;
 import org.fpj.Exceptions.DataNotPresentException;
 import org.fpj.javafxController.ChatWindowController;
 import org.fpj.messaging.application.ChatPreview;
 import org.fpj.messaging.application.DirectMessageService;
+import org.fpj.payments.application.TransactionService;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class ChatPreviewController {
@@ -45,14 +47,11 @@ public class ChatPreviewController {
     @Autowired
     private DirectMessageService directMessageService;
 
-    @Autowired
-    private AlertService alertService;
-
     private final ObservableList<ChatPreview> chatPreviews = FXCollections.observableArrayList();
-    private static final int PAGE_SIZE_CHAT_PREVIEWS = 50;
-    private int currentPageChatPreviews = 0;
-    private boolean lastPageLoadedChatPreviews = false;
-    private boolean loadingNextPageChatPreviews = false;
+    private static final int PAGE_SIZE_CHAT_PREVIEWS = 20;
+    private InfinitePager<ChatPreview> chatPreviewPager;
+    private static final int PAGE_PRE_FETCH_THRESHOLD = 5;
+
 
     @FXML
     private TextField chatsUsernameSearch;
@@ -64,23 +63,32 @@ public class ChatPreviewController {
     public void initialize(User currentUser) {
         this.currentUser = currentUser;
         initChatList();
-        loadChatPreviewsFirstPage();
-
+        initPager();
         setUpAutoCompletion();
     }
 
-    private void addChatPreview(ChatPreview  chatPreview) {
-        this.chatPreviews.add(0,chatPreview);
-    }
-
-    private void loadChatPreviewsFirstPage() {
-        currentPageChatPreviews = 0;
-        lastPageLoadedChatPreviews = false;
-        chatPreviews.clear();
-        loadNextPageChatPreview();
-    }
-
     // <editor-fold defaultstate="collapsed" desc="initialize">
+    private void initPager() {
+        chatPreviewPager = new InfinitePager<>(
+                PAGE_SIZE_CHAT_PREVIEWS,
+                // PageFetcher
+                (pageIndex, pageSize) -> {
+                    var pageRequest = PageRequest.of(pageIndex, pageSize);
+                    return directMessageService.getChatPreviews(currentUser, pageRequest);
+                },
+                // pageConsumer
+                page -> chatPreviews.addAll(page.getContent()),
+                // errorHandler
+                ex -> showError("Chat-Übersicht konnte nicht geladen werden: " +
+                        (ex != null ? ex.getMessage() : "Unbekannter Fehler")),
+                "chat-preview-loader-"
+        );
+
+        chatPreviews.clear();
+        chatPreviewPager.resetAndLoadFirstPage();
+    }
+
+
     private void initChatList() {
         lvChats.setItems(this.chatPreviews);
 
@@ -120,7 +128,11 @@ public class ChatPreviewController {
                 setGraphic(root);
 
                 int index = getIndex();
-                ensureNextChatPreviewPageLoaded(index);
+                chatPreviewPager.ensureLoadedForIndex(
+                        index,
+                        chatPreviews.size(),
+                        PAGE_PRE_FETCH_THRESHOLD
+                );
 
                 setOnMouseClicked(ev -> {
                     if (ev.getClickCount() == 2) {
@@ -146,111 +158,36 @@ public class ChatPreviewController {
     }
     // </editor-fold>
 
-    // <editor-fold defaultstate="collapsed" desc="Infinite Scroll Chat Previews">
-    private void ensureNextChatPreviewPageLoaded(int visibleIndex) {
-        if (loadingNextPageChatPreviews || lastPageLoadedChatPreviews) {
-            return;
-        }
-
-        int prefetchThreshold = 20;
-        int size = chatPreviews.size();
-
-        if (visibleIndex >= size - prefetchThreshold) {
-            loadNextPageChatPreview();
-        }
-    }
-
-    private void loadNextPageChatPreview() {
-        if (!canLoadNextChatPreviewPage()) {
-            return;
-        }
-
-        loadingNextPageChatPreviews = true;
-
-        int pageToLoad = currentPageChatPreviews;
-
-        Task<Page<ChatPreview>> task = createChatPreviewPageTask(pageToLoad);
-
-        task.setOnSucceeded(ev -> onChatPreviewPageLoaded(task.getValue(), pageToLoad));
-        task.setOnFailed(ev -> onChatPreviewPageFailed(task.getException(), pageToLoad));
-
-        UiHelpers.startBackgroundTask(task, "chat-preview-loader-" + pageToLoad);
-    }
-
-    private boolean canLoadNextChatPreviewPage() {
-        return !loadingNextPageChatPreviews && !lastPageLoadedChatPreviews;
-    }
-
-    private Task<Page<ChatPreview>> createChatPreviewPageTask(int pageToLoad) {
-        return new Task<>() {
-            @Override
-            protected Page<ChatPreview> call() {
-                var pageRequest = PageRequest.of(pageToLoad, PAGE_SIZE_CHAT_PREVIEWS);
-                return directMessageService.getChatPreviews(
-                        currentUser,
-                        pageRequest
-                );
-            }
-        };
-    }
-    private void onChatPreviewPageLoaded(Page<ChatPreview> page, int pageToLoad) {
-        try {
-            chatPreviews.addAll(page.getContent());
-            lastPageLoadedChatPreviews = page.isLast();
-            currentPageChatPreviews = pageToLoad + 1;
-        } finally {
-            loadingNextPageChatPreviews = false;
-        }
-    }
-
-    private void onChatPreviewPageFailed(Throwable ex, int pageToLoad) {
-        loadingNextPageChatPreviews = false;
-
-        showError("Chat-Übersicht Seite " + pageToLoad +
-                " konnte nicht geladen werden: " +
-                (ex != null ? ex.getMessage() : "Unbekannter Fehler"));
-    }
-    // </editor-fold>
-
     private void openChatForPreview(ChatPreview preview) {
         if (preview == null) {
             return;
         }
-
         String username = preview.name();
-
         openChatForUsername(username);
     }
 
     private void openChatForUsername(String username) {
-
-        if (username == null || username.isBlank()) {
-            alertService.error("Fehler", "Fehler", "Kein Benutzername für den Chat ausgewählt.");
-            return;
-        }
-
-
-        final User chatPartner;
-        try {
+        try{
+            if (username == null || username.isBlank()) throw  new IllegalArgumentException("Kein Benutzername für den Chat ausgewählt.");
+            if (UiHelpers.isValidEmailBool(username)) throw  new IllegalArgumentException("Der eingegebene Benutzername war im falschen Format.");
+            final Optional<User> chatPartner;
             chatPartner = userService.findByUsername(username);
-        }
-        catch (DataNotPresentException e){
-            alertService.error("Fehler", "Fehler", "Benutzer für Chat nicht gefunden: " + username);
-            return;
-        }
-
-        try {
+            if(chatPartner.isPresent())throw new DataNotPresentException(String.format("Der Benutzer mit dem Username %s wurde nicht gefunden.", username));
             ChatWindowController controller = loadChatWindow(username);
-            controller.openChat(currentUser, chatPartner);
-        } catch (Exception e){
-            alertService.error("Fehler", "Fehler", "Fehler beim laden des Chats aufgetreten. Versuche es bitte erneut.");
+            controller.openChat(currentUser, chatPartner.get());
+
+        }catch (IllegalArgumentException e){
+            error("Es ist ein unerwarteter Fehler beim Laden des Chatfensters aufgetreten: "+e.getMessage());
+        }catch (DataNotPresentException e){
+            error("Es ist ein unerwarteter Fehler beim Laden des Chatfensters aufgetreten: "+e.getMessage());
+        }catch (Exception e){
+            error("Es ist ein unerwarteter Fehler beim Laden des Chatfensters aufgetreten. Bitte versuche es später erneut: "+e.getMessage());
         }
     }
-
     private ChatWindowController loadChatWindow(String username) throws IOException {
         var url = getClass().getResource("/fxml/chat_window.fxml");
         if (url == null) {
-            throw new IllegalStateException("chat_window.fxml nicht gefunden!"); //wieso ist das nötig wir wissen doch dass die Datei existiert
+            throw new IllegalStateException("chat_window.fxml nicht gefunden!");
         }
 
         FXMLLoader loader = new FXMLLoader(url);
@@ -268,16 +205,33 @@ public class ChatPreviewController {
 
     @FXML
     private void onReloadChats() {
-        this.loadingNextPageChatPreviews = false;
-        this.lastPageLoadedChatPreviews = false;
-        this.currentPageChatPreviews = 0;
-        loadChatPreviewsFirstPage();
+        chatPreviews.clear();
+        if (chatPreviewPager != null) {
+            chatPreviewPager.resetAndLoadFirstPage();
+        }
     }
 
     private void showError(String message) {
         Platform.runLater(() -> {
-            alertService.error("Fehler", "Fehler", message);
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Fehler");
+            alert.setHeaderText(null);
+            alert.setContentText(message);
+            alert.showAndWait();
         });
     }
 
+    private void info(String text) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION, text, ButtonType.OK);
+        a.setHeaderText(null);
+        a.setTitle("Info");
+        a.showAndWait();
+    }
+
+    private void error(String text) {
+        Alert a = new Alert(Alert.AlertType.ERROR, text, ButtonType.OK);
+        a.setHeaderText("Fehler");
+        a.setTitle("Fehler");
+        a.showAndWait();
+    }
 }

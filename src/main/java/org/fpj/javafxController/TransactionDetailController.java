@@ -3,12 +3,11 @@ package org.fpj.javafxController;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
-import org.fpj.payments.domain.TransactionRow;
+import org.fpj.payments.domain.TransactionLite;
 import org.fpj.users.domain.User;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -42,25 +41,22 @@ public class TransactionDetailController {
     @FXML
     private Label verwendungszweckLabel;
 
-    @FXML
-    private Button reuseButton;
+    private TransactionLite transaction;
 
-    private TransactionRow transaction;
+    private Consumer<TransactionLite> onSenderClicked;
 
-    private Consumer<TransactionRow> onSenderClicked;
+    private Consumer<TransactionLite> onRecipientClicked;
 
-    private Consumer<TransactionRow> onRecipientClicked;
+    private Consumer<TransactionLite> onReuseClicked;
 
-    private Consumer<TransactionRow> onReuseClicked;
+    private Consumer<TransactionLite> onDescriptionClicked;
 
-    private Consumer<TransactionRow> onDescriptionClicked;
-
-    private Consumer<TransactionRow> onValueClicked;
+    private Consumer<TransactionLite> onValueClicked;
 
     private User currentUser;
 
 
-    public void initialize(TransactionRow transaction, User currentUser, Consumer<TransactionRow> onSenderClicked, Consumer<TransactionRow> onRecipientClicked, Consumer<TransactionRow> onReuseClicked, Consumer<TransactionRow> onDescriptionClicked, Consumer<TransactionRow> onValueClicked ) {
+    public void initialize(TransactionLite transaction, User currentUser, Consumer<TransactionLite> onSenderClicked, Consumer<TransactionLite> onRecipientClicked, Consumer<TransactionLite> onReuseClicked, Consumer<TransactionLite> onDescriptionClicked, Consumer<TransactionLite> onValueClicked ) {
         this.currentUser = currentUser;
         this.transaction = transaction;
         this.onSenderClicked = onSenderClicked;
@@ -113,24 +109,36 @@ public class TransactionDetailController {
     @FXML
     private void onSenderClicked(MouseEvent event) {
         if (onSenderClicked != null && transaction != null) {
+            this.onSenderClicked.accept(transaction);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.close();
         }
     }
 
     @FXML
     private void onRecipientClicked(MouseEvent event) {
         if (onRecipientClicked != null && transaction != null) {
+            this.onRecipientClicked.accept(transaction);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.close();
         }
     }
 
     @FXML
     private void onValueClicked(MouseEvent event) {
         if (onValueClicked != null && transaction != null) {
+            this.onValueClicked.accept(transaction);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.close();
         }
     }
 
     @FXML
     private void onDescriptionClicked(MouseEvent event) {
         if (onDescriptionClicked != null && transaction != null) {
+            this.onDescriptionClicked.accept(transaction);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.close();
         }
     }
 

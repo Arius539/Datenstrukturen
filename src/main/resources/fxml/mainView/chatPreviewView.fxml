@@ -8,10 +8,10 @@
       fx:controller="org.fpj.javafxController.mainView.ChatPreviewController"
       spacing="12">
 
-    <StackPane styleClass="card">
+    <StackPane styleClass="BrandingCard">
         <VBox spacing="6" alignment="CENTER">
-            <Label text="Bezahlplattform" styleClass="app-logo"/>
-            <Label text="Branding-Bereich"/>
+            <Label text="PayTalk" styleClass="app-logo"/>
+            <Label text="Pay. Talk. Trust"/>
         </VBox>
     </StackPane>
 

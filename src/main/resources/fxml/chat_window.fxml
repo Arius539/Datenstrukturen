@@ -23,11 +23,20 @@
 
             <Pane HBox.hgrow="ALWAYS"/>
 
-            <Button text="↻" onAction="#onReloadChat" styleClass="button primary chat-export-button"/>
+            <Button text="↻"
+                    onAction="#onReloadChat">
+                <tooltip>
+                    <Tooltip text="Chatverlauf neu laden"/>
+                </tooltip>
+            </Button>
+
             <Button fx:id="btnExport"
                     text="📂"
-                    onAction="#exportChat"
-                    styleClass="button primary chat-export-button"/>
+                    onAction="#exportChat">
+                <tooltip>
+                    <Tooltip text="Chatverlauf und Pinnwand exportieren als CSV"/>
+                </tooltip>
+            </Button>
         </HBox>
     </top>
 

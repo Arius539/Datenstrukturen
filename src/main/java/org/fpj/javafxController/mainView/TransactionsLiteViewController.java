@@ -3,7 +3,6 @@ package org.fpj.javafxController.mainView;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -15,25 +14,21 @@ import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
 import org.controlsfx.control.textfield.TextFields;
-import org.fpj.AlertService;
+import org.fpj.Data.InfinitePager;
 import org.fpj.Data.UiHelpers;
 import org.fpj.Exceptions.TransactionException;
 import org.fpj.javafxController.TransactionDetailController;
-import org.fpj.payments.domain.TransactionResult;
-import org.fpj.payments.domain.TransactionRow;
+import org.fpj.javafxController.TransactionViewController;
+import org.fpj.payments.domain.*;
 import org.fpj.payments.application.TransactionService;
-import org.fpj.payments.domain.Transaction;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
-import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.function.Consumer;
-
-import static org.fpj.Data.UiHelpers.*;
 
 @Getter
 @Setter
@@ -46,8 +41,6 @@ public class TransactionsLiteViewController {
     private UserService userService;
     @Autowired
     private TransactionService transactionService;
-    @Autowired
-    private AlertService alertService;
 
     @FXML
     private RadioButton rbDeposit;
@@ -62,9 +55,9 @@ public class TransactionsLiteViewController {
 
     private final ObservableList<TransactionRow> liteTransactionList = FXCollections.observableArrayList();
     private static final int PAGE_SIZE_Lite_List = 100;
-    private int currentPageLiteList = 0;
-    private boolean lastPageLoadedLiteList = false;
-    private boolean loadingNextPageLiteList = false;
+    private static final int PAGE_PRE_FETCH_THRESHOLD = 50;
+
+    private InfinitePager<TransactionRow> transactionPager;
 
     private User currentUser;
     private Consumer<String> balanceRefreshCallback;
@@ -74,20 +67,28 @@ public class TransactionsLiteViewController {
         this.balanceRefreshCallback = balanceRefreshCallback;
         updateBalance();
         initTransactionList();
-        loadTransactionsFirstPageLite();
-    }
-
-    private void addLiteTransaction(TransactionRow  transactionItem) {
-        this.liteTransactionList.add(0,transactionItem);
-    }
-
-    private void loadTransactionsFirstPageLite() {
-        currentPageLiteList = 0;
-        lastPageLoadedLiteList = false;
-        liteTransactionList.clear();
-        loadNextPageLite();
-
+        initPager();
         setUpAutoCompletion();
+    }
+
+    private void initPager() {
+        long userId =this.currentUser.getId();
+
+        this.transactionPager = new InfinitePager<>(
+                PAGE_SIZE_Lite_List,
+                (pageIndex, pageSize) -> transactionService.findLiteItemsForUser(
+                        userId,
+                        pageIndex,
+                        pageSize
+                ),
+                page -> liteTransactionList.addAll(page.getContent()),
+                ex -> showError("Transaktionen konnten nicht geladen werden: " +
+                        (ex != null ? ex.getMessage() : "Unbekannter Fehler")),
+                "trx-page-loader-"
+        );
+
+        liteTransactionList.clear();
+        transactionPager.resetAndLoadFirstPage();
     }
 
     private void updateBalance(){
@@ -127,13 +128,13 @@ public class TransactionsLiteViewController {
                         case AUSZAHLUNG   -> "Auszahlung";
                         case UEBERWEISUNG -> (outgoing ? "Überweisung an " : "Überweisung von ") + name;
                     };
-
                     title.setText(counterparty);
                     subtitle.setText(UiHelpers.formatInstant(item.createdAt()) + "  •  " + UiHelpers.truncate(item.description(), 20));
                     amount.setText(item.amountString(currentUser.getId()));
                     setGraphic(root);
+
                     int index = getIndex();
-                    ensureNextPageLoaded(index);
+                    transactionPager.ensureLoadedForIndex(index, liteTransactionList.size(), PAGE_PRE_FETCH_THRESHOLD);
 
                     setOnMouseClicked(ev -> {
                         if (ev.getClickCount() == 2) {
@@ -153,74 +154,6 @@ public class TransactionsLiteViewController {
         });
     }
 
-    // <editor-fold defaultstate="collapsed" desc="Infinite Scroll Transactions">
-    private void ensureNextPageLoaded(int visibleIndex) {
-        if (loadingNextPageLiteList || lastPageLoadedLiteList) {
-            return;
-        }
-
-        int prefetchThreshold = 100;
-        int size = liteTransactionList.size();
-
-        if (visibleIndex >= size - prefetchThreshold) {
-            loadNextPageLite();
-        }
-    }
-
-    private void loadNextPageLite() {
-        if (!canLoadNextLitePage()) {
-            return;
-        }
-
-        loadingNextPageLiteList = true;
-
-        int pageToLoad = currentPageLiteList;
-        long userId = currentUser.getId();
-
-        Task<Page<TransactionRow>> task = createPageTask(userId, pageToLoad);
-
-        task.setOnSucceeded(ev -> onLitePageLoaded(task.getValue(), pageToLoad));
-        task.setOnFailed(ev -> onLitePageFailed(task.getException()));
-
-        startBackgroundTask(task, "trx-page-loader-" + pageToLoad);
-    }
-
-
-    private boolean canLoadNextLitePage() {
-        return !loadingNextPageLiteList && !lastPageLoadedLiteList;
-    }
-
-    private Task<Page<TransactionRow>> createPageTask(long userId, int pageToLoad) {
-        return new Task<>() {
-            @Override
-            protected Page<TransactionRow> call() {
-                return transactionService.findLiteItemsForUser(
-                        userId,
-                        pageToLoad,
-                        PAGE_SIZE_Lite_List
-                );
-            }
-        };
-    }
-
-    private void onLitePageLoaded(Page<TransactionRow> page, int pageToLoad) {
-        try {
-            liteTransactionList.addAll(page.getContent());
-            lastPageLoadedLiteList = page.isLast();
-            currentPageLiteList = pageToLoad + 1;
-        } finally {
-            loadingNextPageLiteList = false;
-        }
-    }
-
-    private void onLitePageFailed(Throwable ex) {
-        loadingNextPageLiteList = false;
-        System.out.print(ex.toString());
-        showError("Transaktionen konnten nicht geladen werden: " +
-                (ex != null ? ex.getMessage() : "Unbekannter Fehler"));
-    }
-    // </editor-fold>
-
     @FXML
     private void onTypeChanged() {
         applyTypeVisibility();
@@ -237,50 +170,58 @@ public class TransactionsLiteViewController {
     @FXML
     private void sendTransfers() {
         try {
-            BigDecimal amount = parseAmountTolerant(tfBetrag.getText());
-            String subject = safe(tfBetreff.getText());
+            String amount = tfBetrag.getText();
+            String subject = tfBetreff.getText();
+            String recipient = tfEmpfaenger.getText();
 
-            TransactionResult result;
+            String sender= null;
+            TransactionType type;
             if (rbDeposit.isSelected()) {
-                result = transactionService.deposit(currentUser, amount, subject);
+                sender= null;
+                recipient =this.currentUser.getUsername();
+                type = TransactionType.EINZAHLUNG;
             } else if (rbWithdraw.isSelected()) {
-                result = transactionService.withdraw(currentUser, amount, subject);
+                sender =this.currentUser.getUsername();
+                recipient = null;
+                type = TransactionType.AUSZAHLUNG;
             } else if (rbTransfer.isSelected()) {
-                String recipient = safe(tfEmpfaenger.getText());
-                result = transactionService.transfer(currentUser, recipient, amount, subject);
+                sender =this.currentUser.getUsername();
+                UiHelpers.isValidEmail(recipient);
+                type = TransactionType.UEBERWEISUNG;
             } else {
                 throw new IllegalStateException("Kein Transaktionstyp ausgewählt.");
             }
-
+            TransactionLite transactionLite= transactionService.transactionInfosToTransactionLite(amount, sender, recipient, subject, type);
+            TransactionResult result= transactionService.sendTransfers(transactionLite,this.currentUser);
             this.balanceRefreshCallback.accept(UiHelpers.formatEuro(result.newBalance()));
 
-            Transaction t= result.transaction();
-            Long sId = t.getSender()== null ? null : t.getSender().getId();
-            Long rId = t.getRecipient()== null ? null : t.getRecipient().getId();
-
-            String sName = t.getSender()== null ? null : t.getSender().getUsername();
-            String rName = t.getRecipient()== null ? null : t.getRecipient().getUsername();
-
-            TransactionRow row= new TransactionRow(t.getId(),t.getAmount(),t.getCreatedAt(), t.getTransactionType(),sId, sName, rId, rName, t.getDescription());
+            TransactionRow row= TransactionRow.fromTransaction(result.transaction());
             addLiteTransaction(row);
             tfBetrag.clear();
             tfBetreff.clear();
             tfEmpfaenger.clear();
+            updateBalance();
         } catch (TransactionException ex) {
-            alertService.error("Fehler", "Fehler", "Transaktion fehlgeschlagen: " + ex.getMessage());
+            error("Transaktion fehlgeschlagen: " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
-            alertService.error("Fehler", "Fehler", "Eingabe ungültig: " + ex.getMessage());
+            error("Eingabe ungültig: " + ex.getMessage());
         } catch (Exception ex) {
-            alertService.error("Fehler", "Fehler", "Unerwarteter Fehler: " + ex.getMessage());
+            error("Unerwarteter Fehler: " + ex.getMessage());
         }
+    }
+
+    @FXML
+    private void onReloadTransaction() {
+        liteTransactionList.clear();
+        if (transactionPager != null) {
+            transactionPager.resetAndLoadFirstPage();
+        }
+        updateBalance();
     }
 
     private void openTransactionDetails(TransactionRow row){
         try {
             var url = getClass().getResource("/fxml/transaction_detail.fxml");
-            if (url == null) {
-                throw new IllegalStateException("chat_window.fxml nicht gefunden!");
-            }
 
             FXMLLoader loader = new FXMLLoader(url);
             loader.setControllerFactory(applicationContext::getBean);
@@ -292,21 +233,13 @@ public class TransactionsLiteViewController {
             stage.setScene(new javafx.scene.Scene(root));
             stage.show();
 
-            detailController.initialize(row, currentUser, null, null, this::useTransactionAsTemplate, null, null);
+            detailController.initialize(TransactionLite.fromTransactionRow(row),this.currentUser, this::onTransactionDetailSenderClicked, this::onTransactionDetailRecipientClicked, this::useTransactionAsTemplate, this::onTransactionDetailDescriptionClicked, this::onTransactionDetailAmountClicked);
         } catch (Exception e) {
             showError("Fehler beim laden der Transaktionsdetails. Versuche es erneut oder starte die Anwendung neu: " + e.getMessage());
         }
     }
 
-    @FXML
-    private void onReloadTransaction() {
-        this.loadingNextPageLiteList = false;
-        this.lastPageLoadedLiteList = false;
-        this.currentPageLiteList = 0;
-        loadTransactionsFirstPageLite();
-    }
-
-    private void useTransactionAsTemplate(TransactionRow row) {
+    private void useTransactionAsTemplate(TransactionLite row) {
         tfBetrag.setText(row.amountStringUnsigned());
         tfBetreff.setText(row.description());
         switch (row.type()) {
@@ -321,10 +254,73 @@ public class TransactionsLiteViewController {
         onTypeChanged();
     }
 
+    private void onTransactionDetailDescriptionClicked(TransactionLite row) {
+        TransactionViewSearchParameter sp= new TransactionViewSearchParameter(null, row.description(), null, null, null, null, null);
+        this.openTransactionViewWindow(sp);
+    }
+
+    private void onTransactionDetailSenderClicked(TransactionLite row) {
+        TransactionViewSearchParameter sp= new TransactionViewSearchParameter(null, null, null, null, row.senderUsername(), null, null);
+        this.openTransactionViewWindow(sp);
+    }
+
+    private void onTransactionDetailRecipientClicked(TransactionLite row) {
+        TransactionViewSearchParameter sp= new TransactionViewSearchParameter(null, null, null, null, row.recipientUsername(), null, null);
+        this.openTransactionViewWindow(sp);
+    }
+
+    private void onTransactionDetailAmountClicked(TransactionLite row) {
+        TransactionViewSearchParameter sp = new TransactionViewSearchParameter(
+                null, null, null, null, null,row.amount().setScale(0, RoundingMode.CEILING.FLOOR), row.amount().setScale(0, RoundingMode.CEILING)
+        );
+        this.openTransactionViewWindow(sp);
+    }
+
+    private void openTransactionViewWindow(TransactionViewSearchParameter transactionViewSearchParameter){
+        try {
+            var url = getClass().getResource("/fxml/transactionView.fxml");
+            FXMLLoader loader = new FXMLLoader(url);
+            loader.setControllerFactory(applicationContext::getBean);
+
+            Parent root = loader.load();
+            TransactionViewController detailController = loader.getController();
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle("Transaktionen");
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.show();
+            detailController.initialize(currentUser, transactionViewSearchParameter);
+        } catch(Exception e) {
+            error("Fehler beim laden des Transaktionsfensters. Versuche es erneut oder starte die Anwendung neu: ");
+            e.printStackTrace();
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private void addLiteTransaction(TransactionRow  transactionItem) {
+        this.liteTransactionList.add(0,transactionItem);
+    }
+
     private void showError(String message) {
         Platform.runLater(() -> {
-            alertService.error("Fehler", "Fehler", message);
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Fehler");
+            alert.setHeaderText(null);
+            alert.setContentText(message);
+            alert.showAndWait();
         });
     }
 
+    private void info(String text) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION, text, ButtonType.OK);
+        a.setHeaderText(null);
+        a.setTitle("Info");
+        a.showAndWait();
+    }
+
+    private void error(String text) {
+        Alert a = new Alert(Alert.AlertType.ERROR, text, ButtonType.OK);
+        a.setHeaderText("Fehler");
+        a.setTitle("Fehler");
+        a.showAndWait();
+    }
 }
