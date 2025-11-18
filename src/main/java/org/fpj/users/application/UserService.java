@@ -1,6 +1,7 @@
 package org.fpj.users.application;
 
 import org.fpj.Exceptions.DataNotPresentException;
+import org.fpj.users.domain.ConversationMessageView;
 import org.fpj.users.domain.User;
 import org.fpj.users.domain.UserRepository;
 import org.fpj.users.domain.UsernameOnly;
@@ -22,7 +23,7 @@ public class UserService {
     }
 
     public User findByUsername(final String username){
-        Optional<User> user = userRepo.findByUsername(username);
+        Optional<User> user = userRepository.findByUsername(username);
         if (user.isPresent()){
             return user.get();
         }
@@ -30,29 +31,29 @@ public class UserService {
     }
 
     public User save(final User user){
-        return userRepo.save(user);
+        return userRepository.save(user);
     }
 
     public Page<User> findContacts(User user, Pageable pageable){
-        return userRepo.findContactsOrderByLastMessageDesc(user.getId(), pageable);
+        return userRepository.findContactsOrderByLastMessageDesc(user.getId(), pageable);
     }
 
     public List<String> usernameContaining(String username){
-        return userRepo.findTop10ByUsernameContainingIgnoreCaseOrderByUsernameAsc(
+        return userRepository.findTop10ByUsernameContainingIgnoreCaseOrderByUsernameAsc(
                 username).stream().map(UsernameOnly::getUsername).toList();
     }
 
     //nur zu Testzwecken
     @Transactional(readOnly = true)
     public User currentUser() {
-        Optional<User> user= userRepo.findByUsername("test1@test.com");
+        Optional<User> user= userRepository.findByUsername("test1@test.com");
         if(user.isPresent()) {
             return user.get();
         }
         throw new DataNotPresentException("User not found");
     }
     public boolean usernameExists(String username) {
-        return userRepo.existsByUsername(username);
+        return userRepository.existsByUsername(username);
     }
 
     public List<ConversationMessageView> getConversationMessageView(Long userId1, Long userId2){

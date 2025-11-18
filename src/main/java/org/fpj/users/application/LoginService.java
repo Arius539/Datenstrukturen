@@ -30,7 +30,7 @@ public class LoginService {
     public void login(final String username, final String password) {
         final User user;
         try {
-            user = userService.findByUsername(username);
+            user = userService.findByUsername(username.toLowerCase());
         }
         catch (DataNotPresentException e){
             throw new LoginFailedException("Kein User mit Username " + username + " vorhanden.");

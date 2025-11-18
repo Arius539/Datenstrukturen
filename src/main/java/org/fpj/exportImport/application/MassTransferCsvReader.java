@@ -7,6 +7,7 @@ import com.univocity.parsers.csv.CsvParser;
 import com.univocity.parsers.csv.CsvParserSettings;
 import lombok.Setter;
 import org.fpj.Data.UiHelpers;
+import org.fpj.Exceptions.DataNotPresentException;
 import org.fpj.exportImport.adapter.CsvError;
 import org.fpj.exportImport.adapter.CsvImportResult;
 import org.fpj.exportImport.adapter.CsvReader;
@@ -158,39 +159,26 @@ public class MassTransferCsvReader implements CsvReader {
     }
 
     private void validateEmpfaenger(String empfaenger, long line, List<CsvError> errors) {
-        empfaenger = empfaenger.trim();
-        if (empfaenger == null || empfaenger.isBlank()) {
-            errors.add(new CsvError(
-                    line,
-                    "Empfänger",
-                    null,
-                    empfaenger,
-                    "Empfänger darf nicht leer sein",
-                    CsvError.Severity.ERROR
-            ));
-            return;
-        }
-        String message= "Empfänger ist keine gültige E-Mail-Adresse";
         try{
+            if (empfaenger == null || empfaenger.isBlank()) {
+            throw new IllegalArgumentException("Empfänger darf nicht leer sein");
+            }
+            empfaenger = empfaenger.trim();
             if(this.currentUser.getUsername().equals(empfaenger)){
-                throw new IllegalArgumentException(message);
+                throw new IllegalArgumentException("Empfänger ist keine gültige E-Mail-Adresse");
             }
             UiHelpers.isValidEmail(empfaenger);
-           Optional<User> user= userService.findByUsername(empfaenger);
-           if(user.isEmpty()) {
-               message = "Der angegebene Benutzername existiert nicht";
-               throw new IllegalArgumentException(message);
-           }
-        }catch (IllegalArgumentException e){
-            errors.add(new CsvError(
-                    line,
-                    "Empfänger",
-                    null,
-                    empfaenger,
-                    message,
-                    CsvError.Severity.ERROR
-            ));
-        }
+            User user= userService.findByUsername(empfaenger);
+            }catch (IllegalArgumentException | DataNotPresentException e) {
+                errors.add(new CsvError(
+                        line,
+                        "Empfänger",
+                        null,
+                        empfaenger,
+                        e.getMessage(),
+                        CsvError.Severity.ERROR
+                ));
+            }
     }
 
     private BigDecimal parseBigDecimal(

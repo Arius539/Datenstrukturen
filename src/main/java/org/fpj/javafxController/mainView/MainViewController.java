@@ -2,9 +2,14 @@ package org.fpj.javafxController.mainView;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
+import org.fpj.AlertService;
+import org.fpj.javafxController.TransactionViewController;
 import org.fpj.payments.application.TransactionService;
+import org.fpj.payments.domain.TransactionViewSearchParameter;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,14 +92,14 @@ public class MainViewController {
             stage.show();
             detailController.initialize(currentUser, transactionViewSearchParameter);
         } catch(Exception e) {
-            error("Fehler beim laden des Transaktionsfensters. Versuche es erneut oder starte die Anwendung neu: ");
+            alertService.error("Error","Error","Fehler beim laden des Transaktionsfensters. Versuche es erneut oder starte die Anwendung neu: ");
         }
     }
 
     @FXML public void actionTransactions()    {
         openTransactionsWindow(null);
     }
-    @FXML public void actionWallComments()    { info("Navigation: Wall Kommentare (Placeholder)."); }
+    @FXML public void actionWallComments()    {alertService.info("Info","Info","Navigation: Wall Kommentare (Placeholder)."); }
 
     private void updateBalanceLabel(String balance) {
         lblBalance.setText(balance);

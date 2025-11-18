@@ -77,11 +77,7 @@ public class TransactionService {
         if (recipientUsername == null || recipientUsername.isBlank()) {
             throw new TransactionException("Empfänger ist erforderlich.");
         }
-        Optional<User> optRecipient = userService.findByUsername(recipientUsername);
-        if (!optRecipient.isPresent()) {
-            throw new TransactionException("Der angegebene Empfänger existiert nicht.");
-        }
-        User recipient = optRecipient.get();
+        User recipient = userService.findByUsername(recipientUsername);
 
         if (recipient.getId().equals(sender.getId())) {
             throw new TransactionException("Überweisung an sich selbst ist nicht erlaubt.");
@@ -125,8 +121,7 @@ public class TransactionService {
         } else if (type == TransactionType.UEBERWEISUNG) {
             if (recipient.equals(senderUsername))
                 throw new TransactionException("Der angegebene Empfänger existiert nicht.");
-            if (userService.findByUsername(recipient).isEmpty())
-                throw new TransactionException(String.format("Der Empfänger mit dem Benutzernamen %s  ist kein Benutzer unserer Plattform", recipient));
+                userService.findByUsername(recipient);
         } else {
             throw new IllegalStateException("Kein Transaktionstyp ausgewählt.");
         }

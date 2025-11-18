@@ -16,6 +16,7 @@ import lombok.Setter;
 import org.controlsfx.control.textfield.TextFields;
 import org.fpj.Data.InfinitePager;
 import org.fpj.Data.UiHelpers;
+import org.fpj.Exceptions.DataNotPresentException;
 import org.fpj.Exceptions.TransactionException;
 import org.fpj.javafxController.TransactionDetailController;
 import org.fpj.javafxController.TransactionViewController;
@@ -201,7 +202,7 @@ public class TransactionsLiteViewController {
             tfBetreff.clear();
             tfEmpfaenger.clear();
             updateBalance();
-        } catch (TransactionException ex) {
+        } catch (TransactionException | DataNotPresentException ex) {
             error("Transaktion fehlgeschlagen: " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
             error("Eingabe ungültig: " + ex.getMessage());

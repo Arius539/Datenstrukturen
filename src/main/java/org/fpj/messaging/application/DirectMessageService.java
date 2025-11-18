@@ -1,8 +1,10 @@
 package org.fpj.messaging.application;
 
 import org.fpj.Exceptions.DataNotPresentException;
+import org.fpj.messaging.domain.ChatPreview;
 import org.fpj.messaging.domain.DirectMessage;
 import org.fpj.messaging.domain.DirectMessageRepository;
+import org.fpj.messaging.domain.DirectMessageRow;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;

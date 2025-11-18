@@ -3,7 +3,6 @@ package org.fpj.javafxController.mainView;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -18,14 +17,12 @@ import org.fpj.Data.InfinitePager;
 import org.fpj.Data.UiHelpers;
 import org.fpj.Exceptions.DataNotPresentException;
 import org.fpj.javafxController.ChatWindowController;
-import org.fpj.messaging.application.ChatPreview;
+import org.fpj.messaging.domain.ChatPreview;
 import org.fpj.messaging.application.DirectMessageService;
-import org.fpj.payments.application.TransactionService;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
@@ -170,11 +167,9 @@ public class ChatPreviewController {
         try{
             if (username == null || username.isBlank()) throw  new IllegalArgumentException("Kein Benutzername für den Chat ausgewählt.");
             if (UiHelpers.isValidEmailBool(username)) throw  new IllegalArgumentException("Der eingegebene Benutzername war im falschen Format.");
-            final Optional<User> chatPartner;
-            chatPartner = userService.findByUsername(username);
-            if(chatPartner.isPresent())throw new DataNotPresentException(String.format("Der Benutzer mit dem Username %s wurde nicht gefunden.", username));
+            final User  chatPartner = userService.findByUsername(username);;
             ChatWindowController controller = loadChatWindow(username);
-            controller.openChat(currentUser, chatPartner.get());
+            controller.openChat(currentUser, chatPartner);
 
         }catch (IllegalArgumentException e){
             error("Es ist ein unerwarteter Fehler beim Laden des Chatfensters aufgetreten: "+e.getMessage());

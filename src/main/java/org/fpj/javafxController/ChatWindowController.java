@@ -14,7 +14,7 @@ import org.fpj.Data.InfinitePager;
 import org.fpj.Data.UiHelpers;
 import org.fpj.exportImport.adapter.FileHandling;
 import org.fpj.exportImport.application.DirectMessagePinBoardCsvExporter;
-import org.fpj.messaging.application.DirectMessageRow;
+import org.fpj.messaging.domain.DirectMessageRow;
 import org.fpj.messaging.application.DirectMessageService;
 import org.fpj.messaging.domain.DirectMessage;
 import org.fpj.users.application.UserService;

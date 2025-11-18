@@ -1,4 +1,4 @@
-package org.fpj.messaging.application;
+package org.fpj.messaging.domain;
 
 import org.fpj.users.domain.User;
 

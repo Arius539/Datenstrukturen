@@ -18,6 +18,7 @@ import org.controlsfx.control.textfield.AutoCompletionBinding;
 import org.controlsfx.control.textfield.TextFields;
 import org.fpj.Data.InfinitePager;
 import org.fpj.Data.UiHelpers;
+import org.fpj.Exceptions.DataNotPresentException;
 import org.fpj.Exceptions.TransactionException;
 import org.fpj.exportImport.adapter.FileHandling;
 import org.fpj.exportImport.application.MassTransferCsvReader;
@@ -367,7 +368,7 @@ public class TransactionViewController {
             return transactionService.transactionInfosToTransactionLite(amount, sender, recipient, subject, type);
         } catch (TransactionException ex) {
             error("Transaktion fehlgeschlagen: " + ex.getMessage());
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | DataNotPresentException ex) {
             error("Eingabe ungültig: " + ex.getMessage());
         } catch (Exception ex) {
             error("Unerwarteter Fehler: " + ex.getMessage());
