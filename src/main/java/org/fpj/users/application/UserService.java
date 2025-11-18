@@ -53,4 +53,7 @@ public class UserService {
         }
         throw new DataNotPresentException("User not found");
     }
+    public boolean usernameExists(String username) {
+        return userRepo.existsByUsername(username);
+    }
 }
