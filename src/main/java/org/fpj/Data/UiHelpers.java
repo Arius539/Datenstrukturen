@@ -1,6 +1,8 @@
 package org.fpj.Data;
 
 import javafx.concurrent.Task;
+import org.apache.commons.logging.Log;
+import org.fpj.users.application.LoginService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -57,7 +59,7 @@ public class UiHelpers {
            return false;
         }
 
-        if (!EMAIL_PATTERN.matcher(email).matches()) {
+        if (!email.matches(LoginService.REGEX_USERNAME_VALIDATOR)) {
             return false;
         }
         return true;

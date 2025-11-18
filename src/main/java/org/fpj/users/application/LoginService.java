@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class LoginService {
 
-    private static final String REGEX_USERNAME_VALIDATOR =
+    public static final String REGEX_USERNAME_VALIDATOR =
             "^(?!.*\\.\\.)(?=.{8,255})[A-Za-z0-9_%.+-]{2,64}@[A-Za-z0-9.-]{2,}\\.[A-Za-z]{2,}$";
     private static final String REGEX_PASSWORT_VALIDATOR =
             "^(?=.{8,127}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).+$";

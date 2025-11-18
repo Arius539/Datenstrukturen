@@ -166,8 +166,8 @@ public class ChatPreviewController {
     private void openChatForUsername(String username) {
         try{
             if (username == null || username.isBlank()) throw  new IllegalArgumentException("Kein Benutzername für den Chat ausgewählt.");
-            if (UiHelpers.isValidEmailBool(username)) throw  new IllegalArgumentException("Der eingegebene Benutzername war im falschen Format.");
-            final User  chatPartner = userService.findByUsername(username);;
+            if (!UiHelpers.isValidEmailBool(username)) throw  new IllegalArgumentException("Der eingegebene Benutzername war im falschen Format.");
+            final User  chatPartner = userService.findByUsername    (username);;
             ChatWindowController controller = loadChatWindow(username);
             controller.openChat(currentUser, chatPartner);
 
