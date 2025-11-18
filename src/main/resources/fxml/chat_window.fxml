@@ -10,7 +10,7 @@
             prefWidth="800"
             prefHeight="600"
             styleClass="root"
-            stylesheets="@../styles/chatWindowStyles.css">
+            stylesheets="@/styles/chatWindowStyles.css">
     <top>
         <HBox spacing="12" styleClass="chat-header">
             <padding>

@@ -38,8 +38,8 @@ public class ViewNavigator {
     }
 
     public void loadMain() throws IOException{
-        mainViewController.initialize();
         loadView("/mainView/main_view.fxml", "Bezahlplatform", 1280, 860);
+        mainViewController.initialize();
     }
 
     public void loadLogin() throws IOException{

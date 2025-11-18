@@ -11,7 +11,7 @@
           fx:controller="org.fpj.javafxController.mainView.MainViewController"
           hgap="12" vgap="12"
           styleClass="root"
-          stylesheets="@../../styles/mainViewStyles.css">
+          stylesheets="@/styles/mainViewStyles.css">
 
     <padding>
         <Insets topRightBottomLeft="12"/>

@@ -4,6 +4,7 @@ import org.fpj.Exceptions.DataNotPresentException;
 import org.fpj.Exceptions.LoginFailedException;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,14 +15,14 @@ public class LoginService {
 
     private static final String REGEX_USERNAME_VALIDATOR =
             "^(?!.*\\.\\.)(?=.{8,255})[A-Za-z0-9_%.+-]{2,64}@[A-Za-z0-9.-]{2,}\\.[A-Za-z]{2,}$";
-
     private static final String REGEX_PASSWORT_VALIDATOR =
             "^(?=.{8,127}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).+$";
-    private final GenericApplicationContext context;
+
+    private final ConfigurableApplicationContext context;
     private final UserService userService;
 
     @Autowired
-    public LoginService(GenericApplicationContext context, UserService userService){
+    public LoginService(ConfigurableApplicationContext context, UserService userService){
         this.context = context;
         this.userService = userService;
     }
@@ -37,7 +38,7 @@ public class LoginService {
 
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         if (passwordEncoder.matches(password, user.getPasswordHash())){
-            context.registerBean("loggedInUser", User.class, user);
+            context.getBeanFactory().registerSingleton("loggedInUser", user);
         }
         else {
             throw new LoginFailedException("Passwort falsch");
