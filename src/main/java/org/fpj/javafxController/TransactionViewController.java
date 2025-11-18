@@ -29,12 +29,9 @@ import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -55,7 +52,6 @@ public class TransactionViewController {
     @Autowired
     private TransactionService transactionService;
 
-    // --- Linke Seite: Kontostände, Filter, Transaktionsliste ---
     @FXML
     private Label currentBalanceLabel;
 
@@ -71,33 +67,7 @@ public class TransactionViewController {
     private String beforeActionComboBoxValue;
 
     @FXML
-    private Button clearFilterButton;
-
-    @FXML
-    private Button searchButton;
-
-    @FXML
     private ListView<TransactionRow> transactionTable;
-
-
-
-
-    // --- Kontextmenü (für beide Tabellen) ---
-
-    @FXML
-    private ContextMenu transactionContextMenu;
-
-    @FXML
-    private MenuItem deleteMenuItem;          // "löschen"
-
-    @FXML
-    private MenuItem useAsTemplateMenuItem;   // "als Vorlage verwenden"
-
-    @FXML
-    private MenuItem executeMenuItem;         // "ausführen"
-
-
-    // --- Rechte Seite: Formular "Transaktion ausführen" ---
 
     @FXML
     private TextField receiverUsernameField;
@@ -112,34 +82,20 @@ public class TransactionViewController {
     private ToggleGroup transactionTypeToggleGroup;
 
     @FXML
-    private RadioButton depositRadio;   // "Einzahlung"
+    private RadioButton depositRadio;
 
     @FXML
-    private RadioButton withdrawRadio;  // "Auszahlung"
+    private RadioButton withdrawRadio;
 
     @FXML
-    private RadioButton transferRadio;  // "Überweisung"
+    private RadioButton transferRadio;
 
-
-    // --- Rechte Seite: Buttons unter dem Formular ---
 
     @FXML
-    private Button importCsvButton;       // "von CSV"
-
-    @FXML
-    private Button executeSingleButton;   // "ausführen"
-
-    @FXML
-    private Button addToBatchButton;      // "hinzufügen"
-
-
-    // --- Rechte Seite: gesammelte Transaktionen + "alle ausführen" ---
+    private Button importCsvButton;
 
     @FXML
     private ListView<TransactionLite> batchTransactionTable;
-
-    @FXML
-    private Button executeAllButton;
 
     private User currentUser;
 
@@ -157,10 +113,6 @@ public class TransactionViewController {
     //Für das Suchfeld wenn der Filter Empfänger Sender ausgewählt ist
     private AutoCompletionBinding<String> autoCompletionBinding = null;
 
-
-    // ---------------------------------------------------------------
-    // Lifecycle
-    // ---------------------------------------------------------------
 
     public void initialize(User currentUser, TransactionViewSearchParameter searchParameter) {
         this.currentUser = currentUser;
@@ -211,22 +163,16 @@ public class TransactionViewController {
         this.balanceLabelBatch.setText(UiHelpers.formatSignedEuro(getBalanceAfterListOfItems(batchTransactionList)));
     }
 
-    private boolean executeTransactionByList(List<TransactionLite> transactionList){
+    private TransactionResult executeTransactionByList(List<TransactionLite> transactionList){
         try{
-            BigDecimal balance= getBalanceAfterListOfItems(transactionList);
-            if(balance.compareTo(BigDecimal.ZERO)< 0){
-                throw new TransactionException("Transaktionsausführung ist nicht möglich. Dein Kontostand würde unter 0 fallen");
-            }
-            for (TransactionLite transactionLite : transactionList){
-                sendTransfers(transactionLite);
-            }
-            return true;
+            List<TransactionResult> results= transactionService.sendBulkTransfers(transactionList, currentUser);
+            return results.getLast();
         } catch (TransactionException e) {
             error("Transaktionsfehler: "+e.getMessage());
         } catch (Exception e){
             error("Unerwarteter Fehler: "+ e.getMessage());
         }
-        return false;
+        return null;
     }
 
    private void initUiElements(){
@@ -641,8 +587,8 @@ public class TransactionViewController {
     private void onExecuteSingleFromContext(ActionEvent event) {
         List<TransactionLite> selectedTransactions = new ArrayList<>(batchTransactionTable.getSelectionModel().getSelectedItems());
         batchTransactionTable.getSelectionModel().clearSelection();
-        boolean result= executeTransactionByList(selectedTransactions);
-        if(result)for (TransactionLite transactionLite : selectedTransactions) {
+        TransactionResult result= executeTransactionByList(selectedTransactions);
+        if(result != null)for (TransactionLite transactionLite : selectedTransactions) {
             batchTransactionList.remove(transactionLite);
         }
         updateBalances();
@@ -741,8 +687,8 @@ public class TransactionViewController {
 
     @FXML
     private void onExecuteAll(ActionEvent event) {
-        boolean result= executeTransactionByList(batchTransactionList);
-        if(result) batchTransactionList.clear();
+        TransactionResult result= executeTransactionByList(batchTransactionList);
+        if(result!= null) batchTransactionList.clear();
         updateBalances();
     }
 

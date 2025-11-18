@@ -26,15 +26,12 @@ public class CsvImportDialogController<e> {
     private Button chooseFileButton;
 
     @FXML
-    private Button startImportButton;
-
-    @FXML
     private Label selectedFileLabel;
 
     @FXML
     private ListView<CsvError> errorListView;
 
-    private ObservableList<CsvError> errorList = FXCollections.observableArrayList();
+    private final ObservableList<CsvError> errorList = FXCollections.observableArrayList();
 
     private String selectedFilePath;
 
@@ -109,7 +106,6 @@ public class CsvImportDialogController<e> {
                     setGraphic(null);
                     setText(null);
                 } else {
-                    // Severity als Text/Color
                     String severityText = switch (item.getSeverity()) {
                         case FATAL   -> "FATAL";
                         case ERROR   -> "ERROR";
@@ -131,7 +127,6 @@ public class CsvImportDialogController<e> {
 
                     setGraphic(root);
 
-                    // Optional: Tooltip mit allen Details
                     setTooltip(new Tooltip(
                             "Zeile: " + item.getLine() +
                                     (item.getColumnName() != null ? "\nSpalte: " + item.getColumnName() : "") +
@@ -141,7 +136,6 @@ public class CsvImportDialogController<e> {
                                     (raw != null && !raw.isBlank() ? "\nWert: " + raw : "")
                     ));
 
-                    // Optional: Färbung je nach Severity für das gesamte Element
                     switch (item.getSeverity()) {
                         case FATAL   -> setStyle("-fx-background-color: #ffeaea;");
                         case ERROR   -> setStyle("-fx-background-color: #fff3cd;");
@@ -150,7 +144,6 @@ public class CsvImportDialogController<e> {
                 }
             }
 
-            // Helper für farbliche Markierung des Titels nach Severity
             private String severityColor(CsvError.Severity severity) {
                 return switch (severity) {
                     case FATAL   -> "-fx-text-fill: #c0392b;";
@@ -160,7 +153,6 @@ public class CsvImportDialogController<e> {
             }
         });
     }
-
 
     private void info(String text) {
         Alert a = new Alert(Alert.AlertType.INFORMATION, text, ButtonType.OK);

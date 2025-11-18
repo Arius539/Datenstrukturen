@@ -6,9 +6,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
-import org.fpj.javafxController.TransactionDetailController;
 import org.fpj.javafxController.TransactionViewController;
-import org.fpj.payments.application.TransactionService;
 import org.fpj.payments.domain.TransactionViewSearchParameter;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
@@ -32,10 +30,7 @@ public class MainViewController {
 
     @Autowired
     private UserService userService;
-    @Autowired
-    private TransactionService transactionService;
 
-    // Profil/Saldo
     @FXML private Label lblEmail;
     @FXML private Label lblBalance;
 
@@ -79,8 +74,6 @@ public class MainViewController {
             detailController.initialize(currentUser, transactionViewSearchParameter);
         } catch(Exception e) {
             error("Fehler beim laden des Transaktionsfensters. Versuche es erneut oder starte die Anwendung neu: ");
-            e.printStackTrace();
-            System.out.println(e.getMessage());
         }
     }
 

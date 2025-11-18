@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,42 +49,29 @@ public class TransactionService {
     /* =================== Commands (neu) =================== */
 
     @Transactional
-    public TransactionResult deposit(User user, BigDecimal amount, String subject) {
-        BigDecimal a = normalizeAmount(amount);
-        requirePositive(a, "Der Betrag muss größer als 0 sein.");
-
+    public void deposit(User user, BigDecimal amount, String subject) {
         Transaction tx = new Transaction();
         tx.setTransactionType(EINZAHLUNG);
         tx.setRecipient(user);
-        tx.setAmount(a);
+        tx.setAmount(amount);
         tx.setDescription(subject);
         tx.setCreatedAt(java.time.Instant.now());
         txRepo.save(tx);
-
-        BigDecimal newBalance = computeBalance(user.getId());
-        return new TransactionResult(tx, newBalance);
     }
 
     @Transactional
-    public TransactionResult withdraw(User user, BigDecimal amount, String subject) {
-        BigDecimal a = normalizeAmount(amount);
-        requirePositive(a, "Der Betrag muss größer als 0 sein.");
-        ensureSufficientFunds(user.getId(), a, "Nicht genügend Guthaben für Auszahlung.");
-
+    public void withdraw(User user, BigDecimal amount, String subject) {
         Transaction tx = new Transaction();
         tx.setTransactionType(AUSZAHLUNG);
         tx.setSender(user);
-        tx.setAmount(a);
+        tx.setAmount(amount);
         tx.setDescription(subject);
         tx.setCreatedAt(java.time.Instant.now());
         txRepo.save(tx);
-
-        BigDecimal newBalance = computeBalance(user.getId());
-        return new TransactionResult(tx, newBalance);
     }
 
     @Transactional
-    public TransactionResult transfer(User sender, String recipientUsername, BigDecimal amount, String subject) {
+    public void transfer(User sender, String recipientUsername, BigDecimal amount, String subject) {
         if (recipientUsername == null || recipientUsername.isBlank()) {
             throw new TransactionException("Empfänger ist erforderlich.");
         }
@@ -93,25 +81,21 @@ public class TransactionService {
         }
         User recipient = optRecipient.get();
 
-        if (recipient.getId() == sender.getId()) {
+        if (recipient.getId().equals(sender.getId())) {
             throw new TransactionException("Überweisung an sich selbst ist nicht erlaubt.");
         }
 
-        BigDecimal a = normalizeAmount(amount);
-        requirePositive(a, "Der Betrag muss größer als 0 sein.");
-        ensureSufficientFunds(sender.getId(), a, "Nicht genügend Guthaben für Überweisung.");
+        requirePositive(amount, "Der Betrag muss größer als 0 sein.");
+        ensureSufficientFunds(sender.getId(), amount, "Nicht genügend Guthaben für Überweisung.");
 
         Transaction tx = new Transaction();
         tx.setTransactionType(UEBERWEISUNG);
         tx.setSender(sender);
         tx.setRecipient(recipient);
-        tx.setAmount(a);
+        tx.setAmount(amount);
         tx.setDescription(subject);
         tx.setCreatedAt(java.time.Instant.now());
         txRepo.save(tx);
-
-        BigDecimal newBalance = computeBalance(sender.getId());
-        return new TransactionResult(tx, newBalance);
     }
 
     public  Page<TransactionRow>  searchTransactions( TransactionViewSearchParameter parameter,  int page, int size) {
@@ -130,8 +114,6 @@ public class TransactionService {
         );
     }
 
-
-
     public TransactionLite transactionInfosToTransactionLite(String amountIn, String senderUsername, String recipientUsername, String description , TransactionType type) {
             BigDecimal amount = parseAmountTolerant(amountIn);
             String recipient = safe(recipientUsername);
@@ -148,27 +130,54 @@ public class TransactionService {
     }
 
     public TransactionResult sendTransfers(TransactionLite transactionLite,User currentUser) {
-            TransactionResult result;
+        TransactionResult result;
             if (transactionLite.type() == TransactionType.EINZAHLUNG) {
-                result = this.deposit(currentUser, transactionLite.amount(), transactionLite.description());
+                this.deposit(currentUser, transactionLite.amount(), transactionLite.description());
             } else if (transactionLite.type()== TransactionType.AUSZAHLUNG) {
-                result = this.withdraw(currentUser, transactionLite.amount(), transactionLite.description());
+                ensureSufficientFunds(currentUser.getId(), transactionLite.amount(), "Nicht genügend Guthaben für die Auszahlung.");
+                this.withdraw(currentUser, transactionLite.amount(), transactionLite.description());
             } else if (transactionLite.type()== TransactionType.UEBERWEISUNG) {
-                result = this.transfer(currentUser, transactionLite.recipientUsername(), transactionLite.amount(), transactionLite.description());
+                ensureSufficientFunds(currentUser.getId(), transactionLite.amount(), "Nicht genügend Guthaben für die Überweisung.");
+                this.transfer(currentUser, transactionLite.recipientUsername(), transactionLite.amount(), transactionLite.description());
             } else {
                 throw new IllegalStateException("Kein Transaktionstyp ausgewählt.");
             }
-            Transaction t= result.transaction();
             return result;
+    }
+
+    public List<TransactionResult> sendBulkTransfers(List<TransactionLite> transactionsLite, User currentUser) {
+        List<TransactionResult> results = new ArrayList<>();
+        BigDecimal sum = BigDecimal.ZERO;
+        for (TransactionLite lite : transactionsLite) {
+            if (lite.type() == TransactionType.EINZAHLUNG) {
+                sum = sum.subtract(lite.amount());
+            } else {
+                sum = sum.add(lite.amount());
+            }
+        }
+        ensureSufficientFunds(currentUser.getId(), sum, "Dein Kontostand ist zu gering um die Transaktionen auszuführen");
+        for (TransactionLite lite : transactionsLite) {
+           results.add(sendTransfersWithoutBalanceCheck(lite, currentUser));
+        }
+
+        return results;
+    }
+
+    private TransactionResult sendTransfersWithoutBalanceCheck(TransactionLite transactionLite,User currentUser) {
+        requirePositive(transactionLite.amount(), "Der Betrag muss größer als 0 sein.");
+        TransactionResult result;
+        if (transactionLite.type() == TransactionType.EINZAHLUNG) {
+            result = this.deposit(currentUser, transactionLite.amount(), transactionLite.description());
+        } else if (transactionLite.type()== TransactionType.AUSZAHLUNG) {
+            result = this.withdraw(currentUser, transactionLite.amount(), transactionLite.description());
+        } else {
+            result = this.transfer(currentUser, transactionLite.recipientUsername(), transactionLite.amount(), transactionLite.description());
+        }
+        return result;
     }
 
     public BigDecimal findUserBalanceAfterTransaction(long userId, long transactionId){
        return txRepo.findUserBalanceAfterTransaction(userId, transactionId);
-    }
-
-    private static BigDecimal normalizeAmount(BigDecimal amt) {
-        if (amt == null) return BigDecimal.ZERO;
-        return amt.setScale(2, RoundingMode.HALF_UP);
     }
 
     private void requirePositive(BigDecimal amt, String msg) {

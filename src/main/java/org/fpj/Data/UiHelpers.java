@@ -44,6 +44,25 @@ public class UiHelpers {
         }
     }
 
+    public static boolean isValidEmailBool(String email) {
+        if (email == null) {
+            return false;
+        }
+
+        if (email.isBlank()) {
+            return false;
+        }
+
+        if (email.length() > MAX_LENGTH_EMAIL) {
+           return false;
+        }
+
+        if (!EMAIL_PATTERN.matcher(email).matches()) {
+            return false;
+        }
+        return true;
+    }
+
     public static String truncate(String s, int max) {
         if (s == null) return "";
         StringBuilder sb = new StringBuilder();

@@ -47,11 +47,6 @@ public class ChatWindowController {
 
     private User currentUser;
     private User currentChatPartner;
-
-    private boolean showedExportWarning = false;
-    @FXML
-    private VBox chatWindowVBox;
-
     @FXML
     private Label lblContact;
 
@@ -67,10 +62,6 @@ public class ChatWindowController {
     @FXML
     private TextArea taInput;
 
-    @FXML
-    private Button btnSend;
-
-    private int exportMessagesCurrentPage=0;
 
     @FXML
     public void initialize() {
@@ -217,10 +208,7 @@ public class ChatWindowController {
             }
             Window window = btnExport.getScene().getWindow();
             String path = FileHandling.openFileChooserAndGetPath(window);
-            if (path == null) {
-                showError("Das auswählen des Paths ist fehlgeschlagen");
-                return;
-            }
+            if (path == null) throw new IllegalStateException("Das auswählen des Dateipfades ist fehlgeschlagen");
             List<ConversationMessageView> messages = userService.getConversationMessageView(this.currentUser.getId(), this.currentChatPartner.getId());
             directMessagePinBoardCsvExporter.export(messages.iterator(),FileHandling.openFileAsOutStream(path));
             info("Der Export der Nachrichten war erfolgreich. Du findest die Einträge in: "+path);

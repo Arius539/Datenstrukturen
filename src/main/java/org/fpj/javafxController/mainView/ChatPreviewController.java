@@ -16,6 +16,7 @@ import org.controlsfx.control.textfield.AutoCompletionBinding;
 import org.controlsfx.control.textfield.TextFields;
 import org.fpj.Data.InfinitePager;
 import org.fpj.Data.UiHelpers;
+import org.fpj.Exceptions.DataNotPresentException;
 import org.fpj.javafxController.ChatWindowController;
 import org.fpj.messaging.application.ChatPreview;
 import org.fpj.messaging.application.DirectMessageService;
@@ -173,28 +174,23 @@ public class ChatPreviewController {
     }
 
     private void openChatForUsername(String username) {
+        try{
+            if (username == null || username.isBlank()) throw  new IllegalArgumentException("Kein Benutzername für den Chat ausgewählt.");
+            if (UiHelpers.isValidEmailBool(username)) throw  new IllegalArgumentException("Der eingegebene Benutzername war im falschen Format.");
+            final Optional<User> chatPartner;
+            chatPartner = userService.findByUsername(username);
+            if(chatPartner.isPresent())throw new DataNotPresentException(String.format("Der Benutzer mit dem Username %s wurde nicht gefunden.", username));
+            ChatWindowController controller = loadChatWindow(username);
+            controller.openChat(currentUser, chatPartner.get());
 
-        if (username == null || username.isBlank()) {
-            this.error("Kein Benutzername für den Chat ausgewählt.");
-            return;
-        }
-
-
-        Optional<User> optUser = userService.findByUsername(username);
-
-        if (optUser.isEmpty()) {
-            error("Benutzer für Chat nicht gefunden: " + username);
-            return;
-        }
-        try {
-            ChatWindowController controller= loadChatWindow(username);
-            User chatPartner = optUser.get();
-            controller.openChat(currentUser, chatPartner);
-        } catch (Exception e){
-            error("Fehler beim laden des Chats aufgetreten. Versuche es bitte erneut.");
+        }catch (IllegalArgumentException e){
+            error("Es ist ein unerwarteter Fehler beim Laden des Chatfensters aufgetreten: "+e.getMessage());
+        }catch (DataNotPresentException e){
+            error("Es ist ein unerwarteter Fehler beim Laden des Chatfensters aufgetreten: "+e.getMessage());
+        }catch (Exception e){
+            error("Es ist ein unerwarteter Fehler beim Laden des Chatfensters aufgetreten. Bitte versuche es später erneut: "+e.getMessage());
         }
     }
-
     private ChatWindowController loadChatWindow(String username) throws IOException {
         var url = getClass().getResource("/fxml/chat_window.fxml");
         if (url == null) {

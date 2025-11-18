@@ -3,7 +3,6 @@ package org.fpj.javafxController.mainView;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -18,7 +17,6 @@ import org.controlsfx.control.textfield.TextFields;
 import org.fpj.Data.InfinitePager;
 import org.fpj.Data.UiHelpers;
 import org.fpj.Exceptions.TransactionException;
-import org.fpj.javafxController.ChatWindowController;
 import org.fpj.javafxController.TransactionDetailController;
 import org.fpj.javafxController.TransactionViewController;
 import org.fpj.payments.domain.*;
@@ -27,14 +25,10 @@ import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
-import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.function.Consumer;
-
-import static org.fpj.Data.UiHelpers.*;
 
 @Getter
 @Setter
@@ -123,7 +117,7 @@ public class TransactionsLiteViewController {
                     setGraphic(null);
                     setText(null);
                 } else {
-                    boolean outgoing = item.senderId() ==currentUser.getId();
+                    boolean outgoing = item.senderId() == currentUser.getId();
 
                     String name = outgoing
                             ? (item.recipientUsername() != null ? item.recipientUsername() : "Empfänger unbekannt")
@@ -134,18 +128,13 @@ public class TransactionsLiteViewController {
                         case AUSZAHLUNG   -> "Auszahlung";
                         case UEBERWEISUNG -> (outgoing ? "Überweisung an " : "Überweisung von ") + name;
                     };
-
                     title.setText(counterparty);
                     subtitle.setText(UiHelpers.formatInstant(item.createdAt()) + "  •  " + UiHelpers.truncate(item.description(), 20));
                     amount.setText(item.amountString(currentUser.getId()));
                     setGraphic(root);
 
                     int index = getIndex();
-                    transactionPager.ensureLoadedForIndex(
-                            index,
-                            liteTransactionList.size(),
-                            PAGE_PRE_FETCH_THRESHOLD
-                    );
+                    transactionPager.ensureLoadedForIndex(index, liteTransactionList.size(), PAGE_PRE_FETCH_THRESHOLD);
 
                     setOnMouseClicked(ev -> {
                         if (ev.getClickCount() == 2) {
@@ -279,7 +268,6 @@ public class TransactionsLiteViewController {
         TransactionViewSearchParameter sp= new TransactionViewSearchParameter(null, null, null, null, row.recipientUsername(), null, null);
         this.openTransactionViewWindow(sp);
     }
-
 
     private void onTransactionDetailAmountClicked(TransactionLite row) {
         TransactionViewSearchParameter sp = new TransactionViewSearchParameter(

@@ -3,13 +3,11 @@ package org.fpj.javafxController;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import org.fpj.payments.domain.TransactionLite;
-import org.fpj.payments.domain.TransactionRow;
 import org.fpj.users.domain.User;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -42,9 +40,6 @@ public class TransactionDetailController {
 
     @FXML
     private Label verwendungszweckLabel;
-
-    @FXML
-    private Button reuseButton;
 
     private TransactionLite transaction;
 
