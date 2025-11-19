@@ -55,6 +55,10 @@ public class LoginController {
 
     @FXML
     public void submit(ActionEvent event){
+        //für Debuggen
+        this.usernameInput.setText("TestUser@gmail.com");
+        this.passwordInput.setText("TestUser?1");
+
         Button button = (Button) event.getSource();
         final String username = usernameInput.getText();
         final String password = passwordInput.getText();

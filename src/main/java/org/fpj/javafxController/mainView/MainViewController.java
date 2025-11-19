@@ -71,7 +71,7 @@ public class MainViewController {
             Parent root = loader.load();
             TransactionViewController detailController = loader.getController();
             javafx.stage.Stage stage = new javafx.stage.Stage();
-            stage.setTitle("Transaktionen");
+            stage.setTitle("PayTalk: Transaktionen");
             stage.setScene(new javafx.scene.Scene(root));
             stage.show();
             detailController.initialize(currentUser, transactionViewSearchParameter);

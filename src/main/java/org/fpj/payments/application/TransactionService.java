@@ -167,9 +167,6 @@ public class TransactionService {
             TransactionLite lite = transactionsLite.get(i);
             Transaction transaction = sendTransfersWithoutBalanceCheck(lite, currentUser);
             results.add(new TransactionResult(transaction, balance));
-            if (i == transactionsLite.size() - 1) {
-                results.add(new TransactionResult(transaction, balance));
-            }
         }
         if(results.isEmpty())throw new IllegalArgumentException("Es gab ein Problem beim ausführen deiner Transaktionen");
         return results;

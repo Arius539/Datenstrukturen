@@ -575,7 +575,7 @@ public class TransactionViewController {
             Parent root = loader.load();
             CsvImportDialogController<MassTransfer> transferCsvImportDialogController = loader.getController();
             javafx.stage.Stage stage = new javafx.stage.Stage();
-            stage.setTitle("Massenüberweisung Import");
+            stage.setTitle("PayTalk CSV Importer");
             stage.setScene(new javafx.scene.Scene(root));
             stage.show();
             //TODO Implement die Callbacks um dann so zu suchen

@@ -38,12 +38,12 @@ public class ViewNavigator {
     }
 
     public void loadMain() throws IOException{
-        loadView("/mainView/main_view.fxml", "Bezahlplatform", 1280, 860);
+        loadView("/mainView/main_view.fxml", "PayTalk", 1280, 860);
         mainViewController.initialize();
     }
 
     public void loadLogin() throws IOException{
-        loadView("/login.fxml", "Login", 400, 400);
+        loadView("/login.fxml", "PayTalk: Login", 400, 400);
     }
 
 }
