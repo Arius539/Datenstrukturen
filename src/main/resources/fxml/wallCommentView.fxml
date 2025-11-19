@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.fpj.javafxController.WallCommentViewController"
+            prefWidth="1280.0" prefHeight="720.0"
+            minWidth="1280.0" minHeight="720.0"
+            styleClass="root"
+            stylesheets="@/styles/wallCommentView.css">
+
+    <top>
+        <VBox spacing="10"
+              BorderPane.alignment="CENTER"
+              styleClass="wall-header">
+            <padding>
+                <Insets top="20" right="20" bottom="10" left="20"/>
+            </padding>
+
+            <fx:define>
+                <ToggleGroup fx:id="commentFilterToggleGroup"/>
+            </fx:define>
+
+            <HBox alignment="CENTER"
+                  spacing="10"
+                  styleClass="card">
+
+                <RadioButton fx:id="rbWrittenBy"
+                             text="Verfasst von"
+                             toggleGroup="$commentFilterToggleGroup"
+                             selected="true"
+                             onAction="#selectionTypeChanged"
+                             styleClass="wall-filter-toggle"/>
+
+                <RadioButton fx:id="rbWrittenFor"
+                             text="Verfasst für"
+                             toggleGroup="$commentFilterToggleGroup"
+                             onAction="#selectionTypeChanged"
+                             styleClass="wall-filter-toggle"/>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <TextField fx:id="searchField"
+                           promptText="Suche…"
+                           maxWidth="300"
+                           styleClass="wall-search-field"/>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <Button fx:id="exportButton"
+                        text="Export"
+                        onAction="#onExport"
+                        styleClass="wall-secondary-button"/>
+
+                <Button fx:id="reloadButton"
+                        text="Neu laden"
+                        onAction="#onReloadWall"
+                        styleClass="wall-secondary-button"/>
+            </HBox>
+
+            <GridPane hgap="20"
+                      styleClass="card">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="80"/>
+                    <ColumnConstraints percentWidth="20"/>
+                </columnConstraints>
+                <VBox spacing="5"
+                      GridPane.columnIndex="0"
+                      alignment="CENTER_LEFT"
+                      styleClass="wall-new-comment-box">
+                    <Label fx:id="headlineLabel"
+                           text="Pinnwand von Username"
+                           styleClass="label-head"/>
+                </VBox>
+                <VBox spacing="5"
+                      GridPane.columnIndex="1"
+                      alignment="CENTER_RIGHT"
+                      styleClass="wall-new-comment-box">
+                    <TextArea fx:id="newCommentTextArea"
+                              promptText="Neuen Kommentar schreiben…"
+                              wrapText="true"
+                              prefRowCount="3"
+                              styleClass="wall-new-comment-area"/>
+
+                    <Button fx:id="sendButton"
+                            text="Senden"
+                            onAction="#onSendClicked"
+                            styleClass="wall-primary-button"/>
+                </VBox>
+            </GridPane>
+        </VBox>
+    </top>
+
+    <center>
+        <StackPane>
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+        <VBox alignment="TOP_CENTER"
+              spacing="10"
+              styleClass="card">
+            <padding>
+                <Insets top="20" right="20" bottom="10" left="20"/>
+            </padding>
+        <ScrollPane fitToWidth="true"
+                    pannable="true"
+                    styleClass="wall-scroll">
+            <GridPane
+                    fx:id="commentGrid"
+                      hgap="20"
+                      vgap="20"
+                      styleClass="wall-grid">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
+                </padding>
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="33.33"/>
+                    <ColumnConstraints percentWidth="33.33"/>
+                    <ColumnConstraints percentWidth="33.33"/>
+                </columnConstraints>
+            </GridPane>
+        </ScrollPane>
+        </VBox>
+        </StackPane>
+    </center>
+</BorderPane>

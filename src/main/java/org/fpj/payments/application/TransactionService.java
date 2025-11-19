@@ -46,9 +46,6 @@ public class TransactionService {
         return this.txRepo.findRowsForUserList(userId);
     }
 
-    /* =================== Commands (neu) =================== */
-
-    @Transactional
     public Transaction deposit(User user, BigDecimal amount, String subject) {
         Transaction tx = new Transaction();
         tx.setTransactionType(EINZAHLUNG);
@@ -60,7 +57,6 @@ public class TransactionService {
         return tx;
     }
 
-    @Transactional
     public Transaction withdraw(User user, BigDecimal amount, String subject) {
         Transaction tx = new Transaction();
         tx.setTransactionType(AUSZAHLUNG);
@@ -72,7 +68,6 @@ public class TransactionService {
         return tx;
     }
 
-    @Transactional
     public Transaction transfer(User sender, String recipientUsername, BigDecimal amount, String subject) {
         if (recipientUsername == null || recipientUsername.isBlank()) {
             throw new TransactionException("Empfänger ist erforderlich.");
@@ -130,21 +125,22 @@ public class TransactionService {
 
     public TransactionResult sendTransfers(TransactionLite transactionLite, User currentUser) {
         BigDecimal currentBalance = this.computeBalance(currentUser.getId());
+        Transaction transaction = new Transaction();
         if (transactionLite.type() == TransactionType.EINZAHLUNG) {
-            this.deposit(currentUser, transactionLite.amount(), transactionLite.description());
+            transaction= this.deposit(currentUser, transactionLite.amount(), transactionLite.description());
             currentBalance = currentBalance.add(transactionLite.amount());
         } else if (transactionLite.type() == TransactionType.AUSZAHLUNG) {
             if (currentBalance.compareTo(transactionLite.amount()) < 0) throw new TransactionException("Nicht genügend Guthaben für die Auszahlung.");
             currentBalance = currentBalance.subtract(transactionLite.amount());
-            this.withdraw(currentUser, transactionLite.amount(), transactionLite.description());
+            transaction= this.withdraw(currentUser, transactionLite.amount(), transactionLite.description());
             currentBalance = currentBalance.add(transactionLite.amount());
         } else {
             if (currentBalance.compareTo(transactionLite.amount()) < 0) throw new TransactionException("Nicht genügend Guthaben für die Auszahlung.");
             currentBalance = currentBalance.subtract(transactionLite.amount());
 
-            this.transfer(currentUser, transactionLite.recipientUsername(), transactionLite.amount(), transactionLite.description());
+            transaction=  this.transfer(currentUser, transactionLite.recipientUsername(), transactionLite.amount(), transactionLite.description());
         }
-        return new TransactionResult(new Transaction(), currentBalance);
+        return new TransactionResult(transaction, currentBalance);
     }
 
 

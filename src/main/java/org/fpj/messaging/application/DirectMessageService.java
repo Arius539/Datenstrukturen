@@ -60,5 +60,9 @@ public class DirectMessageService {
                 .orElseThrow(() -> new DataNotPresentException("DirectMessage not found for id " + id));
     }
 
+    public List<DirectMessage> getConversationMessageList(Long userId1, Long userId2){
+        return this.dmRepo.findConversationAsList(userId1, userId2);
+    }
+
 
 }

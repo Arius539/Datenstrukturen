@@ -1,14 +1,13 @@
 package org.fpj.users.application;
 
 import org.fpj.Exceptions.DataNotPresentException;
-import org.fpj.users.domain.ConversationMessageView;
+import org.fpj.messaging.domain.DirectMessage;
 import org.fpj.users.domain.User;
 import org.fpj.users.domain.UserRepository;
 import org.fpj.users.domain.UsernameOnly;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -45,9 +44,5 @@ public class UserService {
 
     public boolean usernameExists(String username) {
         return userRepository.existsByUsername(username);
-    }
-
-    public List<ConversationMessageView> getConversationMessageView(Long userId1, Long userId2){
-       return this.userRepository.findConversationBetweenUsers(userId1, userId2);
     }
 }

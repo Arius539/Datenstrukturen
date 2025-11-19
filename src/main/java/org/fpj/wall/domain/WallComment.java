@@ -1,6 +1,8 @@
 package org.fpj.wall.domain;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.fpj.users.domain.User;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Comment;
@@ -8,6 +10,8 @@ import org.fpj.users.domain.User;
 
 import java.time.Instant;
 
+@Setter
+@Getter
 @Entity
 @Table(
         name = "pinboard_comments",

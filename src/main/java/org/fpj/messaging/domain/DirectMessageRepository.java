@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface DirectMessageRepository extends JpaRepository<DirectMessage, Long>{
@@ -43,4 +44,13 @@ public interface DirectMessageRepository extends JpaRepository<DirectMessage, Lo
 
     @Query("SELECT d FROM DirectMessage d WHERE d.id = :id")
     Optional<DirectMessage> getDirectMessageById(@Param("id") Long id);
+
+    @Query("""
+        select dm
+        from DirectMessage dm
+        where (dm.sender.id = :a and dm.recipient.id = :b)
+           or (dm.sender.id = :b and dm.recipient.id = :a)
+        order by dm.createdAt desc
+    """)
+    List<DirectMessage> findConversationAsList(@Param("a") Long userA, @Param("b") Long userB);
 }

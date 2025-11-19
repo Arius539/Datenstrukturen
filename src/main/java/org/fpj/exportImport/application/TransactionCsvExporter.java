@@ -32,11 +32,12 @@ public class TransactionCsvExporter {
             writer.writeHeaders();
             Iterable<TransactionRow> iterable = () -> transactions;
             for (TransactionRow t : iterable) {
+                String description =  UiHelpers.safe(t.description());
                 writer.writeRow(
                         UiHelpers.formatInstantToDate(t.createdAt()),
-                        UiHelpers.safe(t.recipientUsername()),
-                        UiHelpers.safe(t.senderUsername()),
-                        UiHelpers.safe(t.description()),
+                        t.recipientUsername(),
+                        t.senderUsername(),
+                        UiHelpers.truncateFull(description, description.length()),
                         UiHelpers.formatBigDecimal(t.amount().abs()),
                         t.type().name()
                 );

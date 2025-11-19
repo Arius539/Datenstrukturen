@@ -8,6 +8,7 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 import org.fpj.AlertService;
 import org.fpj.javafxController.TransactionViewController;
+import org.fpj.javafxController.WallCommentViewController;
 import org.fpj.payments.application.TransactionService;
 import org.fpj.payments.domain.TransactionViewSearchParameter;
 import org.fpj.users.application.UserService;
@@ -80,10 +81,30 @@ public class MainViewController {
         }
     }
 
+    public void openwallCommentView(){
+        try {
+            var url = getClass().getResource("/fxml/wallCommentView.fxml");
+            FXMLLoader loader = new FXMLLoader(url);
+            loader.setControllerFactory(applicationContext::getBean);
+
+            Parent root = loader.load();
+            WallCommentViewController detailController = loader.getController();
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle("PayTalk: Pinnwand");
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.show();
+            detailController.load(currentUser, currentUser);
+        } catch(Exception e) {
+            alertService.error("Error","Error","Fehler beim laden des Transaktionsfensters. Versuche es erneut oder starte die Anwendung neu: ");
+        }
+    }
+
     @FXML public void actionTransactions()    {
         openTransactionsWindow(null);
     }
-    @FXML public void actionWallComments()    {alertService.info("Info","Info","Navigation: Wall Kommentare (Placeholder)."); }
+    @FXML public void actionWallComments()    {
+        openwallCommentView();
+    }
 
     private void updateBalanceLabel(String balance) {
         lblBalance.setText(balance);

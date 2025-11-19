@@ -130,7 +130,7 @@ public class TransactionsLiteViewController {
                         case UEBERWEISUNG -> (outgoing ? "Überweisung an " : "Überweisung von ") + name;
                     };
                     title.setText(counterparty);
-                    subtitle.setText(UiHelpers.formatInstant(item.createdAt()) + "  •  " + UiHelpers.truncate(item.description(), 20));
+                    subtitle.setText(UiHelpers.formatInstant(item.createdAt()) + "  •  " + UiHelpers.truncateFull(item.description(), 20));
                     amount.setText(item.amountString(currentUser.getId()));
                     setGraphic(root);
 
@@ -172,7 +172,7 @@ public class TransactionsLiteViewController {
     private void sendTransfers() {
         try {
             String amount = tfBetrag.getText();
-            String subject = tfBetreff.getText();
+            String subject =UiHelpers.truncate( tfBetreff.getText(), tfBetreff.getText().length() );
             String recipient = tfEmpfaenger.getText();
 
             String sender= null;

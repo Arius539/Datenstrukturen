@@ -117,7 +117,7 @@ public class ChatPreviewController {
                     subtitle.setText("Noch keine Nachrichten");
                 } else {
                     String messageSender= item.lastMessageUsername().equals(currentUser.getUsername()) ? "Du: " : item.lastMessageUsername()+ ": ";
-                    subtitle.setText(UiHelpers.truncate(messageSender, 20)+ UiHelpers.truncate(msg, 20));
+                    subtitle.setText(UiHelpers.truncateFull(messageSender, 20)+ UiHelpers.truncateFull(msg, 20));
                 }
 
                 ts.setText(item.timestamp() == null ? "" : TS.format(item.timestamp()));

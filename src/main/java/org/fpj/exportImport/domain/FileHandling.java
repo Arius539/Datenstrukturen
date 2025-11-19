@@ -1,4 +1,4 @@
-package org.fpj.exportImport.adapter;
+package org.fpj.exportImport.domain;
 
 import javafx.stage.FileChooser;
 import javafx.stage.Window;

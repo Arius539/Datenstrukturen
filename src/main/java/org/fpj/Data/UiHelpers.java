@@ -64,7 +64,7 @@ public class UiHelpers {
         }
         return true;
     }
-
+    /** Entfernt alle leeren Zeilen und reduziert die Länge des Strings*/
     public static String truncate(String s, int max) {
         if (s == null) return "";
         StringBuilder sb = new StringBuilder();
@@ -78,6 +78,25 @@ public class UiHelpers {
         String result = sb.toString();
         return result.length() <= max ? result : result.substring(0, max) + "…";
     }
+    /** Entfernt alle Zeilenumbrüche und reduziert die Länge des Strings*/
+    public static String truncateFull(String s, int max) {
+        if (s == null) return "";
+        StringBuilder sb = new StringBuilder();
+        String[] lines = s.split("\\R");
+
+        for (String line : lines) {
+            String trimmed = line.trim();
+            if (!trimmed.isEmpty()) {
+                if (sb.length() > 0) sb.append(' ');  // statt lineSeparator
+                sb.append(trimmed);
+            }
+        }
+
+        String result = sb.toString();
+        return result.length() <= max ? result : result.substring(0, max) + "…";
+    }
+
+
     /**Punkt als Decimal Trennzeichen, kein Währungszeichen und kein Vorzeichen*/
     public static String formatBigDecimal(BigDecimal amt) {
         BigDecimal v = (amt != null ? amt : BigDecimal.ZERO)

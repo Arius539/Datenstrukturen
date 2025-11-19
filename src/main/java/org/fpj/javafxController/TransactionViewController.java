@@ -20,7 +20,7 @@ import org.fpj.Data.InfinitePager;
 import org.fpj.Data.UiHelpers;
 import org.fpj.Exceptions.DataNotPresentException;
 import org.fpj.Exceptions.TransactionException;
-import org.fpj.exportImport.adapter.FileHandling;
+import org.fpj.exportImport.domain.FileHandling;
 import org.fpj.exportImport.application.MassTransferCsvReader;
 import org.fpj.exportImport.application.TransactionCsvExporter;
 import org.fpj.payments.application.TransactionService;
@@ -34,7 +34,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 
 @Component
@@ -252,7 +251,7 @@ public class TransactionViewController {
                     };
 
                     title.setText(counterparty);
-                    subtitle.setText(UiHelpers.truncate(item.description(), 30));
+                    subtitle.setText(UiHelpers.truncateFull(item.description(), 30));
                     amount.setText(item.amountString(currentUser.getUsername()));
                     setGraphic(root);
 
@@ -302,7 +301,7 @@ public class TransactionViewController {
                     };
 
                     title.setText(counterparty);
-                    subtitle.setText(UiHelpers.formatInstant(item.createdAt()) + "  •  " + UiHelpers.truncate(item.description(), 20));
+                    subtitle.setText(UiHelpers.formatInstant(item.createdAt()) + "  •  " + UiHelpers.truncateFull(item.description(), 20));
                     amount.setText(item.amountString(currentUser.getId()));
                     setGraphic(root);
                     int index = getIndex();
@@ -349,7 +348,7 @@ public class TransactionViewController {
     private TransactionLite transactionInfosToTransactionLite() {
         try {
             String amount = amountField.getText();
-            String subject = purposeField.getText();
+            String subject =UiHelpers.truncate(purposeField.getText(), purposeField.getText().length());
             String recipient = receiverUsernameField.getText();
             String sender= null;
             TransactionType type = null;

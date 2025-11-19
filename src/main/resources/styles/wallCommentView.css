@@ -1,0 +1,293 @@
+/* wurde KI erstellt erstelle mir eine passende css zu dieser fxml: main_view.fxml, und ein passendes Farbkonzept (Blau, Weiß, Grau) */
+.root {
+    -c-brand:        #0F61A8;
+    -c-brand-dark:   #0B4C84;
+    -c-bg:           #FFFFFF;
+    -c-surface: #ffffff;
+    -c-surface-alt:  #E5E7EB;
+    -c-on-brand:     #FFFFFF;
+    -c-text:         #1A1A1A;
+    -c-text-muted:   #6B7280;
+    -c-border:       #E2E8F0;
+    -c-shadow:       rgba(16, 24, 40, 0.08);
+
+    -fx-accent:            -c-brand;
+    -fx-focus-color:       -c-brand;
+    -fx-faint-focus-color: rgba(227, 6, 19, 0.3);
+
+    -fx-font-family: "Segoe UI", "Roboto", "Sans-Serif";
+    -fx-background-color: -c-bg;
+}
+
+/* Optional: falls das BorderPane eine StyleClass bekommt */
+.wall-root {
+    -fx-background-color: -c-bg;
+}
+
+/* ------------------------------------------------------------------
+ * Header- / Top-Bereich
+ * ------------------------------------------------------------------ */
+
+/* VBox im Top-Bereich – z. B. styleClass="wall-header" */
+.wall-header {
+    -fx-spacing: 10;
+    -fx-padding: 20 20 10 20;
+    -fx-background-color: -c-surface;
+    -fx-border-color: -c-border;
+    -fx-border-width: 0 0 1 0;
+}
+
+/* HBox mit Filter, Suche, Buttons – z. B. styleClass="wall-toolbar" */
+.wall-toolbar {
+    -fx-font-size: 12px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-spacing: 10;
+}
+
+/* GridPane mit Headline + "Neuer Kommentar" – z. B. styleClass="wall-header-grid" */
+.wall-header-grid {
+    -fx-hgap: 20;
+    -fx-vgap: 5;
+}
+
+/* ------------------------------------------------------------------
+ * Filter / RadioButtons
+ * ------------------------------------------------------------------ */
+
+.radio-button {
+    -fx-text-fill: -c-text;
+    -fx-font-size: 13px;
+    -fx-padding: 4 8 4 0;
+}
+
+.radio-button > .radio {
+    -fx-mark-color: -c-brand;
+}
+
+/* Optional: zusätzliche Klasse für die Filter-Toggles */
+.wall-filter-toggle {
+    -fx-font-weight: 500;
+}
+
+/* ------------------------------------------------------------------
+ * Suchfeld
+ * ------------------------------------------------------------------ */
+
+.text-field {
+    -fx-font-size: 14px;
+    -fx-background-color: -c-bg;
+    -fx-text-fill: -c-text;
+    -fx-prompt-text-fill: -c-text-muted;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: -c-border;
+    -fx-padding: 6 10;
+}
+
+/* Spezielles Styling für das Suchfeld – z. B. styleClass="wall-search-field" */
+.wall-search-field {
+    -fx-font-size: 14px;
+    -fx-pref-width: 300;
+}
+
+/* ------------------------------------------------------------------
+ * Headline / Neuer Kommentar
+ * ------------------------------------------------------------------ */
+
+/* Überschrift – z. B. styleClass="wall-headline" */
+.wall-headline {
+    -fx-font-weight: bold;
+    -fx-text-fill: -c-text;
+}
+
+/* VBox um TextArea + Senden – z. B. styleClass="wall-new-comment-box" */
+.wall-new-comment-box {
+    -fx-spacing: 5;
+}
+
+/* Basis für alle TextAreas */
+.text-area {
+    -fx-font-size: 14px;
+    -fx-background-color: -c-bg;
+    -fx-text-fill: -c-text;
+    -fx-prompt-text-fill: -c-text-muted;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: -c-border;
+    -fx-padding: 8 10;
+}
+
+.text-area .content {
+    -fx-background-color: transparent;
+}
+
+.wall-new-comment-area {
+    -fx-font-size: 14px;
+    -fx-pref-row-count: 3;
+}
+
+/* ------------------------------------------------------------------
+ * Buttons
+ * ------------------------------------------------------------------ */
+
+/* Basis-Button-Design (übernimmt vorhandenes Design) */
+.button {
+    -fx-background-color: linear-gradient(to bottom, -c-surface, -c-surface-alt);
+    -fx-text-fill: -c-text;
+    -fx-padding: 8 14;
+    -fx-background-radius: 10;
+    -fx-border-color: -c-border;
+    -fx-border-radius: 10;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+}
+
+.button:hover {
+    -fx-background-color: -c-brand;
+    -fx-text-fill: -c-on-brand;
+}
+
+.button:disabled {
+    -fx-opacity: 0.6;
+    -fx-cursor: default;
+}
+
+/* Primärer Aktion-Button – z. B. styleClass="wall-primary-button" zusätzlich zur Basis */
+.wall-primary-button {
+    -fx-background-color: -c-brand;
+    -fx-text-fill: -c-on-brand;
+    -fx-border-color: transparent;
+    -fx-font-weight: 600;
+    -fx-min-width: 96;
+}
+
+.wall-primary-button:hover {
+    -fx-background-color: -c-brand-dark;
+}
+
+/* "Sekundäre" Tool-Buttons (Export/Reload) – z. B. styleClass="wall-secondary-button" */
+.wall-secondary-button {
+    -fx-font-size: 13px;
+}
+
+/* Optional: noch dezenter, wenn erforderlich */
+.wall-secondary-button-flat {
+    -fx-background-color: linear-gradient(to bottom, -c-surface, -c-surface-alt);
+}
+
+/* ------------------------------------------------------------------
+ * ScrollPane / Kommentar-Grid
+ * ------------------------------------------------------------------ */
+
+/* Generelle ScrollPane-Basis */
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.scroll-pane > .viewport {
+    -fx-background-color: -c-bg;
+}
+
+/* Spezielle ScrollPane in der Wall – z. B. styleClass="wall-scroll" */
+.wall-scroll {
+    /* falls du optisch absetzen willst */
+}
+
+/* Grid mit Kommentaren – z. B. styleClass="wall-grid" auf dem GridPane */
+.grid-pane {
+    /* Basisabstände, falls nichts Spezielles gesetzt ist */
+    -fx-hgap: 10;
+    -fx-vgap: 10;
+}
+
+.wall-grid {
+    -fx-padding: 20 20 20 20;
+    -fx-hgap: 20;
+    -fx-vgap: 20;
+}
+
+/* ------------------------------------------------------------------
+ * Kommentar-Karten (aus Controller: "comment-card", "comment-meta-label")
+ * ------------------------------------------------------------------ */
+
+.comment-card {
+    -fx-background-color: -c-brand;
+    -fx-border-color: derive(-c-brand-dark, -10%);
+    -fx-border-width: 1;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-padding: 10 12;
+    -fx-spacing: 6;
+    -fx-effect: dropshadow(gaussian, -c-shadow, 10, 0.2, 0, 1);
+}
+
+.comment-card > .label {
+    -fx-font-size: 16px;
+    -fx-text-fill: -c-on-brand;
+}
+
+.comment-meta-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: rgba(255,255,255,0.75);
+    -fx-padding: 2 0 0 0;
+    -fx-cursor: hand;
+}
+
+.comment-card:hover {
+    -fx-background-color: derive(-c-brand, 15%);
+}
+
+.comment-meta-label.hover,
+.comment-meta-label:hover {
+    -fx-text-fill: -c-on-brand;
+    -fx-underline: true;
+}
+
+.card {
+    -fx-alignment: CENTER_LEFT;
+    -fx-spacing: 10;
+    -fx-background-color: -c-surface;
+    -fx-background-radius: 12;
+    -fx-padding: 12;
+    -fx-border-color: -c-border;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, -c-shadow, 16, 0.3, 0, 3);
+}
+
+
+/* ------------------------------------------------------------------
+ * Allgemeines Label-/Layout-Finetuning
+ * ------------------------------------------------------------------ */
+
+.label {
+    -fx-font-size: 11px;
+
+}
+
+.label-head {
+    -fx-font-size: 60px;
+    -fx-font-family: "Segoe UI Black", "Segoe UI Semibold", "Segoe UI", "Roboto", "Sans-Serif";
+    -fx-font-weight: 900;
+    -fx-text-fill: linear-gradient(
+            from 0% 0% to 100% 0%,
+            derive(-c-brand, 20%) 0%,
+            -c-brand 35%,
+            -c-brand-dark 70%,
+            derive(-c-brand-dark, -20%) 100%
+    );
+}
+
+
+
+
+
+/* Generische VBox/HBox-Basis (falls du sie nicht extra benennen willst) */
+.vbox {
+    -fx-spacing: 5;
+}
+
+.hbox {
+    -fx-spacing: 5;
+}

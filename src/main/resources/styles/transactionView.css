@@ -20,29 +20,19 @@
     -fx-background-color: -c-bg;
 }
 
-/* Standard-Container-Hintergründe */
 .transaction-root .grid-pane,
 .transaction-root .vbox,
 .transaction-root .hbox {
     -fx-background-color: -c-bg;
 }
 
-/************************************************************
- * Grid / Layout
- ************************************************************/
-
 .transaction-main-grid {
     -fx-background-color: -c-bg;
 }
 
-/* Rechte Spalte, Container-Wrapper */
 .transactions-right-container {
     -fx-background-color: transparent;
 }
-
-/************************************************************
- * Cards (gemeinsames Pattern)
- ************************************************************/
 
 .card {
     -fx-background-color: -c-surface;
@@ -54,41 +44,13 @@
     -fx-effect: dropshadow(gaussian, -c-shadow, 16, 0.3, 0, 3);
 }
 
-/* Card-Inhalt: ein bisschen Standard-Vertical-Spacing */
 .card .vbox {
     -fx-spacing: 8;
 }
 
-/* Spezialisierte Cards (optional, nur Feintuning) */
-.transaction-summary-card {
-    -fx-padding: 14;
-}
-
-.transaction-list-card {
-    -fx-padding: 12;
-}
-
-.batch-area-card {
-    -fx-padding: 12;
-}
-
-/************************************************************
- * Typografie, Labels, Text
- ************************************************************/
-
 .label {
     -fx-text-fill: -c-text;
     -fx-font-size: 16px;
-}
-
-.text-verySmall { -fx-font-size: 11px; }
-.text-small     { -fx-font-size: 13px; }
-.text-default   { -fx-font-size: 14px; }
-.text-large     { -fx-font-size: 18px; }
-.text-veryLarge { -fx-font-size: 32px; }
-
-.text-muted {
-    -fx-text-fill: -c-text-muted;
 }
 
 .card-title {
@@ -97,13 +59,6 @@
     -fx-text-fill: -c-text;
 }
 
-/* Sektionstitel (z. B. "gesammelte Transaktionen") */
-.section-title {
-    -fx-font-weight: 600;
-    -fx-letter-spacing: 0.03em;
-}
-
-/* Balance-Anzeige (groß, prominent) */
 .balance {
     -fx-font-size: 16px;
     -fx-font-weight: bold;
@@ -120,10 +75,6 @@
     -fx-border-width: 1;
     -fx-font-size: 14px;
 }
-
-/************************************************************
- * Buttons
- ************************************************************/
 
 .button {
     -fx-background-color: linear-gradient(to bottom, -c-surface, -c-surface-alt);
@@ -152,7 +103,6 @@
     -fx-cursor: default;
 }
 
-/* Primäre Aktionen (z. B. "Suchen", "ausführen", "alle ausführen") */
 .button.primary {
     -fx-background-color: -c-brand;
     -fx-text-fill: -c-on-brand;
@@ -163,12 +113,6 @@
     -fx-background-color: -c-brand-dark;
 }
 
-/* Vollbreiten-Button unten rechts */
-.button-full-width {
-    -fx-max-width: infinity;
-}
-
-/* Reihen mit Buttons (Batch-Operationen) */
 .button-row {
     -fx-alignment: CENTER;
     -fx-spacing: 10;
@@ -186,10 +130,6 @@
 .button-small .graphic {
     -fx-padding: 0 2 0 0;
 }
-
-/************************************************************
- * TextFields, ComboBox, Form Controls
- ************************************************************/
 
 .text-field,
 .password-field {
@@ -210,7 +150,6 @@
     -fx-background-insets: 0;
 }
 
-/* ComboBox-Styling analog TextField */
 .combo-box-base {
     -fx-background-color: -c-surface;
     -fx-background-radius: 10;
@@ -242,12 +181,6 @@
     -fx-background-color: -c-on-brand;
 }
 
-
-
-/************************************************************
- * RadioButtons (Transaktionstyp)
- ************************************************************/
-
 .radio-button {
     -fx-text-fill: -c-text;
     -fx-font-size: 13px;
@@ -276,15 +209,10 @@
     -fx-background-color: -c-brand;
 }
 
-/* HBox, die die Radiobuttons enthält */
 .transaction-type-row {
     -fx-alignment: CENTER;
     -fx-spacing: 10;
 }
-
-/************************************************************
- * ListView & Zellen (Transaktionslisten / Batch-Listen)
- ************************************************************/
 
 .list-view {
     -fx-background-color: transparent;
@@ -294,10 +222,8 @@
 }
 
 .transaction-list {
-    /* Nur optional, falls du etwas Spezifisches brauchst */
 }
 
-/* Zellen-Layout */
 .list-cell {
     -fx-background-color: transparent;
     -fx-text-fill: -c-text;
@@ -329,10 +255,6 @@
     -fx-fill: -c-on-brand;
 }
 
-/************************************************************
- * ContextMenu (für Batch-Transaktionen)
- ************************************************************/
-
 .context-menu {
     -fx-background-color: -c-surface;
     -fx-background-radius: 8;
@@ -360,66 +282,10 @@
     -fx-text-fill: -c-on-brand;
 }
 
-/************************************************************
- * TitledPane als Card (Transaktion ausführen)
- ************************************************************/
-
-/* Oberes Container-Element: Schatten + keine eigene Card-Fläche,
-   die eigentliche visuelle Card entsteht durch title + content. */
-.titled-pane.card.transaction-form-pane {
-    -fx-background-color: -c-on-brand;
-    -fx-border-color: transparent;
-    -fx-padding: 0;
-    -fx-effect: dropshadow(gaussian, -c-shadow, 16, 0.3, 0, 3);
-}
-
-/* Header-Bereich */
-.titled-pane.card.transaction-form-pane > .title {
-    -fx-background-color: -c-surface;
-    -fx-background-radius: 12 12 0 0;
-    -fx-border-radius: 12 12 0 0;
-    -fx-border-color: -c-border;
-    -fx-border-width: 1 1 0 1;
-    -fx-padding: 8 12;
-}
-
-/* Text im Header */
-.titled-pane.card.transaction-form-pane > .title > .text {
-    -fx-fill: -c-on-brand;
-    -fx-font-weight: 600;
-}
-
-/* Pfeil-Button (auf/zu) */
-.titled-pane.card.transaction-form-pane > .title > .arrow-button {
-    -fx-background-color: transparent;
-}
-
-/* Content-Bereich */
-.titled-pane.card.transaction-form-pane > .content {
-    -fx-background-color: -c-surface;
-    -fx-background-radius: 0 0 12 12;
-    -fx-border-radius: 0 0 12 12;
-    -fx-border-color: -c-border;
-    -fx-border-width: 0 1 1 1;
-    -fx-padding: 0;
-}
-
-/* Inneres Grid im Content */
 .transaction-form-grid {
     -fx-background-color: -c-on-brand;
 }
 
-/************************************************************
- * Sonstige Layout-Helfer
- ************************************************************/
-
-/* Zeile für Filter (ComboBox + Buttons) */
-.filter-row {
-    -fx-background-color: -c-on-brand;
-    -fx-alignment: CENTER_RIGHT;
-}
-
-/* Generische Regions transparent halten */
 .region {
     -fx-background-color: -c-on-brand;
 }

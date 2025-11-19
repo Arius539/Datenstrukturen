@@ -9,10 +9,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
-import org.fpj.exportImport.adapter.CsvError;
-import org.fpj.exportImport.adapter.CsvImportResult;
-import org.fpj.exportImport.adapter.FileHandling;
-import org.fpj.exportImport.adapter.CsvReader;
+import org.fpj.exportImport.domain.CsvError;
+import org.fpj.exportImport.domain.CsvImportResult;
+import org.fpj.exportImport.domain.FileHandling;
+import org.fpj.exportImport.domain.CsvReader;
 import org.springframework.stereotype.Component;
 import javafx.scene.layout.Region;
 

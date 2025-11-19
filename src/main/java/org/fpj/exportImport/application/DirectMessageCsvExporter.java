@@ -5,7 +5,6 @@ import com.univocity.parsers.csv.CsvWriterSettings;
 import lombok.Getter;
 import org.fpj.Data.UiHelpers;
 import org.fpj.messaging.domain.DirectMessage;
-import org.fpj.users.domain.ConversationMessageView;
 
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -15,10 +14,10 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
 @Getter
-public class DirectMessagePinBoardCsvExporter {
+public class DirectMessageCsvExporter {
     boolean isRunning = false;
 
-    public void export(Iterator<ConversationMessageView> messages, OutputStream out) {
+    public void export(Iterator<DirectMessage> messages, OutputStream out) {
         isRunning = true;
         CsvWriterSettings settings = new CsvWriterSettings();
         settings.getFormat().setDelimiter(';');
@@ -28,13 +27,14 @@ public class DirectMessagePinBoardCsvExporter {
             CsvWriter writer = new CsvWriter(osw, settings);
 
             writer.writeHeaders();
-            Iterable<ConversationMessageView> iterable = () -> messages;
-            for (ConversationMessageView n : iterable) {
+            Iterable<DirectMessage> iterable = () -> messages;
+            for (DirectMessage n : iterable) {
+                String description = UiHelpers.safe(n.getContent());
                 writer.writeRow(
-                        formatInstant(n.createdAt()),
-                        n.senderUsername(),
-                        n.recipientUsername(),
-                        n.content());
+                        formatInstant(n.getCreatedAt()),
+                        n.getSender().getUsername(),
+                        n.getRecipient().getUsername(),
+                        UiHelpers.truncateFull(description, description.length()));
             }
             writer.flush();
             isRunning = false;

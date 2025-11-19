@@ -8,9 +8,9 @@ import com.univocity.parsers.csv.CsvParserSettings;
 import lombok.Setter;
 import org.fpj.Data.UiHelpers;
 import org.fpj.Exceptions.DataNotPresentException;
-import org.fpj.exportImport.adapter.CsvError;
-import org.fpj.exportImport.adapter.CsvImportResult;
-import org.fpj.exportImport.adapter.CsvReader;
+import org.fpj.exportImport.domain.CsvError;
+import org.fpj.exportImport.domain.CsvImportResult;
+import org.fpj.exportImport.domain.CsvReader;
 import org.fpj.payments.domain.MassTransfer;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
@@ -26,7 +26,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
@@ -164,10 +163,10 @@ public class MassTransferCsvReader implements CsvReader {
             throw new IllegalArgumentException("Empfänger darf nicht leer sein");
             }
             empfaenger = empfaenger.trim();
-            if(this.currentUser.getUsername().equals(empfaenger)){
-                throw new IllegalArgumentException("Empfänger ist keine gültige E-Mail-Adresse");
-            }
             UiHelpers.isValidEmail(empfaenger);
+            if(this.currentUser.getUsername().equals(empfaenger)){
+                throw new IllegalArgumentException("Du kannst keine Überweisungen an dich selbst tätigen");
+            }
             User user= userService.findByUsername(empfaenger);
             }catch (IllegalArgumentException | DataNotPresentException e) {
                 errors.add(new CsvError(

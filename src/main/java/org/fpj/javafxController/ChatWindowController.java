@@ -1,8 +1,6 @@
 package org.fpj.javafxController;
 
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
@@ -12,13 +10,11 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Window;
 import org.fpj.Data.InfinitePager;
 import org.fpj.Data.UiHelpers;
-import org.fpj.exportImport.adapter.FileHandling;
-import org.fpj.exportImport.application.DirectMessagePinBoardCsvExporter;
+import org.fpj.exportImport.domain.FileHandling;
+import org.fpj.exportImport.application.DirectMessageCsvExporter;
 import org.fpj.messaging.domain.DirectMessageRow;
 import org.fpj.messaging.application.DirectMessageService;
 import org.fpj.messaging.domain.DirectMessage;
-import org.fpj.users.application.UserService;
-import org.fpj.users.domain.ConversationMessageView;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -32,14 +28,10 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 @Component
 @Scope(SCOPE_PROTOTYPE)
 public class ChatWindowController {
-    DirectMessagePinBoardCsvExporter directMessagePinBoardCsvExporter = new DirectMessagePinBoardCsvExporter();
-    @Autowired
-    UserService userService;
-
+    DirectMessageCsvExporter directMessageCsvExporter = new DirectMessageCsvExporter();
     @Autowired
     private DirectMessageService directMessageService;
 
-    private final ObservableList<DirectMessage> chatMessages = FXCollections.observableArrayList();
     private static final int PAGE_SIZE_CHAT_Messages = 50;
     private static final double PAGE_PRE_FETCH_THRESHOLD = 0.1; //nur noch 10% übrig bis geladenen Elemente enden
 
@@ -83,7 +75,6 @@ public class ChatWindowController {
     }
 
     private void initChatMessages() {
-        chatMessages.clear();
         vbMessages.getChildren().clear();
 
         messagesPager = new InfinitePager<>(
@@ -95,15 +86,14 @@ public class ChatWindowController {
                 page -> {
                     List<DirectMessage> desc = page.getContent();
 
-                    int beforeCount = this.chatMessages.size();
+                    int beforeCount = this.vbMessages.getChildren().size();
                     double oldV = this.scrollPane.getVvalue();
 
                     for (DirectMessage msg : desc) {
-                        chatMessages.add(msg);
                         addMessageNode(msg, true);
                     }
 
-                    int afterCount = this.chatMessages.size();
+                    int afterCount = this.vbMessages.getChildren().size();
                     if (afterCount > 0 && beforeCount > 0) {
                         double r = (double) beforeCount / (double) afterCount;
                         double newV = r * oldV + (1.0 - r);
@@ -191,10 +181,10 @@ public class ChatWindowController {
         if (input == null || input.isBlank()) {
             return;
         }
+        input = UiHelpers.truncate(input, input.length());
         DirectMessageRow row=  new DirectMessageRow(this.currentUser, this.currentChatPartner, input);
         DirectMessage directMessage = directMessageService.addDirectMessage(row);
         addMessageNode(directMessage, false);
-        chatMessages.add(directMessage);
         taInput.clear();
         Platform.runLater(() -> vbMessages.layout());
     }
@@ -202,15 +192,15 @@ public class ChatWindowController {
     @FXML
     private void exportChat() {
         try {
-            if(directMessagePinBoardCsvExporter.isRunning()) {
+            if(directMessageCsvExporter.isRunning()) {
                 showError("Ein andere Exporter instanz läuft noch. Warte bitte bis diese abgeschlossen ist.");
                 return;
             }
             Window window = btnExport.getScene().getWindow();
             String path = FileHandling.openFileChooserAndGetPath(window);
             if (path == null) throw new IllegalStateException("Das auswählen des Dateipfades ist fehlgeschlagen");
-            List<ConversationMessageView> messages = userService.getConversationMessageView(this.currentUser.getId(), this.currentChatPartner.getId());
-            directMessagePinBoardCsvExporter.export(messages.iterator(),FileHandling.openFileAsOutStream(path));
+            List<DirectMessage> messages = directMessageService.getConversationMessageList(this.currentUser.getId(), this.currentChatPartner.getId());
+            directMessageCsvExporter.export(messages.iterator(),FileHandling.openFileAsOutStream(path));
             info("Der Export der Nachrichten war erfolgreich. Du findest die Einträge in: "+path);
         }catch (IllegalArgumentException e){
             showError("Fehler beim exportieren der Nachrichten: " + e.getMessage());
@@ -221,7 +211,6 @@ public class ChatWindowController {
 
     @FXML
     private void onReloadChat() {
-        chatMessages.clear();
         vbMessages.getChildren().clear();
         if (messagesPager != null) {
             messagesPager.resetAndLoadFirstPage();

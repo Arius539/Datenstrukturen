@@ -1,4 +1,4 @@
-package org.fpj.exportImport.adapter;
+package org.fpj.exportImport.domain;
 
 import java.io.InputStream;
 
