@@ -21,11 +21,6 @@ public class UiHelpers {
     private static final NumberFormat EUR = NumberFormat.getCurrencyInstance(Locale.GERMANY);
     private static final int MAX_LENGTH_EMAIL = 320;
 
-
-    private static final Pattern EMAIL_PATTERN = Pattern.compile(
-            "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
-    );
-
     public static void isValidEmail(String email) {
         if (email == null) {
             throw new IllegalArgumentException("E-Mail bzw. der Benutzername darf nicht null sein.");
@@ -41,7 +36,7 @@ public class UiHelpers {
             );
         }
 
-        if (!EMAIL_PATTERN.matcher(email).matches()) {
+        if (!email.matches(LoginService.REGEX_USERNAME_VALIDATOR)) {
             throw new IllegalArgumentException("E-Mail bzw. der Benutzername hat kein gültiges Format (z.B. firstname.lastname@domain.de).");
         }
     }
@@ -64,6 +59,14 @@ public class UiHelpers {
         }
         return true;
     }
+
+    public static String usernameFromEmail(String email) {
+        if (email == null || email.isBlank()) {
+           return  "Unbekannter Benutzer";
+        }
+       return   email.split("@")[0];
+    }
+
     /** Entfernt alle leeren Zeilen und reduziert die Länge des Strings*/
     public static String truncate(String s, int max) {
         if (s == null) return "";

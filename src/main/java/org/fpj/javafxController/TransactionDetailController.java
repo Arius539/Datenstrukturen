@@ -11,12 +11,15 @@ import org.fpj.payments.domain.TransactionLite;
 import org.fpj.users.domain.User;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
 import java.util.function.Consumer;
+
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
 @Component
 @Scope(SCOPE_PROTOTYPE)
 public class TransactionDetailController {
+
     @FXML
     private StackPane senderBox;
 
@@ -42,34 +45,59 @@ public class TransactionDetailController {
     private Label verwendungszweckLabel;
 
     private TransactionLite transaction;
-
     private Consumer<TransactionLite> onSenderClicked;
-
     private Consumer<TransactionLite> onRecipientClicked;
-
     private Consumer<TransactionLite> onReuseClicked;
-
     private Consumer<TransactionLite> onDescriptionClicked;
-
     private Consumer<TransactionLite> onValueClicked;
-
     private User currentUser;
 
+    // <editor-fold defaultstate="collapsed" desc="initialize">
+    @FXML
+    private void initialize() {
+    }
 
-    public void initialize(TransactionLite transaction, User currentUser, Consumer<TransactionLite> onSenderClicked, Consumer<TransactionLite> onRecipientClicked, Consumer<TransactionLite> onReuseClicked, Consumer<TransactionLite> onDescriptionClicked, Consumer<TransactionLite> onValueClicked ) {
+    public void initialize(TransactionLite transaction, User currentUser, Consumer<TransactionLite> onSenderClicked, Consumer<TransactionLite> onRecipientClicked, Consumer<TransactionLite> onReuseClicked, Consumer<TransactionLite> onDescriptionClicked, Consumer<TransactionLite> onValueClicked) {
         this.currentUser = currentUser;
         this.transaction = transaction;
         this.onSenderClicked = onSenderClicked;
+        this.onRecipientClicked = onRecipientClicked;
         this.onReuseClicked = onReuseClicked;
         this.onDescriptionClicked = onDescriptionClicked;
         this.onValueClicked = onValueClicked;
-        this.onRecipientClicked = onRecipientClicked;
-        updateClickability();
+
         updateView();
+        updateClickability();
+    }
+    // </editor-fold>
+
+    @FXML
+    private void onSenderClicked(MouseEvent event) {
+        handleAndClose(event.getSource(), onSenderClicked);
+    }
+
+    @FXML
+    private void onRecipientClicked(MouseEvent event) {
+        handleAndClose(event.getSource(), onRecipientClicked);
+    }
+
+    @FXML
+    private void onValueClicked(MouseEvent event) {
+        handleAndClose(event.getSource(), onValueClicked);
+    }
+
+    @FXML
+    private void onDescriptionClicked(MouseEvent event) {
+        handleAndClose(event.getSource(), onDescriptionClicked);
+    }
+
+    @FXML
+    private void onReuseClicked(ActionEvent event) {
+        handleAndClose(event.getSource(), onReuseClicked);
     }
 
     private void updateView() {
-        if (transaction == null) {
+        if (transaction == null || currentUser == null) {
             senderLabel.setText("Sender");
             empfaengerLabel.setText("Empfänger");
             betragLabel.setText("Betrag");
@@ -77,24 +105,31 @@ public class TransactionDetailController {
             return;
         }
 
-        String sender= (transaction.senderUsername()==null || transaction.senderUsername().isEmpty())? "Sender Unbekannt": transaction.senderUsername().equals(currentUser.getUsername())? "Du":transaction.senderUsername();
-        String recipient= (transaction.recipientUsername()==null || transaction.recipientUsername().isEmpty())? "Empfänger Unbekannt": transaction.recipientUsername().equals(currentUser.getUsername())? "Du": transaction.recipientUsername();
-        String description = (transaction.description() == null || transaction.description().isBlank()) ? "Keine Verwendungszweck" : transaction.description();
+        String sender = buildPartyLabel(transaction.senderUsername(), "Sender unbekannt");
+        String recipient = buildPartyLabel(transaction.recipientUsername(), "Empfänger unbekannt");
+        String description = (transaction.description() == null || transaction.description().isBlank()) ? "Kein Verwendungszweck" : transaction.description();
+
         senderLabel.setText(sender);
         empfaengerLabel.setText(recipient);
         betragLabel.setText(transaction.amountStringUnsigned());
         verwendungszweckLabel.setText(description);
     }
 
+    private String buildPartyLabel(String username, String unknownLabel) {
+        if (username == null || username.isBlank()) {
+            return unknownLabel;
+        }
+        if (currentUser != null && username.equals(currentUser.getUsername())) {
+            return "Du";
+        }
+        return username;
+    }
+
     private void updateClickability() {
-        boolean clickable = (onSenderClicked!= null);
-        setClickableStyle(senderBox, clickable);
-        clickable = (onRecipientClicked!= null);
-        setClickableStyle(empfaengerBox, clickable);
-        clickable = (onValueClicked!= null);
-        setClickableStyle(betragBox, clickable);
-        clickable = (onDescriptionClicked!= null);
-        setClickableStyle(verwendungszweckBox, clickable);
+        setClickableStyle(senderBox, onSenderClicked != null);
+        setClickableStyle(empfaengerBox, onRecipientClicked != null);
+        setClickableStyle(betragBox, onValueClicked != null);
+        setClickableStyle(verwendungszweckBox, onDescriptionClicked != null);
     }
 
     private void setClickableStyle(StackPane pane, boolean clickable) {
@@ -106,49 +141,21 @@ public class TransactionDetailController {
         pane.setMouseTransparent(!clickable);
     }
 
-    @FXML
-    private void onSenderClicked(MouseEvent event) {
-        if (onSenderClicked != null && transaction != null) {
-            this.onSenderClicked.accept(transaction);
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.close();
+    private void handleAndClose(Object source, Consumer<TransactionLite> handler) {
+        if (handler == null || transaction == null) {
+            return;
         }
+        handler.accept(transaction);
+        closeStageFromSource(source);
     }
 
-    @FXML
-    private void onRecipientClicked(MouseEvent event) {
-        if (onRecipientClicked != null && transaction != null) {
-            this.onRecipientClicked.accept(transaction);
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.close();
+    private void closeStageFromSource(Object source) {
+        if (!(source instanceof Node node)) {
+            return;
         }
-    }
-
-    @FXML
-    private void onValueClicked(MouseEvent event) {
-        if (onValueClicked != null && transaction != null) {
-            this.onValueClicked.accept(transaction);
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.close();
-        }
-    }
-
-    @FXML
-    private void onDescriptionClicked(MouseEvent event) {
-        if (onDescriptionClicked != null && transaction != null) {
-            this.onDescriptionClicked.accept(transaction);
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.close();
-        }
-    }
-
-    @FXML
-    private void onReuseClicked(ActionEvent event) {
-        if (onReuseClicked != null && transaction != null) {
-            this.onReuseClicked.accept(transaction);
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        Stage stage = (Stage) node.getScene().getWindow();
+        if (stage != null) {
             stage.close();
         }
     }
 }
-

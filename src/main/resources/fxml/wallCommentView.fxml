@@ -51,25 +51,33 @@
                 <Region HBox.hgrow="ALWAYS"/>
 
                 <Button fx:id="exportButton"
-                        text="Export"
+                        text="📂"
                         onAction="#onExport"
-                        styleClass="wall-secondary-button"/>
+                        styleClass="wall-secondary-button">
+                    <tooltip>
+                        <Tooltip text="Pinnwand exportieren als CSV"/>
+                    </tooltip>
+                </Button>
 
                 <Button fx:id="reloadButton"
-                        text="Neu laden"
+                        text="↻"
                         onAction="#onReloadWall"
-                        styleClass="wall-secondary-button"/>
+                        styleClass="wall-secondary-button">
+                    <tooltip>
+                        <Tooltip text="Pinnwand aktualisieren"/>
+                    </tooltip>
+                </Button>
             </HBox>
 
             <GridPane hgap="20"
                       styleClass="card">
                 <columnConstraints>
-                    <ColumnConstraints percentWidth="80"/>
-                    <ColumnConstraints percentWidth="20"/>
+                    <ColumnConstraints percentWidth="70"/>
+                    <ColumnConstraints percentWidth="30"/>
                 </columnConstraints>
                 <VBox spacing="5"
                       GridPane.columnIndex="0"
-                      alignment="CENTER_LEFT"
+                      alignment="CENTER"
                       styleClass="wall-new-comment-box">
                     <Label fx:id="headlineLabel"
                            text="Pinnwand von Username"
@@ -78,7 +86,7 @@
                 <VBox spacing="5"
                       GridPane.columnIndex="1"
                       alignment="CENTER_RIGHT"
-                      styleClass="wall-new-comment-box">
+                      styleClass="card">
                     <TextArea fx:id="newCommentTextArea"
                               promptText="Neuen Kommentar schreiben…"
                               wrapText="true"

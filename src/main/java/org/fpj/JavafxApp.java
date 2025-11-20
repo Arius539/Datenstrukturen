@@ -21,8 +21,6 @@ public class JavafxApp extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         ViewNavigator viewNavigator = context.getBean(ViewNavigator.class);
-        viewNavigator.setStage(stage);
-
         viewNavigator.loadLogin();
     }
 

@@ -1,113 +1,88 @@
 package org.fpj.javafxController.mainView;
 
-import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.control.*;
-import javafx.stage.Stage;
+import javafx.scene.control.Label;
 import org.fpj.AlertService;
+import org.fpj.Data.WindowInformationResponse;
+import org.fpj.ViewNavigator;
 import org.fpj.javafxController.TransactionViewController;
 import org.fpj.javafxController.WallCommentViewController;
 import org.fpj.payments.application.TransactionService;
-import org.fpj.payments.domain.TransactionViewSearchParameter;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import java.time.format.DateTimeFormatter;
-
 @Component
 public class MainViewController {
 
     private final ApplicationContext applicationContext;
-
     private final TransactionsLiteViewController transactionsLiteController;
-
     private final ChatPreviewController chatPreviewController;
-
-    private final UserService userService;
-
-    private final TransactionService transactionService;
     private final AlertService alertService;
+    private final ViewNavigator viewNavigator;
 
-    @Autowired
-    public MainViewController(ApplicationContext context, TransactionsLiteViewController transactionsLiteController, ChatPreviewController chatPreviewController,
-                              UserService userService, TransactionService transactionService, AlertService alertService){
-        this.applicationContext = context;
-        this.transactionsLiteController = transactionsLiteController;
-        this.chatPreviewController = chatPreviewController;
-        this.userService = userService;
-        this.transactionService = transactionService;
-        this.alertService = alertService;
-    }
+    @FXML
+    private Label lblEmail;
 
-    // Profil/Saldo
-    @FXML private Label lblEmail;
-    @FXML private Label lblBalance;
-
-    private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+    @FXML
+    private Label lblBalance;
 
     private User currentUser;
 
+    @Autowired
+    public MainViewController(ViewNavigator viewNavigator,ApplicationContext context, TransactionsLiteViewController transactionsLiteController, ChatPreviewController chatPreviewController, AlertService alertService) {
+        this.viewNavigator = viewNavigator;
+        this.applicationContext = context;
+        this.transactionsLiteController = transactionsLiteController;
+        this.chatPreviewController = chatPreviewController;
+        this.alertService = alertService;
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="initialize">
     @FXML
     public void initialize() {
-        //TODO: Produktiv sollte folgendens ausgeführt werden:
-        currentUser = applicationContext.getBean("loggedInUser", User.class);
+        try {
+            currentUser = applicationContext.getBean("loggedInUser", User.class);
+        } catch (Exception e) {
+            alertService.error("Fehler", "Benutzer konnte nicht geladen werden", "Der angemeldete Benutzer konnte nicht aus dem Kontext geladen werden.");
+            return;
+        }
+
+        if (currentUser == null) {
+            alertService.error("Fehler", "Benutzer fehlt", "Es ist kein angemeldeter Benutzer vorhanden.");
+            return;
+        }
 
         lblEmail.setText(currentUser.getUsername());
-
         transactionsLiteController.initialize(currentUser, this::updateBalanceLabel);
         chatPreviewController.initialize(currentUser);
     }
+    // </editor-fold>
 
-    public void openTransactionsWindow(TransactionViewSearchParameter transactionViewSearchParameter){
-        try {
-            var url = getClass().getResource("/fxml/transactionView.fxml");
-            FXMLLoader loader = new FXMLLoader(url);
-            loader.setControllerFactory(applicationContext::getBean);
-
-            Parent root = loader.load();
-            TransactionViewController detailController = loader.getController();
-            javafx.stage.Stage stage = new javafx.stage.Stage();
-            stage.setTitle("PayTalk: Transaktionen");
-            stage.setScene(new javafx.scene.Scene(root));
-            stage.show();
-            detailController.initialize(currentUser, transactionViewSearchParameter);
-        } catch(Exception e) {
-            alertService.error("Error","Error","Fehler beim laden des Transaktionsfensters. Versuche es erneut oder starte die Anwendung neu: ");
+    @FXML
+    public void actionTransactions() {
+        try{
+            WindowInformationResponse<TransactionViewController> response= viewNavigator.loadTransactionView();
+            if(!response.isLoaded()) response.controller().initialize(currentUser, null);
+        }catch (Exception e){
+            this.alertService.error("Fehler", "Fehler", "Es ist eine Fehler beim Laden des Transaktionsfensters aufgetreten");
         }
+
     }
 
-    public void openwallCommentView(){
-        try {
-            var url = getClass().getResource("/fxml/wallCommentView.fxml");
-            FXMLLoader loader = new FXMLLoader(url);
-            loader.setControllerFactory(applicationContext::getBean);
-
-            Parent root = loader.load();
-            WallCommentViewController detailController = loader.getController();
-            javafx.stage.Stage stage = new javafx.stage.Stage();
-            stage.setTitle("PayTalk: Pinnwand");
-            stage.setScene(new javafx.scene.Scene(root));
-            stage.show();
-            detailController.load(currentUser, currentUser);
-        } catch(Exception e) {
-            alertService.error("Error","Error","Fehler beim laden des Transaktionsfensters. Versuche es erneut oder starte die Anwendung neu: ");
+    @FXML
+    public void actionWallComments() {
+        try{
+           WindowInformationResponse<WallCommentViewController> response= viewNavigator.loadWallCommentView();
+           if(!response.isLoaded()) response.controller().load(currentUser, currentUser);;
+        }catch (Exception e){
+            this.alertService.error("Fehler", "Fehler", "Es ist eine Fehler beim Laden des Transaktionsfensters aufgetreten");
         }
-    }
-
-    @FXML public void actionTransactions()    {
-        openTransactionsWindow(null);
-    }
-    @FXML public void actionWallComments()    {
-        openwallCommentView();
     }
 
     private void updateBalanceLabel(String balance) {
         lblBalance.setText(balance);
     }
-
 }

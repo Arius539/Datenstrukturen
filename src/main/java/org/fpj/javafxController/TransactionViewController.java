@@ -1,12 +1,9 @@
 package org.fpj.javafxController;
 
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.layout.HBox;
@@ -16,41 +13,50 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Window;
 import org.controlsfx.control.textfield.AutoCompletionBinding;
 import org.controlsfx.control.textfield.TextFields;
+import org.fpj.AlertService;
 import org.fpj.Data.InfinitePager;
 import org.fpj.Data.UiHelpers;
+import org.fpj.Data.WindowInformationResponse;
 import org.fpj.Exceptions.DataNotPresentException;
 import org.fpj.Exceptions.TransactionException;
-import org.fpj.exportImport.domain.FileHandling;
+import org.fpj.ViewNavigator;
 import org.fpj.exportImport.application.MassTransferCsvReader;
 import org.fpj.exportImport.application.TransactionCsvExporter;
+import org.fpj.exportImport.domain.FileHandling;
 import org.fpj.payments.application.TransactionService;
-import org.fpj.payments.domain.*;
+import org.fpj.payments.domain.MassTransfer;
+import org.fpj.payments.domain.TransactionLite;
+import org.fpj.payments.domain.TransactionResult;
+import org.fpj.payments.domain.TransactionRow;
+import org.fpj.payments.domain.TransactionType;
+import org.fpj.payments.domain.TransactionViewSearchParameter;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
+
+import javax.swing.text.View;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Component
 public class TransactionViewController {
-    TransactionCsvExporter  transactionCsvExporter = new TransactionCsvExporter();
+
+    private static final int PAGE_SIZE_LIST = 100;
+    private static final int PAGE_PRE_FETCH_THRESHOLD = 100;
+
+    private final ApplicationContext applicationContext;
+    private final UserService userService;
+    private final TransactionService transactionService;
+    private final TransactionCsvExporter transactionCsvExporter = new TransactionCsvExporter();
+    private final AlertService alertService;
+    private final ViewNavigator viewNavigator;
 
     @FXML
     public Label balanceLabelBatch;
-
-    @Autowired
-    private ApplicationContext applicationContext;
-
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private TransactionService transactionService;
 
     @FXML
     private Label currentBalanceLabel;
@@ -63,8 +69,6 @@ public class TransactionViewController {
 
     @FXML
     private ComboBox<String> filterFieldComboBox;
-
-    private String beforeActionComboBoxValue;
 
     @FXML
     private ListView<TransactionRow> transactionTable;
@@ -90,7 +94,6 @@ public class TransactionViewController {
     @FXML
     private RadioButton transferRadio;
 
-
     @FXML
     private Button importCsvButton;
 
@@ -98,25 +101,35 @@ public class TransactionViewController {
     private ListView<TransactionLite> batchTransactionTable;
 
     private User currentUser;
-
     private TransactionViewSearchParameter searchParameter;
 
     private final ObservableList<TransactionRow> transactionList = FXCollections.observableArrayList();
-
     private final ObservableList<TransactionLite> batchTransactionList = FXCollections.observableArrayList();
-
-    private static final int PAGE_SIZE_List = 100;
-    private static final int PAGE_PRE_FETCH_THRESHOLD = 100;
 
     private InfinitePager<TransactionRow> transactionPager;
 
-    //Für das Suchfeld wenn der Filter Empfänger Sender ausgewählt ist
-    private AutoCompletionBinding<String> autoCompletionBinding = null;
+    private AutoCompletionBinding<String> autoCompletionBinding;
+    private String beforeActionComboBoxValue;
 
+    @Autowired
+    public TransactionViewController(ApplicationContext applicationContext, UserService userService, TransactionService transactionService, AlertService alertService, ViewNavigator  viewNavigator) {
+        this.viewNavigator = viewNavigator;
+        this.applicationContext = applicationContext;
+        this.userService = userService;
+        this.transactionService = transactionService;
+        this.alertService = alertService;
+    }
 
+    // <editor-fold defaultstate="collapsed" desc="initialize">
     public void initialize(User currentUser, TransactionViewSearchParameter searchParameter) {
         this.currentUser = currentUser;
         this.searchParameter = searchParameter;
+
+        if (this.currentUser == null) {
+            alertService.error("Fehler", "Benutzer nicht gesetzt", "Fehler beim Laden der nötigen Daten, bitte starte die Anwendung neu.");
+            return;
+        }
+
         processSearchParameter();
         initUiElements();
         initTransactionList();
@@ -126,88 +139,28 @@ public class TransactionViewController {
         setUpAutoCompletion();
     }
 
-    private void setUpAutoCompletion() {
-        TextFields.bindAutoCompletion(receiverUsernameField, request -> {
-            String term = request.getUserText();
-            if (term == null || term.isBlank()) return List.of();
-            return userService.usernameContaining(term);
-        });
-    }
-
-    private void updateBalances(){
-        updateCurrentBalanceLabel();
-        updateBatchTransactionBalanceLabel();
-    }
-
-    private void updateCurrentBalanceLabel(){
-      this.currentBalanceLabel.setText( UiHelpers.formatEuro(this.transactionService.computeBalance(this.currentUser.getId())));
-    }
-
-    private void updateSelectedBalanceLabel(BigDecimal amount){
-        this.selectedTransactionBalanceLabel.setText( UiHelpers.formatEuro(amount));
-    }
-
-    private BigDecimal getBalanceAfterListOfItems(List<TransactionLite> transactionList){
-        BigDecimal currentBalance = this.transactionService.computeBalance(this.currentUser.getId());
-        for (TransactionLite transactionLite : transactionList){
-            currentBalance = transactionLite.isOutgoing(currentUser.getUsername()) ?currentBalance.subtract(transactionLite.amount()):  currentBalance.add(transactionLite.amount());
-        }
-        return currentBalance;
-    }
-
-    private void updateBatchTransactionBalanceLabel(){
-        BigDecimal currentBalance = this.transactionService.computeBalance(this.currentUser.getId());
-        for (TransactionLite transactionLite : batchTransactionList){
-            currentBalance = transactionLite.isOutgoing(currentUser.getUsername()) ?currentBalance.subtract(transactionLite.amount()):  currentBalance.add(transactionLite.amount());
-        }
-        this.balanceLabelBatch.setText(UiHelpers.formatSignedEuro(getBalanceAfterListOfItems(batchTransactionList)));
-    }
-
-    private ArrayList<TransactionResult> executeTransactionByList(List<TransactionLite> transactionList){
-        try{
-            return transactionService.sendBulkTransfers(transactionList, currentUser);
-        } catch (TransactionException | IllegalArgumentException e) {
-            error("Transaktionsfehler: "+e.getMessage());
-        } catch (Exception e){
-            error("Unerwarteter Fehler: "+ e.getMessage());
-        }
-        return new ArrayList<>();
-    }
-
-   private void initUiElements(){
-       if (batchTransactionTable != null) {
-           batchTransactionTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-       }
-
-       if (transactionTypeToggleGroup != null && transferRadio != null) {
-           transactionTypeToggleGroup.selectToggle(transferRadio);
-       }
-    }
-
     private void processSearchParameter() {
-        if(this.searchParameter==null) this.searchParameter = new TransactionViewSearchParameter(null,null, null, null, null, null, null);
-        //TODO eine close fenster methode bei dem error auslösen
-        if(this.currentUser==null) error("Fehler beim laden der nötigen Daten, bitte start die Anwendung neu");
+        if (this.searchParameter == null) {
+            this.searchParameter = new TransactionViewSearchParameter(null, null, null, null, null, null, null);
+        }
         this.searchParameter.setCurrentUserID(this.currentUser.getId());
-
     }
 
-    private void reloadTransactionList(){
-        transactionList.clear();
-        transactionPager.resetAndLoadFirstPage();
+    private void initUiElements() {
+        if (batchTransactionTable != null) {
+            batchTransactionTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        }
+        if (transactionTypeToggleGroup != null && transferRadio != null) {
+            transactionTypeToggleGroup.selectToggle(transferRadio);
+        }
     }
 
     private void initPager() {
         this.transactionPager = new InfinitePager<>(
-                PAGE_SIZE_List,
-                (pageIndex, pageSize) -> transactionService.searchTransactions(
-                        this.searchParameter,
-                        pageIndex,
-                        pageSize
-                ),
+                PAGE_SIZE_LIST,
+                (pageIndex, pageSize) -> transactionService.searchTransactions(this.searchParameter, pageIndex, pageSize),
                 page -> transactionList.addAll(page.getContent()),
-                ex -> showError("Transaktionen konnten nicht geladen werden: " +
-                    (ex != null ? ex.getMessage() : "Unbekannter Fehler")),
+                ex -> alertService.error("Fehler", null, "Transaktionen konnten nicht geladen werden: " + (ex != null ? ex.getMessage() : "Unbekannter Fehler")),
                 "trx-page-loader-"
         );
 
@@ -215,143 +168,172 @@ public class TransactionViewController {
         transactionPager.resetAndLoadFirstPage();
     }
 
-    private void initBatchTransactionList(){
-        batchTransactionTable.setItems(batchTransactionList);
-        batchTransactionTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-
-        batchTransactionTable.setCellFactory(list -> new ListCell<TransactionLite>() {
-            private final Label title = new Label();
-            private final Label subtitle = new Label();
-            private final VBox left = new VBox(2, title, subtitle);
-            private final Label amount = new Label();
-            private final Region spacer = new Region();
-            private final HBox root = new HBox(8, left, spacer, amount);
-
-            {
-                HBox.setHgrow(spacer, Priority.ALWAYS);
-            }
-
-            @Override
-            protected void updateItem(TransactionLite item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setGraphic(null);
-                    setText(null);
-                } else {
-                    boolean outgoing =item.isOutgoing(currentUser.getUsername());
-
-                    String name = outgoing
-                            ? (item.recipientUsername() != null ? item.recipientUsername() : "Empfänger unbekannt")
-                            : (item.senderUsername() != null ? item.senderUsername() : "Sender unbekannt");
-
-                    String counterparty = switch (item.type()) {
-                        case EINZAHLUNG   -> "Einzahlung";
-                        case AUSZAHLUNG   -> "Auszahlung";
-                        case UEBERWEISUNG -> (outgoing ? "Überweisung an " : "Überweisung von ") + name;
-                    };
-
-                    title.setText(counterparty);
-                    subtitle.setText(UiHelpers.truncateFull(item.description(), 30));
-                    amount.setText(item.amountString(currentUser.getUsername()));
-                    setGraphic(root);
-
-
-                    setOnMouseClicked(ev -> {
-                        if (ev.getClickCount() == 2) {
-                            openTransactionDetails(item);
-                        }
-                    });
-                }
-            }
-        });
-    }
-
-    private void initTransactionList(){
+    private void initTransactionList() {
         transactionTable.setItems(transactionList);
 
-        transactionTable.setCellFactory(list -> new ListCell<TransactionRow>() {
-            private final Label title = new Label();
-            private final Label subtitle = new Label();
-            private final VBox left = new VBox(2, title, subtitle);
-            private final Label amount = new Label();
-            private final Region spacer = new Region();
-            private final HBox root = new HBox(8, left, spacer, amount);
-
-            {
-                HBox.setHgrow(spacer, Priority.ALWAYS);
-            }
-
+        transactionTable.setCellFactory(list -> new ListCell<>() {
             @Override
             protected void updateItem(TransactionRow item, boolean empty) {
                 super.updateItem(item, empty);
+
                 if (empty || item == null) {
                     setGraphic(null);
                     setText(null);
-                } else {
-                    boolean outgoing = item.isOutgoing(currentUser.getId());
-
-                    String name = outgoing
-                            ? (item.recipientUsername() != null ? item.recipientUsername() : "Empfänger unbekannt")
-                            : (item.senderUsername() != null ? item.senderUsername() : "Sender unbekannt");
-
-                    String counterparty = switch (item.type()) {
-                        case EINZAHLUNG   -> "Einzahlung";
-                        case AUSZAHLUNG   -> "Auszahlung";
-                        case UEBERWEISUNG -> (outgoing ? "Überweisung an " : "Überweisung von ") + name;
-                    };
-
-                    title.setText(counterparty);
-                    subtitle.setText(UiHelpers.formatInstant(item.createdAt()) + "  •  " + UiHelpers.truncateFull(item.description(), 20));
-                    amount.setText(item.amountString(currentUser.getId()));
-                    setGraphic(root);
-                    int index = getIndex();
-                    transactionPager.ensureLoadedForIndex(
-                            index,
-                            transactionList.size(),
-                            PAGE_PRE_FETCH_THRESHOLD
-                    );
-
-                    setOnMouseClicked(ev -> {
-                        if (ev.getClickCount() == 1) {
-                            updateSelectedBalanceLabel(transactionService.findUserBalanceAfterTransaction(currentUser.getId(), item.id()));
-                        }
-
-                        if (ev.getClickCount() == 2) {
-                           openTransactionDetails(TransactionLite.fromTransactionRow(item));
-                        }
-                    });
+                    return;
                 }
+
+                boolean outgoing = item.isOutgoing(currentUser.getId());
+                String name = outgoing
+                        ? (item.recipientUsername() != null ? item.recipientUsername() : "Empfänger unbekannt")
+                        : (item.senderUsername() != null ? item.senderUsername() : "Sender unbekannt");
+
+                String counterparty = switch (item.type()) {
+                    case EINZAHLUNG -> "Einzahlung";
+                    case AUSZAHLUNG -> "Auszahlung";
+                    case UEBERWEISUNG -> (outgoing ? "Überweisung an " : "Überweisung von ") + name;
+                };
+
+                String subtitle = UiHelpers.formatInstant(item.createdAt()) + "  •  " + UiHelpers.truncateFull(item.description(), 20);
+                String amountText = item.amountString(currentUser.getId());
+
+                HBox root = createTransactionRowBox(counterparty, subtitle, amountText);
+                setGraphic(root);
+
+                int index = getIndex();
+                if (transactionPager != null) {
+                    transactionPager.ensureLoadedForIndex(index, transactionList.size(), PAGE_PRE_FETCH_THRESHOLD);
+                }
+
+                setOnMouseClicked(ev -> {
+                    if (ev.getClickCount() == 1) {
+                        BigDecimal after = transactionService.findUserBalanceAfterTransaction(currentUser.getId(), item.id());
+                        updateSelectedBalanceLabel(after);
+                    }
+                    if (ev.getClickCount() == 2) {
+                        openTransactionDetails(TransactionLite.fromTransactionRow(item));
+                    }
+                });
             }
         });
     }
 
-    private void openTransactionDetails(TransactionLite row){
-        try {
-            var url = getClass().getResource("/fxml/transaction_detail.fxml");
+    private void initBatchTransactionList() {
+        batchTransactionTable.setItems(batchTransactionList);
+        batchTransactionTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
-            FXMLLoader loader = new FXMLLoader(url);
-            loader.setControllerFactory(applicationContext::getBean);
+        batchTransactionTable.setCellFactory(list -> new ListCell<>() {
+            @Override
+            protected void updateItem(TransactionLite item, boolean empty) {
+                super.updateItem(item, empty);
 
-            Parent root = loader.load();
-            TransactionDetailController detailController = loader.getController();
-            javafx.stage.Stage stage = new javafx.stage.Stage();
-            stage.setTitle("Transaktionsdetails");
-            stage.setScene(new javafx.scene.Scene(root));
-            stage.show();
-            //TODO Implement die Callbacks um dann so zu suchen
-            detailController.initialize(row, currentUser, null, null, this::useTransactionAsTemplate, null, null);
-        } catch (Exception e) {
-            showError("Fehler beim laden der Transaktionsdetails. Versuche es erneut oder starte die Anwendung neu: " + e.getMessage());
+                if (empty || item == null) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+
+                boolean outgoing = item.isOutgoing(currentUser.getUsername());
+                String name = outgoing
+                        ? (item.recipientUsername() != null ? item.recipientUsername() : "Empfänger unbekannt")
+                        : (item.senderUsername() != null ? item.senderUsername() : "Sender unbekannt");
+
+                String counterparty = switch (item.type()) {
+                    case EINZAHLUNG -> "Einzahlung";
+                    case AUSZAHLUNG -> "Auszahlung";
+                    case UEBERWEISUNG -> (outgoing ? "Überweisung an " : "Überweisung von ") + name;
+                };
+
+                String subtitle = UiHelpers.truncateFull(item.description(), 30);
+                String amountText = item.amountString(currentUser.getUsername());
+
+                HBox root = createTransactionRowBox(counterparty, subtitle, amountText);
+                setGraphic(root);
+
+                setOnMouseClicked(ev -> {
+                    if (ev.getClickCount() == 2) {
+                        openTransactionDetails(item);
+                    }
+                });
+            }
+        });
+    }
+
+    private void setUpAutoCompletion() {
+        TextFields.bindAutoCompletion(receiverUsernameField, request -> {
+            String term = request.getUserText();
+            if (term == null || term.isBlank()) {
+                return List.of();
+            }
+            return userService.usernameContaining(term);
+        });
+    }
+    // </editor-fold>
+
+    private HBox createTransactionRowBox(String titleText, String subtitleText, String amountText) {
+        Label title = new Label(titleText);
+        Label subtitle = new Label(subtitleText);
+        VBox left = new VBox(2, title, subtitle);
+
+        Label amount = new Label(amountText);
+        Region spacer = new Region();
+
+        HBox root = new HBox(8, left, spacer, amount);
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        return root;
+    }
+
+    private void updateBalances() {
+        updateCurrentBalanceLabel();
+        updateBatchTransactionBalanceLabel();
+    }
+
+    private void updateCurrentBalanceLabel() {
+        BigDecimal balance = transactionService.computeBalance(currentUser.getId());
+        currentBalanceLabel.setText(UiHelpers.formatEuro(balance));
+    }
+
+    private void updateSelectedBalanceLabel(BigDecimal amount) {
+        selectedTransactionBalanceLabel.setText(UiHelpers.formatEuro(amount));
+    }
+
+    private BigDecimal getBalanceAfterListOfItems(List<TransactionLite> transactions) {
+        BigDecimal currentBalance = transactionService.computeBalance(currentUser.getId());
+        for (TransactionLite transactionLite : transactions) {
+            if (transactionLite.isOutgoing(currentUser.getUsername())) {
+                currentBalance = currentBalance.subtract(transactionLite.amount());
+            } else {
+                currentBalance = currentBalance.add(transactionLite.amount());
+            }
         }
+        return currentBalance;
+    }
+
+    private void updateBatchTransactionBalanceLabel() {
+        BigDecimal newBalance = getBalanceAfterListOfItems(batchTransactionList);
+        balanceLabelBatch.setText(UiHelpers.formatSignedEuro(newBalance));
+    }
+
+    private ArrayList<TransactionResult> executeTransactionByList(List<TransactionLite> transactions) {
+        try {
+            return transactionService.sendBulkTransfers(transactions, currentUser);
+        } catch (TransactionException | IllegalArgumentException e) {
+            alertService.error("Fehler", "Transaktion fehlgeschlagen", "Transaktionsfehler: " + e.getMessage());
+        } catch (Exception e) {
+            alertService.error("Fehler", "Unerwarteter Fehler", "Unerwarteter Fehler: " + e.getMessage());
+        }
+        return new ArrayList<>();
     }
 
     private TransactionLite transactionInfosToTransactionLite() {
         try {
             String amount = amountField.getText();
-            String subject =UiHelpers.truncate(purposeField.getText(), purposeField.getText().length());
+            String subjectRaw = purposeField.getText();
+            String subject = subjectRaw == null ? "" : UiHelpers.truncate(subjectRaw, subjectRaw.length());
             String recipient = receiverUsernameField.getText();
-            String sender= null;
-            TransactionType type = null;
+            String sender = null;
+            TransactionType type;
+
             if (depositRadio.isSelected()) {
                 recipient = currentUser.getUsername();
                 type = TransactionType.EINZAHLUNG;
@@ -365,13 +347,14 @@ public class TransactionViewController {
             } else {
                 throw new IllegalStateException("Kein Transaktionstyp ausgewählt.");
             }
+
             return transactionService.transactionInfosToTransactionLite(amount, sender, recipient, subject, type);
         } catch (TransactionException ex) {
-            error("Transaktion fehlgeschlagen: " + ex.getMessage());
+            alertService.error("Fehler", "Transaktion fehlgeschlagen", "Transaktion fehlgeschlagen: " + ex.getMessage());
         } catch (IllegalArgumentException | DataNotPresentException ex) {
-            error("Eingabe ungültig: " + ex.getMessage());
+            alertService.error("Fehler", "Eingabe ungültig", "Eingabe ungültig: " + ex.getMessage());
         } catch (Exception ex) {
-            error("Unerwarteter Fehler: " + ex.getMessage());
+            alertService.error("Fehler", "Unerwarteter Fehler", "Unerwarteter Fehler: " + ex.getMessage());
         }
         return null;
     }
@@ -379,66 +362,85 @@ public class TransactionViewController {
     private void useTransactionAsTemplate(TransactionLite row) {
         amountField.setText(row.amountStringUnsigned());
         purposeField.setText(row.description());
+
         switch (row.type()) {
             case UEBERWEISUNG:
                 transferRadio.setSelected(true);
                 receiverUsernameField.setText(row.recipientUsername());
                 break;
-            case AUSZAHLUNG: withdrawRadio.setSelected(true);
+            case AUSZAHLUNG:
+                withdrawRadio.setSelected(true);
                 break;
-            case EINZAHLUNG: depositRadio.setSelected(true);
+            case EINZAHLUNG:
+                depositRadio.setSelected(true);
+                break;
         }
+
         applyTypeVisibility();
     }
 
-    private boolean parseValuesFromSearchField( String selected ){
+    private boolean parseValuesFromSearchField(String selected) {
         try {
+            String text = filterTextField.getText();
             switch (selected) {
-                case "Verwendungszweck":
-                    if(this.filterTextField.getText().isEmpty()) this.searchParameter.setDescription(null);
-                    this.searchParameter.setDescription(this.filterTextField.getText());
-                    break;
-                case "Empfänger, Sender":
-                    if(this.filterTextField.getText().isEmpty()) this.searchParameter.setSenderRecipientUsername(null);
-                    this.searchParameter.setSenderRecipientUsername(this.filterTextField.getText());
-                    break;
-                case "Created at von":
-                    if(this.filterTextField.getText().isEmpty()) this.searchParameter.setCreatedFrom(null);
-                    this.searchParameter.setCreatedFrom(
-                            UiHelpers.parseDateTolerant(this.filterTextField.getText())
-                    );
-                    break;
-                case "Created at bis":
-                    if(this.filterTextField.getText().isEmpty()) this.searchParameter.setCreatedTo(null);
-                    this.searchParameter.setCreatedTo(
-                            UiHelpers.parseDateTolerant(this.filterTextField.getText())
-                    );
-                    break;
-                case "Betrag ab":
-                    if(this.filterTextField.getText().isEmpty()) this.searchParameter.setAmountFrom(null);
-                    this.searchParameter.setAmountFrom(
-                            UiHelpers.parseAmountTolerant(this.filterTextField.getText()).abs()
-                    );
-                    break;
-                case "Betrag bis":
-                    if(this.filterTextField.getText().isEmpty()) this.searchParameter.setAmountTo(null);
-                    this.searchParameter.setAmountTo(
-                            UiHelpers.parseAmountTolerant(this.filterTextField.getText()).abs()
-                    );
-                    break;
+                case "Verwendungszweck" -> {
+                    if (text == null || text.isBlank()) {
+                        searchParameter.setDescription(null);
+                    } else {
+                        searchParameter.setDescription(text);
+                    }
+                }
+                case "Empfänger, Sender" -> {
+                    if (text == null || text.isBlank()) {
+                        searchParameter.setSenderRecipientUsername(null);
+                    } else {
+                        searchParameter.setSenderRecipientUsername(text);
+                    }
+                }
+                case "Created at von" -> {
+                    if (text == null || text.isBlank()) {
+                        searchParameter.setCreatedFrom(null);
+                    } else {
+                        searchParameter.setCreatedFrom(UiHelpers.parseDateTolerant(text));
+                    }
+                }
+                case "Created at bis" -> {
+                    if (text == null || text.isBlank()) {
+                        searchParameter.setCreatedTo(null);
+                    } else {
+                        searchParameter.setCreatedTo(UiHelpers.parseDateTolerant(text));
+                    }
+                }
+                case "Betrag ab" -> {
+                    if (text == null || text.isBlank()) {
+                        searchParameter.setAmountFrom(null);
+                    } else {
+                        searchParameter.setAmountFrom(UiHelpers.parseAmountTolerant(text).abs());
+                    }
+                }
+                case "Betrag bis" -> {
+                    if (text == null || text.isBlank()) {
+                        searchParameter.setAmountTo(null);
+                    } else {
+                        searchParameter.setAmountTo(UiHelpers.parseAmountTolerant(text).abs());
+                    }
+                }
             }
         } catch (Exception e) {
-            if(!this.filterTextField.getText().isEmpty())error("Es ist ein Fehler beim Lesen des Filterwertes aufgetreten: " + e.getMessage());
+            String text = filterTextField.getText();
+            if (text != null && !text.isBlank()) {
+                alertService.error("Fehler", "Filter ungültig", "Es ist ein Fehler beim Lesen des Filterwertes aufgetreten: " + e.getMessage());
+            }
             return false;
         }
         return true;
     }
 
-    private String getTextValueSelectedFilter(String selected){
+    private String getTextValueSelectedFilter(String selected) {
+        if (this.searchParameter == null) {
+            return "";
+        }
         try {
-            if (this.searchParameter == null) {
-                return "";
-            }
             return switch (selected) {
                 case "Verwendungszweck" -> {
                     String description = this.searchParameter.getDescription();
@@ -467,7 +469,7 @@ public class TransactionViewController {
                 default -> "";
             };
         } catch (Exception e) {
-            throw new RuntimeException();
+            return "";
         }
     }
 
@@ -479,19 +481,12 @@ public class TransactionViewController {
         }
     }
 
-    @FXML
-    private void onReloadTransactions(ActionEvent event){
+    private void reloadTransactionList() {
         transactionList.clear();
-        transactionPager.resetAndLoadFirstPage();
+        if (transactionPager != null) {
+            transactionPager.resetAndLoadFirstPage();
+        }
     }
-
-    @FXML
-    private void onReloadBatches(ActionEvent event){
-        updateBalances();
-    }
-    // ---------------------------------------------------------------
-    // Aktionen: Filter / Suche (linke Seite)
-    // ---------------------------------------------------------------
 
     private void updateAutoCompletion(boolean enable) {
         if (autoCompletionBinding != null) {
@@ -500,31 +495,85 @@ public class TransactionViewController {
         }
 
         if (enable) {
-            autoCompletionBinding = TextFields.bindAutoCompletion(
-                    filterTextField,
-                    request -> {
-                        String term = request.getUserText();
-                        if (term == null || term.isBlank()) return List.of();
-                        return userService.usernameContaining(term);
-                    }
-            );
+            autoCompletionBinding = TextFields.bindAutoCompletion(filterTextField, request -> {
+                String term = request.getUserText();
+                if (term == null || term.isBlank()) {
+                    return List.of();
+                }
+                return userService.usernameContaining(term);
+            });
         }
     }
+
+    private void openTransactionDetails(TransactionLite row) {
+        if (row == null) {
+            return;
+        }
+        try {
+            WindowInformationResponse<TransactionDetailController> response = viewNavigator.loadTransactionDetailView();
+            response.controller().initialize(row, currentUser, null, null, this::useTransactionAsTemplate, null, null);
+        } catch (Exception e) {
+            alertService.error("Fehler", "Fenster konnte nicht geöffnet werden", "Fehler beim Laden der Transaktionsdetails. Versuche es erneut oder starte die Anwendung neu: " + e.getMessage());
+        }
+    }
+
+    private void openCsvImportDialog() {
+        try {
+            WindowInformationResponse<CsvImportDialogController> response = viewNavigator.loadCsvDialogView();
+            if(response.isLoaded()) {
+                alertService.info("Info", "Info", "Es ist bereits ein Importer Fenster offen, schließe dieses bitte zuerst");
+                return;
+            }
+            CsvImportDialogController<MassTransfer> dialogController =response.controller();
+            MassTransferCsvReader reader = new MassTransferCsvReader();
+            reader.setCurrentUser(this.currentUser);
+            reader.setUserService(this.userService);
+            dialogController.initialize(reader, this::addTransactionToBatch);
+        } catch (Exception e) {
+            alertService.error("Fehler", "Fenster konnte nicht geöffnet werden", "Fehler beim Laden des CSV-Import-Dialogs. Versuche es erneut oder starte die Anwendung neu: " + e.getMessage());
+        }
+    }
+
+    private void addTransactionToBatch(List<MassTransfer> massTransfers) {
+        for (MassTransfer massTransfer : massTransfers) {
+            batchTransactionList.add(new TransactionLite(massTransfer.betrag(), TransactionType.UEBERWEISUNG, currentUser.getUsername(), massTransfer.empfaenger(), massTransfer.beschreibung()));
+        }
+        updateBalances();
+    }
+
+    private void addTransactionsToList(List<TransactionResult> transactions) {
+        for (TransactionResult transactionResult : transactions) {
+            transactionList.add(0, TransactionRow.fromTransaction(transactionResult.transaction()));
+        }
+    }
+
+    @FXML
+    private void onReloadTransactions(ActionEvent event) {
+        reloadTransactionList();
+    }
+
+    @FXML
+    private void onReloadBatches(ActionEvent event) {
+        updateBalances();
+    }
+
     @FXML
     private void onFilterChanged(ActionEvent event) {
         String selected = filterFieldComboBox.getValue();
-        if(beforeActionComboBoxValue!= null) parseValuesFromSearchField(beforeActionComboBoxValue);
-        String filterText= getTextValueSelectedFilter(selected);
-       filterTextField.setText(filterText);
-       beforeActionComboBoxValue = selected;
-       updateAutoCompletion(selected.equals("Empfänger, Sender"));
+        if (beforeActionComboBoxValue != null) {
+            parseValuesFromSearchField(beforeActionComboBoxValue);
+        }
+        String filterText = getTextValueSelectedFilter(selected);
+        filterTextField.setText(filterText);
+        beforeActionComboBoxValue = selected;
+        updateAutoCompletion("Empfänger, Sender".equals(selected));
     }
 
     @FXML
     private void onClearFilter(ActionEvent event) {
         filterTextField.setText("");
         filterFieldComboBox.getSelectionModel().clearSelection();
-        this.searchParameter=null;
+        this.searchParameter = null;
         processSearchParameter();
         reloadTransactionList();
     }
@@ -535,8 +584,9 @@ public class TransactionViewController {
         if (selected == null) {
             return;
         }
-        parseValuesFromSearchField(selected);
-        reloadTransactionList();
+        if (parseValuesFromSearchField(selected)) {
+            reloadTransactionList();
+        }
     }
 
     @FXML
@@ -556,48 +606,14 @@ public class TransactionViewController {
     private void onExecuteSingleFromContext(ActionEvent event) {
         List<TransactionLite> selectedTransactions = new ArrayList<>(batchTransactionTable.getSelectionModel().getSelectedItems());
         batchTransactionTable.getSelectionModel().clearSelection();
-        ArrayList<TransactionResult> result= executeTransactionByList(selectedTransactions);
-        if(!result.isEmpty())for (TransactionLite transactionLite : selectedTransactions) {
-            batchTransactionList.remove(transactionLite);
+        ArrayList<TransactionResult> result = executeTransactionByList(selectedTransactions);
+        if (!result.isEmpty()) {
+            for (TransactionLite transactionLite : selectedTransactions) {
+                batchTransactionList.remove(transactionLite);
+            }
         }
         updateBalances();
         addTransactionsToList(result);
-    }
-
-    private void openCsvImportDialog(){
-        try {
-            var url = getClass().getResource("/fxml/csvImportDialog.fxml");
-
-            FXMLLoader loader = new FXMLLoader(url);
-            loader.setControllerFactory(applicationContext::getBean);
-
-            Parent root = loader.load();
-            CsvImportDialogController<MassTransfer> transferCsvImportDialogController = loader.getController();
-            javafx.stage.Stage stage = new javafx.stage.Stage();
-            stage.setTitle("PayTalk CSV Importer");
-            stage.setScene(new javafx.scene.Scene(root));
-            stage.show();
-            //TODO Implement die Callbacks um dann so zu suchen
-            MassTransferCsvReader reader= new MassTransferCsvReader();
-            reader.setCurrentUser(this.currentUser);
-            reader.setUserService(this.userService);
-            transferCsvImportDialogController.initialize(reader, this::addTransactionToBatch);
-        } catch (Exception e) {
-            showError("Fehler beim laden der Transaktionsdetails. Versuche es erneut oder starte die Anwendung neu: " + e.getMessage());
-        }
-    }
-
-    private void addTransactionToBatch(List< MassTransfer> massTransfers){
-        for (MassTransfer massTransfer : massTransfers) {
-            this.batchTransactionList.add(new TransactionLite(massTransfer.betrag(),TransactionType.UEBERWEISUNG, this.currentUser.getUsername(), massTransfer.empfaenger(), massTransfer.beschreibung()));
-        }
-        this.updateBalances();
-    }
-
-    private void addTransactionsToList(List< TransactionResult> transactions){
-        for(TransactionResult transactionResult : transactions) {
-            this.transactionList.add(0, TransactionRow.fromTransaction(transactionResult.transaction()));
-        }
     }
 
     @FXML
@@ -606,25 +622,32 @@ public class TransactionViewController {
     }
 
     @FXML
-    private void exportTransactions(){
+    private void exportTransactions() {
+        if (currentUser == null) {
+            alertService.error("Fehler", "Export nicht möglich", "Benutzer ist nicht gesetzt.");
+            return;
+        }
+
         try {
-            if(transactionCsvExporter.isRunning()) {
-                showError("Ein andere Exporter instanz läuft noch. Warte bitte bis diese abgeschlossen ist.");
+            if (transactionCsvExporter.isRunning()) {
+                alertService.error("Fehler", null, "Eine andere Export-Instanz läuft noch. Warte bitte, bis diese abgeschlossen ist.");
                 return;
             }
+
             Window window = importCsvButton.getScene().getWindow();
             String path = FileHandling.openFileChooserAndGetPath(window);
             if (path == null) {
-                showError("Das auswählen des Paths ist fehlgeschlagen");
+                alertService.error("Fehler", "Pfad ungültig", "Das Auswählen des Zielpfads ist fehlgeschlagen.");
                 return;
             }
+
             List<TransactionRow> messages = transactionService.transactionsForUserAsList(currentUser.getId());
-            transactionCsvExporter.export(messages.iterator(),FileHandling.openFileAsOutStream(path));
-            info("Der Export der Transaktionen war erfolgreich. Du findest die Einträge in: "+path);
-        }catch (IllegalArgumentException e){
-            showError("Fehler beim exportieren der Nachrichten: " + e.getMessage());
+            transactionCsvExporter.export(messages.iterator(), FileHandling.openFileAsOutStream(path));
+            alertService.info("Export erfolgreich", null, "Der Export der Transaktionen war erfolgreich. Du findest die Einträge in: " + path);
+        } catch (IllegalArgumentException e) {
+            alertService.error("Fehler", "Export fehlgeschlagen", "Fehler beim Exportieren der Transaktionen: " + e.getMessage());
         } catch (Exception e) {
-            showError("Ein Unbekannter Fehler ist aufgetreten: " + e.getMessage());
+            alertService.error("Fehler", "Unerwarteter Fehler", "Ein unbekannter Fehler ist aufgetreten: " + e.getMessage());
         }
     }
 
@@ -636,52 +659,34 @@ public class TransactionViewController {
 
     @FXML
     private void onExecuteSingle(ActionEvent event) {
-        TransactionLite transactionLite= this.transactionInfosToTransactionLite();
-        if(transactionLite==null) return;
+        TransactionLite transactionLite = transactionInfosToTransactionLite();
+        if (transactionLite == null) {
+            return;
+        }
         List<TransactionLite> list = new ArrayList<>();
         list.add(transactionLite);
-       ArrayList<TransactionResult> result= executeTransactionByList(list);
+        ArrayList<TransactionResult> result = executeTransactionByList(list);
         addTransactionsToList(result);
         updateBalances();
     }
 
     @FXML
     private void onAddToBatch(ActionEvent event) {
-        TransactionLite transactionLite= this.transactionInfosToTransactionLite();
-        if(transactionLite==null) return;
+        TransactionLite transactionLite = transactionInfosToTransactionLite();
+        if (transactionLite == null) {
+            return;
+        }
         batchTransactionList.add(transactionLite);
         updateBalances();
     }
 
     @FXML
     private void onExecuteAll(ActionEvent event) {
-        ArrayList<TransactionResult> result= executeTransactionByList(batchTransactionList);
-        if(!result.isEmpty()) batchTransactionList.clear();
+        ArrayList<TransactionResult> result = executeTransactionByList(batchTransactionList);
+        if (!result.isEmpty()) {
+            batchTransactionList.clear();
+        }
         updateBalances();
         addTransactionsToList(result);
-    }
-
-    private void showError(String message) {
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Fehler");
-            alert.setHeaderText(null);
-            alert.setContentText(message);
-            alert.showAndWait();
-        });
-    }
-
-    private void info(String text) {
-        Alert a = new Alert(Alert.AlertType.INFORMATION, text, ButtonType.OK);
-        a.setHeaderText(null);
-        a.setTitle("Info");
-        a.showAndWait();
-    }
-
-    private void error(String text) {
-        Alert a = new Alert(Alert.AlertType.ERROR, text, ButtonType.OK);
-        a.setHeaderText("Fehler");
-        a.setTitle("Fehler");
-        a.showAndWait();
     }
 }

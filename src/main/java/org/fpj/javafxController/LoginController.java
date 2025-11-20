@@ -87,6 +87,7 @@ public class LoginController {
         try {
             loginService.login(username, password);
             viewNavigator.loadMain();
+            viewNavigator.closeLogin();
         }
         catch (LoginFailedException e){
             alertService.warn("Warnung", "Login fehlgeschlagen", e.getMessage());

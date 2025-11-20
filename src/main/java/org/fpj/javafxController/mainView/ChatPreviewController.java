@@ -1,24 +1,31 @@
 package org.fpj.javafxController.mainView;
 
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.control.*;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import org.controlsfx.control.textfield.AutoCompletionBinding;
 import org.controlsfx.control.textfield.TextFields;
+import org.fpj.AlertService;
 import org.fpj.Data.InfinitePager;
 import org.fpj.Data.UiHelpers;
+import org.fpj.Data.WindowInformationResponse;
 import org.fpj.Exceptions.DataNotPresentException;
+import org.fpj.ViewNavigator;
 import org.fpj.javafxController.ChatWindowController;
-import org.fpj.messaging.domain.ChatPreview;
 import org.fpj.messaging.application.DirectMessageService;
+import org.fpj.messaging.domain.ChatPreview;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,121 +36,126 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 
 @Component
 public class ChatPreviewController {
-    private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
-    @Autowired
-    private ApplicationContext applicationContext;
-
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private DirectMessageService directMessageService;
-
-    private final ObservableList<ChatPreview> chatPreviews = FXCollections.observableArrayList();
+    private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
     private static final int PAGE_SIZE_CHAT_PREVIEWS = 20;
-    private InfinitePager<ChatPreview> chatPreviewPager;
     private static final int PAGE_PRE_FETCH_THRESHOLD = 5;
 
+    private final ApplicationContext applicationContext;
+    private final UserService userService;
+    private final DirectMessageService directMessageService;
+    private final AlertService alertService;
+    private final ViewNavigator viewNavigator;
+
+    private final ObservableList<ChatPreview> chatPreviews = FXCollections.observableArrayList();
+    private InfinitePager<ChatPreview> chatPreviewPager;
 
     @FXML
     private TextField chatsUsernameSearch;
 
-    @FXML private ListView<ChatPreview> lvChats;
+    @FXML
+    private ListView<ChatPreview> lvChats;
 
-    User currentUser;
+    private User currentUser;
 
+    @Autowired
+    public ChatPreviewController(ApplicationContext applicationContext, UserService userService, DirectMessageService directMessageService, AlertService alertService, ViewNavigator viewNavigator) {
+        this.viewNavigator = viewNavigator;
+        this.applicationContext = applicationContext;
+        this.userService = userService;
+        this.directMessageService = directMessageService;
+        this.alertService = alertService;
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="initialize">
     public void initialize(User currentUser) {
-        this.currentUser = currentUser;
+        this.currentUser = Objects.requireNonNull(currentUser, "currentUser must not be null");
         initChatList();
         initPager();
         setUpAutoCompletion();
     }
 
-    // <editor-fold defaultstate="collapsed" desc="initialize">
     private void initPager() {
-        chatPreviewPager = new InfinitePager<>(
-                PAGE_SIZE_CHAT_PREVIEWS,
-                // PageFetcher
-                (pageIndex, pageSize) -> {
-                    var pageRequest = PageRequest.of(pageIndex, pageSize);
-                    return directMessageService.getChatPreviews(currentUser, pageRequest);
-                },
-                // pageConsumer
-                page -> chatPreviews.addAll(page.getContent()),
-                // errorHandler
-                ex -> showError("Chat-Übersicht konnte nicht geladen werden: " +
-                        (ex != null ? ex.getMessage() : "Unbekannter Fehler")),
-                "chat-preview-loader-"
-        );
-
         chatPreviews.clear();
+        lvChats.getItems().clear();
+
+        chatPreviewPager = new InfinitePager<>(PAGE_SIZE_CHAT_PREVIEWS, (pageIndex, pageSize) -> {
+            PageRequest pageRequest = PageRequest.of(pageIndex, pageSize);
+            return directMessageService.getChatPreviews(currentUser, pageRequest);
+        }, page -> chatPreviews.addAll(page.getContent()), ex -> alertService.error("Fehler", null, "Chat-Übersicht konnte nicht geladen werden: " + (ex != null ? ex.getMessage() : "Unbekannter Fehler")), "chat-preview-loader-");
+
         chatPreviewPager.resetAndLoadFirstPage();
     }
 
-
     private void initChatList() {
-        lvChats.setItems(this.chatPreviews);
+        lvChats.setItems(chatPreviews);
 
-        lvChats.setCellFactory(list -> new ListCell<ChatPreview>() {
-            private final Label title = new Label();
-            private final Label subtitle = new Label();
-            private final VBox left = new VBox(2, title, subtitle);
-            private final Label ts = new Label();
-            private final Region spacer = new Region();
-            private final HBox root = new HBox(8, left, spacer, ts);
-
-            {
-                HBox.setHgrow(spacer, Priority.ALWAYS);
-            }
-
+        lvChats.setCellFactory(listView -> new ListCell<>() {
             @Override
             protected void updateItem(ChatPreview item, boolean empty) {
                 super.updateItem(item, empty);
+
                 if (empty || item == null) {
                     setGraphic(null);
                     setText(null);
                     return;
                 }
 
-                title.setText(item.name().equals(currentUser.getUsername())? "Du": item.name());
+                String titleText = buildTitleText(item);
+                String subtitleText = buildSubtitleText(item);
+                String timestampText = buildTimestampText(item);
 
-                String msg = item.lastMessage();
-                if (msg == null || msg.isBlank()) {
-                    subtitle.setText("Noch keine Nachrichten");
-                } else {
-                    String messageSender= item.lastMessageUsername().equals(currentUser.getUsername()) ? "Du: " : item.lastMessageUsername()+ ": ";
-                    subtitle.setText(UiHelpers.truncateFull(messageSender, 20)+ UiHelpers.truncateFull(msg, 20));
-                }
-
-                ts.setText(item.timestamp() == null ? "" : TS.format(item.timestamp()));
-
+                HBox root = createChatPreviewBox(titleText, subtitleText, timestampText, () -> openChatForPreview(item));
                 setGraphic(root);
 
                 int index = getIndex();
-                chatPreviewPager.ensureLoadedForIndex(
-                        index,
-                        chatPreviews.size(),
-                        PAGE_PRE_FETCH_THRESHOLD
-                );
+                chatPreviewPager.ensureLoadedForIndex(index, chatPreviews.size(), PAGE_PRE_FETCH_THRESHOLD);
+            }
 
-                setOnMouseClicked(ev -> {
-                    if (ev.getClickCount() == 2) {
-                        openChatForPreview(item);
-                    }
-                });
+            private String buildTitleText(ChatPreview item) {
+                String previewName = item.name();
+                if (previewName == null) {
+                    previewName = "";
+                }
+                String currentUsername = currentUser.getUsername();
+                return previewName.equals(currentUsername) ? "Du" : previewName;
+            }
+
+            private String buildSubtitleText(ChatPreview item) {
+                String lastMessage = item.lastMessage();
+                if (lastMessage == null || lastMessage.isBlank()) {
+                    return "Noch keine Nachrichten";
+                }
+
+                String lastMsgUsername = item.lastMessageUsername();
+                String currentUsername = currentUser.getUsername();
+
+                String senderPrefix = currentUsername.equals(lastMsgUsername) ? "Du: " : lastMsgUsername + ": ";
+                String truncatedPrefix = UiHelpers.truncateFull(senderPrefix, 20);
+                String truncatedMessage = UiHelpers.truncateFull(lastMessage, 20);
+
+                return truncatedPrefix + truncatedMessage;
+            }
+
+            private String buildTimestampText(ChatPreview item) {
+                if (item.timestamp() == null) {
+                    return "";
+                }
+                return TIMESTAMP_FORMATTER.format(item.timestamp());
             }
         });
     }
 
     private void setUpAutoCompletion() {
-        AutoCompletionBinding<String> binding =TextFields.bindAutoCompletion(chatsUsernameSearch, request -> {
+        AutoCompletionBinding<String> binding = TextFields.bindAutoCompletion(chatsUsernameSearch, request -> {
             String term = request.getUserText();
-            if (term == null || term.isBlank()) return List.of();
+            if (term == null || term.isBlank()) {
+                return List.of();
+            }
             return userService.usernameContaining(term);
         });
 
@@ -155,47 +167,55 @@ public class ChatPreviewController {
     }
     // </editor-fold>
 
+    private HBox createChatPreviewBox(String titleText, String subtitleText, String timestampText, Runnable onDoubleClick) {
+        Label title = new Label(titleText);
+        Label subtitle = new Label(subtitleText);
+        VBox left = new VBox(2, title, subtitle);
+
+        Label timestampLabel = new Label(timestampText);
+        Region spacer = new Region();
+
+        HBox root = new HBox(8, left, spacer, timestampLabel);
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        root.setOnMouseClicked(event -> {
+            if (event.getClickCount() == 2 && onDoubleClick != null) {
+                onDoubleClick.run();
+            }
+        });
+
+        return root;
+    }
+
     private void openChatForPreview(ChatPreview preview) {
         if (preview == null) {
             return;
         }
-        String username = preview.name();
-        openChatForUsername(username);
+        openChatForUsername(preview.name());
     }
 
     private void openChatForUsername(String username) {
-        try{
-            if (username == null || username.isBlank()) throw  new IllegalArgumentException("Kein Benutzername für den Chat ausgewählt.");
-            if (!UiHelpers.isValidEmailBool(username)) throw  new IllegalArgumentException("Der eingegebene Benutzername war im falschen Format.");
-            final User  chatPartner = userService.findByUsername    (username);;
-            ChatWindowController controller = loadChatWindow(username);
-            controller.openChat(currentUser, chatPartner);
-
-        }catch (IllegalArgumentException e){
-            error("Es ist ein unerwarteter Fehler beim Laden des Chatfensters aufgetreten: "+e.getMessage());
-        }catch (DataNotPresentException e){
-            error("Es ist ein unerwarteter Fehler beim Laden des Chatfensters aufgetreten: "+e.getMessage());
-        }catch (Exception e){
-            error("Es ist ein unerwarteter Fehler beim Laden des Chatfensters aufgetreten. Bitte versuche es später erneut: "+e.getMessage());
+        try {
+            validateUsername(username);
+            User chatPartner = userService.findByUsername(username);
+            WindowInformationResponse<ChatWindowController> chatView = viewNavigator.loadChatView(username);
+            if(!chatView.isLoaded()) chatView.controller().openChat(currentUser, chatPartner);
+        } catch (IllegalArgumentException | DataNotPresentException ex) {
+            alertService.error("Fehler", "Fehler beim Laden des Chatfensters", ex.getMessage());
+        } catch (Exception ex) {
+            alertService.error("Fehler", "Unerwarteter Fehler", "Es ist ein unerwarteter Fehler beim Laden des Chatfensters aufgetreten. Bitte versuche es später erneut.");
+            System.out.println("Fehler beim Laden des Chatfensters"+ ex.getMessage());
+            ex.printStackTrace();
         }
     }
-    private ChatWindowController loadChatWindow(String username) throws IOException {
-        var url = getClass().getResource("/fxml/chat_window.fxml");
-        if (url == null) {
-            throw new IllegalStateException("chat_window.fxml nicht gefunden!");
+
+    private void validateUsername(String username) {
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("Kein Benutzername für den Chat ausgewählt.");
         }
-
-        FXMLLoader loader = new FXMLLoader(url);
-        loader.setControllerFactory(applicationContext::getBean);
-
-        Parent root = loader.load();
-        ChatWindowController controller = loader.getController();
-
-        javafx.stage.Stage stage = new javafx.stage.Stage();
-        stage.setTitle("Chat mit " + username);
-        stage.setScene(new javafx.scene.Scene(root));
-        stage.show();
-        return   controller;
+        if (!UiHelpers.isValidEmailBool(username)) {
+            throw new IllegalArgumentException("Der eingegebene Benutzername war im falschen Format.");
+        }
     }
 
     @FXML
@@ -204,29 +224,5 @@ public class ChatPreviewController {
         if (chatPreviewPager != null) {
             chatPreviewPager.resetAndLoadFirstPage();
         }
-    }
-
-    private void showError(String message) {
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Fehler");
-            alert.setHeaderText(null);
-            alert.setContentText(message);
-            alert.showAndWait();
-        });
-    }
-
-    private void info(String text) {
-        Alert a = new Alert(Alert.AlertType.INFORMATION, text, ButtonType.OK);
-        a.setHeaderText(null);
-        a.setTitle("Info");
-        a.showAndWait();
-    }
-
-    private void error(String text) {
-        Alert a = new Alert(Alert.AlertType.ERROR, text, ButtonType.OK);
-        a.setHeaderText("Fehler");
-        a.setTitle("Fehler");
-        a.showAndWait();
     }
 }

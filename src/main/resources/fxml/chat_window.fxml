@@ -34,7 +34,7 @@
                     text="📂"
                     onAction="#exportChat">
                 <tooltip>
-                    <Tooltip text="Chatverlauf und Pinnwand exportieren als CSV"/>
+                    <Tooltip text="Chatverlauf exportieren als CSV"/>
                 </tooltip>
             </Button>
         </HBox>

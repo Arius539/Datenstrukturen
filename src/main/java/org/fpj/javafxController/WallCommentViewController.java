@@ -1,16 +1,20 @@
 package org.fpj.javafxController;
 
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.HPos;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.scene.control.ScrollPane;
 import javafx.stage.Window;
 import org.controlsfx.control.textfield.AutoCompletionBinding;
 import org.controlsfx.control.textfield.TextFields;
@@ -20,23 +24,32 @@ import org.fpj.Data.UiHelpers;
 import org.fpj.Exceptions.DataNotPresentException;
 import org.fpj.exportImport.application.WallCommentCsvExporter;
 import org.fpj.exportImport.domain.FileHandling;
-import org.fpj.messaging.domain.DirectMessage;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
-import org.fpj.wall.domain.WallComment;
 import org.fpj.wall.application.WallCommentService;
+import org.fpj.wall.domain.WallComment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
+
 import java.util.List;
+
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
 @Component
 @Scope(SCOPE_PROTOTYPE)
 public class WallCommentViewController {
 
-    // FXML-Referenzen
+    private static final int PAGE_SIZE_COMMENTS = 30;
+    private static final double PAGE_PRE_FETCH_THRESHOLD = 0.1;
+    private static final int COLUMNS = 3;
+
+    private final WallCommentService wallCommentService;
+    private final UserService userService;
+    private final AlertService alertService;
+    private final WallCommentCsvExporter wallCommentCsvExporter = new WallCommentCsvExporter();
+
     @FXML
     private TextField searchField;
 
@@ -55,68 +68,44 @@ public class WallCommentViewController {
     @FXML
     private ScrollPane scrollPane;
 
-    @FXML private RadioButton rbWrittenBy;
-    @FXML private RadioButton rbWrittenFor;
-    @FXML private Button exportButton;
-    @FXML private Button reloadButton;
-    @FXML private ToggleGroup commentFilterToggleGroup;
-
-
-    @Autowired
-    private WallCommentService wallCommentService;
-
-    @Autowired
-    private UserService userService;
-
-    WallCommentCsvExporter wallCommentCsvExporter =new WallCommentCsvExporter();
-
-    private static final int PAGE_SIZE_COMMENTS = 30;
-    private static final double PAGE_PRE_FETCH_THRESHOLD = 0.1; // 10% vor dem Ende nachladen
-    private static final int COLUMNS = 3;
-
-    private InfinitePager<WallComment> commentsPager;
-
-    private User currentUser;
-    private User wallOwner;
-
-    private AlertService alertService;
+    @FXML
+    private RadioButton rbWrittenBy;
 
     @FXML
-    private void initialize() {
-       this.alertService  = new AlertService();
+    private RadioButton rbWrittenFor;
+
+    @FXML
+    private Button exportButton;
+
+    @FXML
+    private Button reloadButton;
+
+    @FXML
+    private ToggleGroup commentFilterToggleGroup;
+
+    private InfinitePager<WallComment> commentsPager;
+    private User currentUser;
+    private User wallOwner;
+    private AutoCompletionBinding<String> autoCompletionBinding;
+
+    @Autowired
+    public WallCommentViewController(WallCommentService wallCommentService, UserService userService, AlertService alertService) {
+        this.wallCommentService = wallCommentService;
+        this.userService = userService;
+        this.alertService = alertService;
+
     }
 
-    public void load(User currentUser, User wallCommentOwner){
+    // <editor-fold defaultstate="collapsed" desc="initialize">
+    @FXML
+    private void initialize() {
+    }
+
+    public void load(User currentUser, User wallCommentOwner) {
         this.currentUser = currentUser;
         this.wallOwner = wallCommentOwner;
         setUpAutoCompletion();
-        this.openWall();
-    }
-
-    private void setUpAutoCompletion() {
-        AutoCompletionBinding<String> binding = TextFields.bindAutoCompletion(searchField, request -> {
-            String term = request.getUserText();
-            if (term == null || term.isBlank()) return List.of();
-            return userService.usernameContaining(term);
-        });
-
-        binding.setOnAutoCompleted(event -> {
-            String selected = event.getCompletion();
-            searchField.setText(selected);
-            openWallForUsername(selected);
-        });
-    }
-
-    private void openWallForUsername(String username) {
-        try{
-            this.wallOwner = userService.findByUsername(username);
-            reload();
-        }catch (DataNotPresentException e){
-            this.alertService.error("Error", "Error", "Es ist ein Fehler beim Laden der Pinnwand aufgetreten, versuche es erneut oder starte die Anwendung neu.");
-        }
-        catch (Exception e){
-            this.alertService.error("Error", "Error", "Es ist ein unerwarteter Fehler beim Laden der Pinnwand aufgetreten, versuche es erneut oder starte die Anwendung neu.");
-        }
+        openWall();
     }
 
     private void openWall() {
@@ -125,7 +114,7 @@ public class WallCommentViewController {
         setupScrollPanel();
     }
 
-    private void reload(){
+    private void reload() {
         reloadComments();
         setHeadlineLabel();
     }
@@ -141,24 +130,6 @@ public class WallCommentViewController {
         }
     }
 
-    private boolean isGetByAuthor(){
-        return rbWrittenBy.isSelected();
-    }
-
-    private void setHeadlineLabel() {
-        if (headlineLabel == null || wallOwner == null) {
-            return;
-        }
-        String ownerName = wallOwner.getUsername();
-        String currentName = currentUser != null ? currentUser.getUsername() : null;
-
-        if (currentName != null && currentName.equals(ownerName)) {
-            headlineLabel.setText("Deine Pinnwand");
-        } else {
-            headlineLabel.setText(ownerName);
-        }
-    }
-
     private void initComments() {
         commentGrid.getChildren().clear();
 
@@ -166,15 +137,14 @@ public class WallCommentViewController {
                 PAGE_SIZE_COMMENTS,
                 (pageIndex, pageSize) -> {
                     PageRequest pageRequest = PageRequest.of(pageIndex, pageSize);
-                    if(isGetByAuthor()){
+                    if (isGetByAuthor()) {
                         return wallCommentService.getWallCommentsByAuthor(wallOwner.getId(), pageRequest);
-                    }else {
+                    } else {
                         return wallCommentService.getWallCommentsCreatedByWallOwner(wallOwner.getId(), pageRequest);
                     }
                 },
                 page -> {
                     List<WallComment> content = page.getContent();
-
                     int beforeCount = commentGrid.getChildren().size();
 
                     for (int i = 0; i < content.size(); i++) {
@@ -188,35 +158,50 @@ public class WallCommentViewController {
                         GridPane.setFillWidth(card, false);
                         GridPane.setHgrow(card, Priority.NEVER);
                         GridPane.setVgrow(card, Priority.NEVER);
-
                         GridPane.setHalignment(card, HPos.CENTER);
                         GridPane.setValignment(card, VPos.TOP);
                     }
-
-                    if (beforeCount == 0 && !content.isEmpty()) {
-                        Platform.runLater(() -> commentGrid.requestLayout());
-                    }
                 },
-                ex -> showError("Pinnwand-Kommentare konnten nicht geladen werden: " +
-                        (ex != null ? ex.getMessage() : "Unbekannter Fehler")),
+                ex -> alertService.error("Fehler", null, "Pinnwand-Kommentare konnten nicht geladen werden: " + (ex != null ? ex.getMessage() : "Unbekannter Fehler")),
                 "wall-comments-loader-"
         );
 
         commentsPager.resetAndLoadFirstPage();
     }
 
-    /**
-     * Scroll-Listener: kurz vor dem unteren Ende der ScrollPane weitere Seiten laden.
-     */
     private void setupScrollPanel() {
-        if (scrollPane != null) {
-            scrollPane.vvalueProperty().addListener((obs, oldVal, newVal) -> {
-                if (newVal.doubleValue() >= 1.0 - PAGE_PRE_FETCH_THRESHOLD && commentsPager != null) {
-                    commentsPager.ensureLoadedForScroll();
-                }
-            });
+        if (scrollPane == null) {
+            return;
         }
+
+        scrollPane.vvalueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.doubleValue() >= 1.0 - PAGE_PRE_FETCH_THRESHOLD && commentsPager != null) {
+                commentsPager.ensureLoadedForScroll();
+            }
+        });
     }
+
+    private void setUpAutoCompletion() {
+        if (autoCompletionBinding != null) {
+            autoCompletionBinding.dispose();
+            autoCompletionBinding = null;
+        }
+
+        autoCompletionBinding = TextFields.bindAutoCompletion(searchField, request -> {
+            String term = request.getUserText();
+            if (term == null || term.isBlank()) {
+                return List.of();
+            }
+            return userService.usernameContaining(term);
+        });
+
+        autoCompletionBinding.setOnAutoCompleted(event -> {
+            String selected = event.getCompletion();
+            searchField.setText(selected);
+            openWallForUsername(selected);
+        });
+    }
+    // </editor-fold>
 
     @FXML
     private void onSendClicked() {
@@ -227,16 +212,90 @@ public class WallCommentViewController {
 
         try {
             WallComment comment = new WallComment();
-            comment.setContent(UiHelpers.truncate( input, input.length()));
+            comment.setContent(UiHelpers.truncate(input, input.length()));
             comment.setAuthor(currentUser);
             comment.setWallOwner(wallOwner);
             WallComment created = wallCommentService.add(comment);
             newCommentTextArea.clear();
             addComment(created);
         } catch (IllegalArgumentException e) {
-            showError("Kommentar konnte nicht gespeichert werden: " + e.getMessage());
+            alertService.error("Fehler", "Kommentar konnte nicht gespeichert werden", "Kommentar konnte nicht gespeichert werden: " + e.getMessage());
         } catch (Exception e) {
-            showError("Es ist ein unerwarteter Fehler aufgetreten: Kommentar konnte nicht gespeichert werden: " + e.getMessage());
+            alertService.error("Fehler", "Unerwarteter Fehler", "Es ist ein unerwarteter Fehler aufgetreten: Kommentar konnte nicht gespeichert werden: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void onReloadWall() {
+        reloadComments();
+    }
+
+    @FXML
+    private void onExport() {
+        if (currentUser == null || wallOwner == null) {
+            alertService.error("Fehler", "Export nicht möglich", "Benutzer oder Pinnwand-Besitzer ist nicht gesetzt.");
+            return;
+        }
+
+        try {
+            if (!currentUser.getUsername().equals(wallOwner.getUsername())) {
+                throw new IllegalArgumentException("Du kannst nur die Pinnwandkommentare an deiner eigenen Pinnwand exportieren.");
+            }
+            if (wallCommentCsvExporter.isRunning()) {
+                throw new IllegalStateException("Eine andere Export-Instanz läuft noch. Warte bitte, bis diese abgeschlossen ist.");
+            }
+
+            Window window = exportButton.getScene().getWindow();
+            String path = FileHandling.openFileChooserAndGetPath(window);
+            if (path == null) {
+                throw new IllegalStateException("Das Auswählen des Dateipfades ist fehlgeschlagen.");
+            }
+
+            List<WallComment> comments = isGetByAuthor()
+                    ? wallCommentService.toListByAuthor(currentUser.getId())
+                    : wallCommentService.toListByWallOwner(currentUser.getId());
+
+            wallCommentCsvExporter.export(comments.iterator(), FileHandling.openFileAsOutStream(path));
+            alertService.info("Export erfolgreich", null, "Der Export der Pinnwandkommentare war erfolgreich. Du findest die Einträge in: " + path);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            alertService.error("Fehler", "Export fehlgeschlagen", "Fehler beim Exportieren der Pinnwandkommentare: " + e.getMessage());
+        } catch (Exception e) {
+            alertService.error("Fehler", "Unerwarteter Fehler", "Ein unbekannter Fehler ist aufgetreten: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void selectionTypeChanged() {
+        reloadComments();
+    }
+
+    private void openWallForUsername(String username) {
+        try {
+            this.wallOwner = userService.findByUsername(username);
+            reload();
+        } catch (DataNotPresentException e) {
+            alertService.error("Fehler", "Pinnwand konnte nicht geladen werden", "Es ist ein Fehler beim Laden der Pinnwand aufgetreten, versuche es erneut oder starte die Anwendung neu.");
+        } catch (Exception e) {
+            alertService.error("Fehler", "Unerwarteter Fehler", "Es ist ein unerwarteter Fehler beim Laden der Pinnwand aufgetreten, versuche es erneut oder starte die Anwendung neu.");
+        }
+    }
+
+    private boolean isGetByAuthor() {
+        return rbWrittenBy != null && rbWrittenBy.isSelected();
+    }
+
+    private void setHeadlineLabel() {
+        if (headlineLabel == null || wallOwner == null) {
+            return;
+        }
+
+        String ownerName = wallOwner.getUsername();
+        String currentName = currentUser != null ? currentUser.getUsername() : null;
+
+        if (currentName != null && currentName.equals(ownerName)) {
+            headlineLabel.setText("Deine Pinnwand");
+        } else {
+            headlineLabel.setText(UiHelpers.usernameFromEmail(ownerName));
         }
     }
 
@@ -249,14 +308,11 @@ public class WallCommentViewController {
         commentGrid.add(card, col, row);
     }
 
-
     private Node createCommentCard(WallComment comment) {
         VBox box = new VBox(8);
         box.getStyleClass().add("comment-card");
-
         box.setMaxWidth(Region.USE_PREF_SIZE);
         box.setMaxHeight(Region.USE_PREF_SIZE);
-
         box.setFillWidth(true);
 
         Label textLabel = new Label(comment.getContent());
@@ -276,74 +332,24 @@ public class WallCommentViewController {
         return box;
     }
 
-
     private String buildMetaText(WallComment comment) {
         String rawName;
         if (isGetByAuthor()) {
-            rawName = comment.getWallOwner() != null
-                    ? comment.getWallOwner().getUsername()
-                    : "Unbekannt";
+            rawName = comment.getWallOwner() != null ? comment.getWallOwner().getUsername() : "Unbekannt";
         } else {
-            rawName = comment.getAuthor() != null
-                    ? comment.getAuthor().getUsername()
-                    : "Unbekannt";
+            rawName = comment.getAuthor() != null ? comment.getAuthor().getUsername() : "Unbekannt";
         }
 
-        String authorName = (currentUser != null && rawName.equals(currentUser.getUsername())) ? "Du" : rawName;
+        String authorName = currentUser != null && rawName.equals(currentUser.getUsername()) ? "Du" : rawName;
         return authorName + " · " + UiHelpers.formatInstantToDate(comment.getCreatedAt());
     }
 
     private void onMetaClicked(WallComment comment) {
-        User toUser= this.isGetByAuthor() ? comment.getWallOwner():  comment.getAuthor();
-        this.wallOwner = toUser;
-        this.reload();
-    }
-
-    @FXML
-    private void onReloadWall() {
-        reloadComments();
-    }
-
-    @FXML
-    private void onExport() {
-        try {
-            if(!currentUser.getUsername().equals(wallOwner.getUsername())) throw new IllegalArgumentException("Du kannst nur die Pinnwandkommentare an deiner Wand exportieren");
-            if(wallCommentCsvExporter.isRunning()) {
-                throw new IllegalStateException("Ein andere Exporter instanz läuft noch. Warte bitte bis diese abgeschlossen ist.");
-            }
-            Window window = exportButton.getScene().getWindow();
-            String path = FileHandling.openFileChooserAndGetPath(window);
-            if (path == null) throw new IllegalStateException("Das auswählen des Dateipfades ist fehlgeschlagen");
-            List<WallComment> comments= isGetByAuthor()? wallCommentService.toListByAuthor(this.currentUser.getId()): wallCommentService.toListByWallOwner(this.currentUser.getId());
-            wallCommentCsvExporter.export(comments.iterator(),FileHandling.openFileAsOutStream(path));
-            info("Der Export der Pinnwandkommentare war erfolgreich. Du findest die Einträge in: "+path);
-        }catch (IllegalArgumentException | IllegalStateException e){
-            showError("Fehler beim exportieren der Pinnwandkommentare: " + e.getMessage());
-        } catch (Exception e) {
-            showError("Ein Unbekannter Fehler ist aufgetreten: " + e.getMessage());
+        User toUser = isGetByAuthor() ? comment.getWallOwner() : comment.getAuthor();
+        if (toUser == null) {
+            return;
         }
-    }
-
-
-    @FXML
-    private void selectionTypeChanged(){
-        reloadComments();
-    }
-
-    private void showError(String message) {
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Fehler");
-            alert.setHeaderText(null);
-            alert.setContentText(message);
-            alert.showAndWait();
-        });
-    }
-
-    private void info(String text) {
-        Alert a = new Alert(Alert.AlertType.INFORMATION, text, ButtonType.OK);
-        a.setHeaderText(null);
-        a.setTitle("Info");
-        a.showAndWait();
+        this.wallOwner = toUser;
+        reload();
     }
 }
