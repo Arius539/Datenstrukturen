@@ -1,11 +1,10 @@
 package org.fpj.users.application;
 
-import org.fpj.Exceptions.DataNotPresentException;
-import org.fpj.Exceptions.LoginFailedException;
+import org.fpj.exceptions.DataNotPresentException;
+import org.fpj.exceptions.LoginFailedException;
 import org.fpj.users.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

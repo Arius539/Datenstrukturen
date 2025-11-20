@@ -1,6 +1,6 @@
 package org.fpj.messaging.application;
 
-import org.fpj.Exceptions.DataNotPresentException;
+import org.fpj.exceptions.DataNotPresentException;
 import org.fpj.messaging.domain.ChatPreview;
 import org.fpj.messaging.domain.DirectMessage;
 import org.fpj.messaging.domain.DirectMessageRepository;

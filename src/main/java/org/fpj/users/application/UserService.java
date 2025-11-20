@@ -1,7 +1,6 @@
 package org.fpj.users.application;
 
-import org.fpj.Exceptions.DataNotPresentException;
-import org.fpj.messaging.domain.DirectMessage;
+import org.fpj.exceptions.DataNotPresentException;
 import org.fpj.users.domain.User;
 import org.fpj.users.domain.UserRepository;
 import org.fpj.users.domain.UsernameOnly;

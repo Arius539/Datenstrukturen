@@ -1,6 +1,6 @@
 package users;
 
-import org.fpj.Exceptions.LoginFailedException;
+import org.fpj.exceptions.LoginFailedException;
 import org.fpj.users.application.LoginService;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
@@ -14,7 +14,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.util.Assert;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;

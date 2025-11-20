@@ -1,6 +1,6 @@
 package org.fpj.payments.domain;
 
-import org.fpj.Data.UiHelpers;
+import org.fpj.util.UiHelpers;
 
 import java.math.BigDecimal;
 

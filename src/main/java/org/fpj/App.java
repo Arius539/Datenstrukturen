@@ -6,6 +6,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class App {
     public static void main(String[] args){
-        Application.launch(org.fpj.JavafxApp.class, args);
+        Application.launch(JavafxApp.class, args);
     }
 }

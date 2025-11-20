@@ -10,7 +10,7 @@
 
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="org.fpj.javafxController.TransactionDetailController"
+      fx:controller="org.fpj.javafxcontroller.TransactionDetailController"
       alignment="CENTER"
       spacing="24"
       styleClass="root"
