@@ -3,6 +3,7 @@ package org.fpj.navigation;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import org.fpj.javafxcontroller.TransactionViewController;
 import org.fpj.javafxcontroller.WallCommentViewController;
@@ -13,19 +14,37 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import java.awt.*;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Component
 public class ViewNavigator {
 
     private final ApplicationContext context;
     private final Map<String, NavigationContext> openWindows = new HashMap<>();
+    private final ArrayList<Image> appIcons;
 
     @Autowired
     public ViewNavigator(ApplicationContext context) {
         this.context = context;
+        this.appIcons = new ArrayList<>();
+        appIcons.add(loadIcon("/icons/app-icon-16.png"));
+        appIcons.add(loadIcon("/icons/app-icon-32.png"));
+        appIcons.add(loadIcon("/icons/app-icon-48.png"));
+        appIcons.add(loadIcon("/icons/app-icon-64.png"));
+    }
+
+    private Image loadIcon(String resourcePath) {
+        InputStream is = Objects.requireNonNull(
+                getClass().getResourceAsStream(resourcePath),
+                "Icon-Ressource nicht gefunden: " + resourcePath
+        );
+        return new Image(is);
     }
 
     private <T> NavigationResponse loadView(String key, String fxml, String title, double width, double height, boolean alwaysOnTop, Class<T> controllerType) throws IOException {
@@ -55,6 +74,8 @@ public class ViewNavigator {
         stage.show();
         stage.toFront();
         stage.requestFocus();
+
+        stage.getIcons().setAll(appIcons);
 
         Object controller = loader.getController();
         NavigationContext info = new NavigationContext(stage, controller);

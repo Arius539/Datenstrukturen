@@ -49,7 +49,14 @@
                            styleClass="wall-search-field"/>
 
                 <Region HBox.hgrow="ALWAYS"/>
-
+                <Button
+                        text="👤"
+                        onAction="#onToCurrentUserWallClicked"
+                        styleClass="wall-secondary-button">
+                    <tooltip>
+                        <Tooltip text="Pinnwand exportieren als CSV"/>
+                    </tooltip>
+                </Button>
                 <Button fx:id="exportButton"
                         text="📂"
                         onAction="#onExport"

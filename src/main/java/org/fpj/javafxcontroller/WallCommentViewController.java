@@ -265,6 +265,12 @@ public class WallCommentViewController {
     }
 
     @FXML
+    private void onToCurrentUserWallClicked() {
+        this.wallOwner = this.currentUser;
+        this.openWall();
+    }
+
+    @FXML
     private void selectionTypeChanged() {
         reloadComments();
     }
@@ -293,9 +299,9 @@ public class WallCommentViewController {
         String currentName = currentUser != null ? currentUser.getUsername() : null;
 
         if (currentName != null && currentName.equals(ownerName)) {
-            headlineLabel.setText("Deine Pinnwand");
+            headlineLabel.setText("Deine Pinnwand".toUpperCase());
         } else {
-            headlineLabel.setText(UiHelpers.usernameFromEmail(ownerName));
+            headlineLabel.setText(UiHelpers.usernameFromEmail(ownerName).toUpperCase());
         }
     }
 
@@ -306,6 +312,11 @@ public class WallCommentViewController {
 
         Node card = createCommentCard(comment);
         commentGrid.add(card, col, row);
+        GridPane.setFillWidth(card, false);
+        GridPane.setHgrow(card, Priority.NEVER);
+        GridPane.setVgrow(card, Priority.NEVER);
+        GridPane.setHalignment(card, HPos.CENTER);
+        GridPane.setValignment(card, VPos.TOP);
     }
 
     private Node createCommentCard(WallComment comment) {
