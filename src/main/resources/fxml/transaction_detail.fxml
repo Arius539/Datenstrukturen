@@ -93,7 +93,7 @@
                                 </VBox>
                             </StackPane>
 
-                            <StackPane
+                            <StackPane fx:id="typeBox"
                                     GridPane.columnIndex="1"
                                     styleClass="clickable-box">
                                 <padding>

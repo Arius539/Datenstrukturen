@@ -21,6 +21,7 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 public class TransactionDetailController {
 
 
+    public StackPane typeBox;
     @FXML
     private StackPane senderBox;
 
@@ -54,6 +55,7 @@ public class TransactionDetailController {
     private Consumer<TransactionLite> onReuseClicked;
     private Consumer<TransactionLite> onDescriptionClicked;
     private Consumer<TransactionLite> onValueClicked;
+    private Consumer<TransactionLite> onTransactionTypeClicked;
     private User currentUser;
 
     // <editor-fold defaultstate="collapsed" desc="initialize">
@@ -69,7 +71,7 @@ public class TransactionDetailController {
         this.onReuseClicked = onReuseClicked;
         this.onDescriptionClicked = onDescriptionClicked;
         this.onValueClicked = onValueClicked;
-
+        this.onTransactionTypeClicked= null;
         updateView();
         updateClickability();
     }
@@ -133,6 +135,7 @@ public class TransactionDetailController {
     }
 
     private void updateClickability() {
+        setClickableStyle(typeBox, onTransactionTypeClicked!= null);
         setClickableStyle(senderBox, onSenderClicked != null);
         setClickableStyle(empfaengerBox, onRecipientClicked != null);
         setClickableStyle(betragBox, onValueClicked != null);
