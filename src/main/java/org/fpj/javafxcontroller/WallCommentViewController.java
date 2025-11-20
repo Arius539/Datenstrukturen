@@ -217,7 +217,7 @@ public class WallCommentViewController {
             comment.setWallOwner(wallOwner);
             WallComment created = wallCommentService.add(comment);
             newCommentTextArea.clear();
-            addComment(created);
+           if(!isGetByAuthor()) addComment(created);
         } catch (IllegalArgumentException e) {
             alertService.error("Fehler", "Kommentar konnte nicht gespeichert werden", "Kommentar konnte nicht gespeichert werden: " + e.getMessage());
         } catch (Exception e) {
