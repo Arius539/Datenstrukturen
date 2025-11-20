@@ -158,7 +158,7 @@ public class WallCommentViewController {
                         GridPane.setFillWidth(card, false);
                         GridPane.setHgrow(card, Priority.NEVER);
                         GridPane.setVgrow(card, Priority.NEVER);
-                        GridPane.setHalignment(card, HPos.CENTER);
+                        GridPane.setHalignment(card, HPos.LEFT);
                         GridPane.setValignment(card, VPos.TOP);
                     }
                 },
@@ -315,7 +315,7 @@ public class WallCommentViewController {
         GridPane.setFillWidth(card, false);
         GridPane.setHgrow(card, Priority.NEVER);
         GridPane.setVgrow(card, Priority.NEVER);
-        GridPane.setHalignment(card, HPos.CENTER);
+        GridPane.setHalignment(card, HPos.LEFT);
         GridPane.setValignment(card, VPos.TOP);
     }
 
