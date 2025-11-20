@@ -1,7 +1,9 @@
 package org.fpj.javafxcontroller;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -19,6 +21,7 @@ import org.fpj.exportimport.domain.CsvError;
 import org.fpj.exportimport.domain.CsvImportResult;
 import org.fpj.exportimport.domain.CsvReader;
 import org.fpj.exportimport.application.FileHandling;
+import org.fpj.util.UiHelpers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -95,19 +98,36 @@ public class CsvImportDialogController<E> {
             return;
         }
 
-        try {
-            InputStream inputStream = FileHandling.openFileAsStream(selectedFilePath);
-            CsvImportResult<E> result = csvReader.parse(inputStream);
+        if (csvReader.isRunning()) {
+            alertService.error("Fehler", "Import nicht möglich", "Importer läuft bereits, bitte warte auf die Verarbeitung");
+            return;
+        }
 
+
+        Task<CsvImportResult<E>> importTask = new Task<>() {
+            @Override
+            protected CsvImportResult<E> call() throws Exception {
+                InputStream inputStream = FileHandling.openFileAsStream(selectedFilePath);
+                return csvReader.parse(inputStream);
+            }
+        };
+
+        importTask.setOnSucceeded(event1 -> {
+            CsvImportResult<E> result = importTask.getValue();
             if (result.getErrors().isEmpty()) {
                 alertService.info("Import erfolgreich", null, "Import erfolgreich ohne Fehler.");
                 csvImportConsumer.accept(result.getRecords());
             } else {
                 errorList.addAll(result.getErrors());
             }
-        } catch (Exception ex) {
+        });
+
+        importTask.setOnFailed(event1 -> {
+            Throwable ex = importTask.getException();
             alertService.error("Fehler", "Unerwarteter Fehler", "Unerwarteter Fehler: " + ex.getMessage());
-        }
+        });
+
+        new Thread(importTask).start();
     }
 
     private void initErrorList() {

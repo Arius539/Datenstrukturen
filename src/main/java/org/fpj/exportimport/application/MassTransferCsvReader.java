@@ -1,6 +1,5 @@
 package org.fpj.exportimport.application;
 
-
 import com.univocity.parsers.common.TextParsingException;
 import com.univocity.parsers.common.record.Record;
 import com.univocity.parsers.csv.CsvParser;
@@ -34,12 +33,12 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 @Setter
 public class MassTransferCsvReader implements CsvReader {
     UserService userService;
-
+    private boolean isRunningB = false;
     User currentUser;
-
 
     @Override
     public CsvImportResult<MassTransfer> parse(InputStream in) {
+        this.isRunningB = true;
         CsvParserSettings settings = createBaseSettings();
         CsvParser parser = new CsvParser(settings);
 
@@ -47,48 +46,27 @@ public class MassTransferCsvReader implements CsvReader {
         List<MassTransfer> records = new ArrayList<>();
 
         try (Reader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
-
             parser.beginParsing(reader);
 
-            long line = 1L; // Header ist Zeile 1
+            long line = 1L;
 
             String[] actualHeaders = parser.getContext().headers();
             String[] expectedHeaders = new String[]{"Empfänger", "Betrag", "Beschreibung"};
 
             if (!Arrays.equals(actualHeaders, expectedHeaders)) {
-                String msg = "Unerwarteter Header. Erwartet: "
-                        + String.join(";", expectedHeaders)
-                        + " aber gefunden: "
-                        + String.join(";", actualHeaders != null ? actualHeaders : new String[0]);
-
-                CsvError fatal = new CsvError(
-                        line,
-                        null,
-                        null,
-                        null,
-                        msg,
-                        CsvError.Severity.FATAL
-                );
+                String msg = "Unerwarteter Header. Erwartet: " + String.join(";", expectedHeaders) + " aber gefunden: " + String.join(";", actualHeaders != null ? actualHeaders : new String[0]);
+                CsvError fatal = new CsvError(line, null, null, null, msg, CsvError.Severity.FATAL);
                 return new CsvImportResult<>(List.of(), List.of(fatal), true);
             }
 
             Record record;
             while ((record = parser.parseNextRecord()) != null) {
                 line++;
-
                 try {
-                    MassTransfer eintrag =
-                            mapMassenUeberweisung(record, line, errors);
+                    MassTransfer eintrag = mapMassenUeberweisung(record, line, errors);
                     records.add(eintrag);
                 } catch (Exception ex) {
-                    errors.add(new CsvError(
-                            line,
-                            null,
-                            null,
-                            null,
-                            "Unerwarteter Fehler in dieser Zeile: " + ex.getMessage(),
-                            CsvError.Severity.ERROR
-                    ));
+                    errors.add(new CsvError(line, null, null, null, "Unerwarteter Fehler in dieser Zeile: " + ex.getMessage(), CsvError.Severity.ERROR));
                 }
             }
 
@@ -96,28 +74,20 @@ public class MassTransferCsvReader implements CsvReader {
             return new CsvImportResult<>(records, errors, fatal);
 
         } catch (TextParsingException tpe) {
-            CsvError fatalError = new CsvError(
-                    tpe.getLineIndex() + 1L,
-                    null,
-                    null,
-                    null,
-                    "CSV-Strukturfehler: " + tpe.getMessage(),
-                    CsvError.Severity.FATAL
-            );
+            CsvError fatalError = new CsvError(tpe.getLineIndex() + 1L, null, null, null, "CSV-Strukturfehler: " + tpe.getMessage(), CsvError.Severity.FATAL);
             return new CsvImportResult<>(List.of(), List.of(fatalError), true);
         } catch (IOException ioe) {
-            CsvError fatalError = new CsvError(
-                    0,
-                    null,
-                    null,
-                    null,
-                    "CSV konnte nicht gelesen werden: " + ioe.getMessage(),
-                    CsvError.Severity.FATAL
-            );
+            CsvError fatalError = new CsvError(0, null, null, null, "CSV konnte nicht gelesen werden: " + ioe.getMessage(), CsvError.Severity.FATAL);
             return new CsvImportResult<>(List.of(), List.of(fatalError), true);
         } finally {
+            this.isRunningB = false;
             parser.stopParsing();
         }
+    }
+
+    @Override
+    public boolean isRunning() {
+        return isRunningB;
     }
 
     private CsvParserSettings createBaseSettings() {
@@ -130,11 +100,7 @@ public class MassTransferCsvReader implements CsvReader {
         return settings;
     }
 
-    private MassTransfer mapMassenUeberweisung(
-            Record r,
-            long line,
-            List<CsvError> errors
-    ) {
+    private MassTransfer mapMassenUeberweisung(Record r, long line, List<CsvError> errors) {
         String empfaenger = r.getString("Empfänger");
         String rawBetrag = r.getString("Betrag");
         String beschreibung = r.getString("Beschreibung");
@@ -144,70 +110,37 @@ public class MassTransferCsvReader implements CsvReader {
         BigDecimal betrag = parseBigDecimal(rawBetrag, "Betrag", line, errors);
 
         if (betrag != null && betrag.compareTo(BigDecimal.ZERO) <= 0) {
-            errors.add(new CsvError(
-                    line,
-                    "Betrag",
-                    null,
-                    rawBetrag,
-                    "Betrag muss größer als 0 sein",
-                    CsvError.Severity.ERROR
-            ));
+            errors.add(new CsvError(line, "Betrag", null, rawBetrag, "Betrag muss größer als 0 sein", CsvError.Severity.ERROR));
         }
 
         return new MassTransfer(empfaenger, betrag, beschreibung);
     }
 
     private void validateEmpfaenger(String empfaenger, long line, List<CsvError> errors) {
-        try{
+        try {
             if (empfaenger == null || empfaenger.isBlank()) {
-            throw new IllegalArgumentException("Empfänger darf nicht leer sein");
+                throw new IllegalArgumentException("Empfänger darf nicht leer sein");
             }
             empfaenger = empfaenger.trim();
             UiHelpers.isValidEmail(empfaenger);
-            if(this.currentUser.getUsername().equals(empfaenger)){
+            if (this.currentUser.getUsername().equals(empfaenger)) {
                 throw new IllegalArgumentException("Du kannst keine Überweisungen an dich selbst tätigen");
             }
-            User user= userService.findByUsername(empfaenger);
-            }catch (IllegalArgumentException | DataNotPresentException e) {
-                errors.add(new CsvError(
-                        line,
-                        "Empfänger",
-                        null,
-                        empfaenger,
-                        e.getMessage(),
-                        CsvError.Severity.ERROR
-                ));
-            }
+            User user = userService.findByUsername(empfaenger);
+        } catch (IllegalArgumentException | DataNotPresentException e) {
+            errors.add(new CsvError(line, "Empfänger", null, empfaenger, e.getMessage(), CsvError.Severity.ERROR));
+        }
     }
 
-    private BigDecimal parseBigDecimal(
-            String raw,
-            String column,
-            long line,
-            List<CsvError> errors
-    ) {
+    private BigDecimal parseBigDecimal(String raw, String column, long line, List<CsvError> errors) {
         if (raw == null || raw.isBlank()) {
-            errors.add(new CsvError(
-                    line,
-                    column,
-                    null,
-                    raw,
-                    "Betrag darf nicht leer sein",
-                    CsvError.Severity.ERROR
-            ));
+            errors.add(new CsvError(line, column, null, raw, "Betrag darf nicht leer sein", CsvError.Severity.ERROR));
             return null;
         }
         try {
             return UiHelpers.parseAmountTolerant(raw);
         } catch (NumberFormatException ex) {
-            errors.add(new CsvError(
-                    line,
-                    column,
-                    null,
-                    raw,
-                    "Ungültiger Betrag: " + raw,
-                    CsvError.Severity.ERROR
-            ));
+            errors.add(new CsvError(line, column, null, raw, "Ungültiger Betrag: " + raw, CsvError.Severity.ERROR));
             return null;
         }
     }

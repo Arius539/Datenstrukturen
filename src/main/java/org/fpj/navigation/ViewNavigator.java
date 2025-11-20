@@ -33,10 +33,18 @@ public class ViewNavigator {
     public ViewNavigator(ApplicationContext context) {
         this.context = context;
         this.appIcons = new ArrayList<>();
+        addIconsToList();
+    }
+
+    private void addIconsToList(){
         appIcons.add(loadIcon("/icons/app-icon-16.png"));
         appIcons.add(loadIcon("/icons/app-icon-32.png"));
         appIcons.add(loadIcon("/icons/app-icon-48.png"));
         appIcons.add(loadIcon("/icons/app-icon-64.png"));
+        appIcons.add(loadIcon("/icons/app-icon-128.png"));
+        appIcons.add(loadIcon("/icons/app-icon-256.png"));
+        appIcons.add(loadIcon("/icons/app-icon-512.png"));
+        appIcons.add(loadIcon("/icons/app-icon-1024.png"));
     }
 
     private Image loadIcon(String resourcePath) {
@@ -48,13 +56,13 @@ public class ViewNavigator {
     }
 
     private <T> NavigationResponse loadView(String key, String fxml, String title, double width, double height, boolean alwaysOnTop, Class<T> controllerType) throws IOException {
-        NavigationContext existing = openWindows.get(key);
+        NavigationContext<T> existing = openWindows.get(key);
         if (existing != null) {
             Stage stage = existing.windowStage();
             if (stage.isShowing()) {
                 stage.toFront(); stage.requestFocus();
                 if (controllerType == null) {
-                    return new NavigationResponse(null, true);
+                    return new NavigationResponse<T>(null, true);
                 }
                 return new NavigationResponse<T>(controllerType.cast(existing.controller()),true);
             } else {
@@ -78,7 +86,7 @@ public class ViewNavigator {
         stage.getIcons().setAll(appIcons);
 
         Object controller = loader.getController();
-        NavigationContext info = new NavigationContext(stage, controller);
+        NavigationContext<T> info = new NavigationContext(stage, controller);
         openWindows.put(key, info);
         stage.setOnHidden(e -> openWindows.remove(key));
 
