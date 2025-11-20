@@ -8,6 +8,8 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="org.fpj.javafxcontroller.TransactionDetailController"
@@ -28,98 +30,102 @@
                     <padding>
                         <Insets top="24" right="24" bottom="24" left="24"/>
                     </padding>
-
-                    <children>
-                        <HBox spacing="16">
-                            <children>
-                                <StackPane fx:id="senderBox"
-                                           styleClass="clickable-box"
-                                           onMouseClicked="#onSenderClicked"
-                                           HBox.hgrow="ALWAYS">
-                                    <padding>
-                                        <Insets top="8" right="16" bottom="8" left="16"/>
-                                    </padding>
-                                    <children>
-                                        <VBox spacing="2" maxWidth="Infinity">
-                                            <children>
-                                                <Label text="Sender"
-                                                       styleClass="text-small text-muted"/>
-                                                <Label fx:id="senderLabel"
-                                                       text=""
-                                                       maxWidth="Infinity"/>
-                                            </children>
-                                        </VBox>
-                                    </children>
-                                </StackPane>
-
-                                <StackPane fx:id="empfaengerBox"
-                                           styleClass="clickable-box"
-                                           onMouseClicked="#onRecipientClicked"
-                                           HBox.hgrow="ALWAYS">
-                                    <padding>
-                                        <Insets top="8" right="16" bottom="8" left="16"/>
-                                    </padding>
-                                    <children>
-                                        <VBox spacing="2" maxWidth="Infinity">
-                                            <children>
-                                                <Label text="Empfänger"
-                                                       styleClass="text-small text-muted"/>
-                                                <Label fx:id="empfaengerLabel"
-                                                       text=""
-                                                       maxWidth="Infinity"/>
-                                            </children>
-                                        </VBox>
-                                    </children>
-                                </StackPane>
-
-                                <Button fx:id="reuseButton"
-                                        text="als Vorlage verwenden"
-                                        minWidth="140"
-                                        onAction="#onReuseClicked"/>
-                            </children>
-                        </HBox>
-
-                        <!-- Betrag -->
-                        <StackPane fx:id="betragBox"
+                    <HBox spacing="16">
+                        <StackPane fx:id="senderBox"
                                    styleClass="clickable-box"
-                                   onMouseClicked="#onValueClicked">
+                                   onMouseClicked="#onSenderClicked"
+                                   HBox.hgrow="ALWAYS">
                             <padding>
-                                <Insets top="12" right="16" bottom="12" left="16"/>
+                                <Insets top="8" right="16" bottom="8" left="16"/>
                             </padding>
-                            <children>
-                                <VBox spacing="4" maxWidth="Infinity">
-                                    <children>
-                                        <Label text="Betrag"
-                                               styleClass="text-small text-muted"/>
-                                        <Label fx:id="betragLabel"
-                                               text=""
-                                               maxWidth="Infinity"/>
-                                    </children>
-                                </VBox>
-                            </children>
+                            <VBox spacing="2" maxWidth="Infinity">
+                                <Label text="Sender"
+                                       styleClass="text-small text-muted"/>
+                                <Label fx:id="senderLabel"
+                                       text=""
+                                       maxWidth="Infinity"/>
+                            </VBox>
                         </StackPane>
 
-                        <StackPane fx:id="verwendungszweckBox"
+                        <StackPane fx:id="empfaengerBox"
                                    styleClass="clickable-box"
-                                   onMouseClicked="#onDescriptionClicked">
+                                   onMouseClicked="#onRecipientClicked"
+                                   HBox.hgrow="ALWAYS">
                             <padding>
-                                <Insets top="16" right="16" bottom="16" left="16"/>
+                                <Insets top="8" right="16" bottom="8" left="16"/>
                             </padding>
-                            <children>
-                                <VBox spacing="4" maxWidth="Infinity">
-                                    <children>
-                                        <Label text="Verwendungszweck"
-                                               styleClass="text-small text-muted"/>
-                                        <Label fx:id="verwendungszweckLabel"
-                                               text=""
-                                               wrapText="true"
-                                               maxWidth="Infinity"/>
-                                    </children>
-                                </VBox>
-                            </children>
+                            <VBox spacing="2" maxWidth="Infinity">
+                                <children>
+                                    <Label text="Empfänger"
+                                           styleClass="text-small text-muted"/>
+                                    <Label fx:id="empfaengerLabel"
+                                           text=""
+                                           maxWidth="Infinity"/>
+                                </children>
+                            </VBox>
                         </StackPane>
 
-                    </children>
+                        <Button fx:id="reuseButton"
+                                text="als Vorlage verwenden"
+                                minWidth="140"
+                                onAction="#onReuseClicked"/>
+                    </HBox>
+
+                    <GridPane hgap="16">
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="70" hgrow="ALWAYS"/>
+                            <ColumnConstraints percentWidth="30" hgrow="ALWAYS"/>
+                        </columnConstraints>
+                        <children>
+                            <StackPane fx:id="betragBox"
+                                       GridPane.columnIndex="0"
+                                       styleClass="clickable-box"
+                                       onMouseClicked="#onValueClicked">
+                                <padding>
+                                    <Insets top="12" right="16" bottom="12" left="16"/>
+                                </padding>
+                                <VBox spacing="4" maxWidth="Infinity">
+                                    <Label text="Betrag"
+                                           styleClass="text-small text-muted"/>
+                                    <Label fx:id="betragLabel"
+                                           text=""
+                                           maxWidth="Infinity"/>
+                                </VBox>
+                            </StackPane>
+
+                            <StackPane
+                                    GridPane.columnIndex="1"
+                                    styleClass="clickable-box">
+                                <padding>
+                                    <Insets top="8" right="16" bottom="8" left="16"/>
+                                </padding>
+                                <VBox spacing="2" maxWidth="Infinity">
+                                    <Label text="Typ"
+                                           styleClass="text-small text-muted"/>
+                                    <Label fx:id="transaktionsTyp"
+                                           text=""
+                                           maxWidth="Infinity"/>
+                                </VBox>
+                            </StackPane>
+                        </children>
+                    </GridPane>
+
+                    <StackPane fx:id="verwendungszweckBox"
+                               styleClass="clickable-box"
+                               onMouseClicked="#onDescriptionClicked">
+                        <padding>
+                            <Insets top="16" right="16" bottom="16" left="16"/>
+                        </padding>
+                        <VBox spacing="4" maxWidth="Infinity">
+                            <Label text="Verwendungszweck"
+                                   styleClass="text-small text-muted"/>
+                            <Label fx:id="verwendungszweckLabel"
+                                   text=""
+                                   wrapText="true"
+                                   maxWidth="Infinity"/>
+                        </VBox>
+                    </StackPane>
+
                 </VBox>
             </center>
         </BorderPane>

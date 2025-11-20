@@ -20,6 +20,7 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 @Scope(SCOPE_PROTOTYPE)
 public class TransactionDetailController {
 
+
     @FXML
     private StackPane senderBox;
 
@@ -43,6 +44,9 @@ public class TransactionDetailController {
 
     @FXML
     private Label verwendungszweckLabel;
+
+    @FXML
+    private Label transaktionsTyp;
 
     private TransactionLite transaction;
     private Consumer<TransactionLite> onSenderClicked;
@@ -102,13 +106,16 @@ public class TransactionDetailController {
             empfaengerLabel.setText("Empfänger");
             betragLabel.setText("Betrag");
             verwendungszweckLabel.setText("Verwendungszweck");
+            transaktionsTyp.setText("Transaktionstyp");
             return;
         }
 
         String sender = buildPartyLabel(transaction.senderUsername(), "Sender unbekannt");
         String recipient = buildPartyLabel(transaction.recipientUsername(), "Empfänger unbekannt");
         String description = (transaction.description() == null || transaction.description().isBlank()) ? "Kein Verwendungszweck" : transaction.description();
+        String transactionType = sender.equals("Sender unbekannt")? "Einzahlung": recipient.equals("Empfänger unbekannt")? "Einzahlung": "Überweisung";
 
+        transaktionsTyp.setText(transactionType);
         senderLabel.setText(sender);
         empfaengerLabel.setText(recipient);
         betragLabel.setText(transaction.amountStringUnsigned());
