@@ -21,6 +21,10 @@ public class TransactionViewSearchParameter {
     private BigDecimal amountFrom;
     private BigDecimal amountTo;
 
+    public TransactionViewSearchParameter(){
+        this(null, null, null, null, null, null, null);
+    }
+
     public TransactionViewSearchParameter(
             Long currentUserID,
             String description,
