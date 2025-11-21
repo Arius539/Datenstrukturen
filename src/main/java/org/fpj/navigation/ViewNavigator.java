@@ -5,6 +5,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import lombok.Getter;
 import org.fpj.javafxcontroller.TransactionViewController;
 import org.fpj.javafxcontroller.WallCommentViewController;
 import org.fpj.javafxcontroller.ChatWindowController;
@@ -28,12 +29,45 @@ public class ViewNavigator {
     private final ApplicationContext context;
     private final Map<String, NavigationContext> openWindows = new HashMap<>();
     private final ArrayList<Image> appIcons;
+    @Getter
+    private boolean isWhiteMode = false;
 
     @Autowired
     public ViewNavigator(ApplicationContext context) {
         this.context = context;
         this.appIcons = new ArrayList<>();
         addIconsToList();
+    }
+
+    public void setWhiteMode(boolean whiteMode) {
+        this.isWhiteMode = whiteMode;
+        for (NavigationContext ctx : openWindows.values()) {
+            Scene scene = ctx.windowStage().getScene();
+            if (scene != null) {
+                applyTheme(scene);
+            }
+        }
+    }
+
+    private void applyTheme(Scene scene) {
+        if (scene == null) {
+            return;
+        }
+
+        Parent root = scene.getRoot();
+        if (root == null) {
+            return;
+        }
+
+        var styleClasses = root.getStyleClass();
+
+        styleClasses.remove("rootDark");
+
+        if (!isWhiteMode) {
+            if (!styleClasses.contains("rootDark")) {
+                styleClasses.add("rootDark");
+            }
+        }
     }
 
     private void addIconsToList(){
@@ -55,16 +89,17 @@ public class ViewNavigator {
         return new Image(is);
     }
 
-    private <T> NavigationResponse loadView(String key, String fxml, String title, double width, double height, boolean alwaysOnTop, Class<T> controllerType) throws IOException {
+    private <T> NavigationResponse<T> loadView(String key, String fxml, String title, double width, double height, boolean alwaysOnTop, Class<T> controllerType)throws IOException {
         NavigationContext<T> existing = openWindows.get(key);
         if (existing != null) {
             Stage stage = existing.windowStage();
             if (stage.isShowing()) {
-                stage.toFront(); stage.requestFocus();
+                stage.toFront();
+                stage.requestFocus();
                 if (controllerType == null) {
-                    return new NavigationResponse<T>(null, true);
+                    return new NavigationResponse<>(null, true);
                 }
-                return new NavigationResponse<T>(controllerType.cast(existing.controller()),true);
+                return new NavigationResponse<>(controllerType.cast(existing.controller()), true);
             } else {
                 openWindows.remove(key);
             }
@@ -76,7 +111,11 @@ public class ViewNavigator {
 
         Stage stage = new Stage();
         stage.setTitle(title);
-        stage.setScene(new Scene(root, width, height));
+
+        Scene scene = new Scene(root, width, height);
+        applyTheme(scene);
+
+        stage.setScene(scene);
         stage.setAlwaysOnTop(alwaysOnTop);
         stage.setIconified(false);
         stage.show();
@@ -91,12 +130,13 @@ public class ViewNavigator {
         stage.setOnHidden(e -> openWindows.remove(key));
 
         if (controllerType == null) {
-            return new NavigationResponse<T>(null, false);
+            return new NavigationResponse<>(null, false);
         }
         if (!controllerType.isInstance(controller)) {
-            throw new IllegalStateException("Controller für " + fxml + " hat nicht den erwarteten Typ " + controllerType.getName() + ", sondern " + controller.getClass().getName());
+            throw new IllegalStateException("Controller für " + fxml + " hat nicht den erwarteten Typ "
+                    + controllerType.getName() + ", sondern " + controller.getClass().getName());
         }
-        return new NavigationResponse<T>(controllerType.cast(controller), false);
+        return new NavigationResponse<>(controllerType.cast(controller), false);
     }
 
     public void loadMain() throws IOException {

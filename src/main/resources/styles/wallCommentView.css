@@ -19,6 +19,26 @@
     -fx-background-color: -c-bg;
 }
 
+.rootDark {
+    -c-brand:        #0F61A8;
+    -c-brand-dark:   #094272;
+    -c-bg:           #151A1F;
+    -c-surface:      #20262D;
+    -c-surface-alt:  #232B34;
+    -c-on-brand:     #FFFFFF;
+    -c-text:         #F5F6FA;
+    -c-text-muted:   #A0AEC0;
+    -c-border:       #27303A;
+    -c-shadow:       rgba(0, 0, 0, 0.32);
+
+    -fx-accent:            -c-brand;
+    -fx-focus-color:       -c-brand;
+    -fx-faint-focus-color: rgba(15, 97, 168, 0.18);
+
+    -fx-font-family: "Segoe UI", "Roboto", "Sans-Serif";
+    -fx-background-color: -c-bg;
+}
+
 /* Optional: falls das BorderPane eine StyleClass bekommt */
 .wall-root {
     -fx-background-color: -c-bg;
@@ -341,10 +361,6 @@
     );
 }
 
-
-
-
-
 /* Generische VBox/HBox-Basis (falls du sie nicht extra benennen willst) */
 .vbox {
     -fx-spacing: 5;
@@ -352,4 +368,65 @@
 
 .hbox {
     -fx-spacing: 5;
+}
+
+.scroll-bar,
+.scroll-bar:vertical,
+.scroll-bar:horizontal {
+    -fx-background-color: transparent;
+}
+.scroll-bar .thumb {
+    -fx-background-color: linear-gradient(to bottom, derive(-c-brand, 8%), derive(-c-brand-dark, 4%));
+    -fx-background-radius: 7;
+    -fx-padding: 2;
+}
+.scroll-bar:vertical .thumb { -fx-min-width: 13px; }
+.scroll-bar:horizontal .thumb { -fx-min-height: 13px; }
+.scroll-bar .track {
+    -fx-background-color: -c-surface-alt;
+    -fx-background-radius: 7;
+}
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: -c-surface-alt;
+    -fx-padding: 2;
+}
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
+    -fx-background-color: transparent;
+    -fx-shape: "M0 0 L6 3 L0 6 Z";
+    -fx-background-insets: 0;
+    -fx-padding: 2;
+}
+.scroll-bar .thumb:hover,
+.scroll-bar .thumb:pressed {
+    -fx-background-color: linear-gradient(to bottom, derive(-c-brand-dark, 10%), -c-brand-dark);
+}
+
+
+.radio-button {
+    -fx-text-fill: -c-text;
+}
+
+.radio-button > .radio {
+    -fx-background-color: -c-surface;
+    -fx-border-color: -c-border;
+    -fx-border-width: 2;
+    -fx-background-radius: 100;
+    -fx-border-radius: 100;
+    -fx-padding: 2;
+}
+
+.radio-button:selected > .radio {
+    -fx-border-color: -c-brand;
+    -fx-background-color: -c-surface;
+}
+
+.radio-button > .radio > .dot {
+    -fx-background-radius: 100;
+    -fx-background-color: transparent;
+}
+
+.radio-button:selected > .radio > .dot {
+    -fx-background-color: -c-brand;
 }

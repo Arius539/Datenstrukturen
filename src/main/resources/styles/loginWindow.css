@@ -1,61 +1,115 @@
-/* mit KI erstellt: Erstelle mir zu dieser File (login.fxml) ein stylesheet
- */
-.login-window {
-    -fx-font-family: "Segoe UI", "Roboto", sans-serif;
-    -fx-font-size: 14px;
+/* =========================
+   Farbvariablen (Light Mode)
+   ========================= */
+.root {
+    -c-brand:        #0F61A8;
+    -c-brand-dark:   #094272;
+    -c-bg:           #F3F6FA;
+    -c-surface:      #FFFFFF;
+    -c-surface-alt:  #E7EDF5;
+    -c-on-brand:     #FFFFFF;
+    -c-text:         #1A1A1A;
+    -c-text-muted:   #6B7280;
+    -c-border:       #CBD5E1;
+    -c-shadow:       rgba(0, 0, 0, 0.08);
+
+    -fx-font-family: "Segoe UI", "Roboto", "Sans-Serif";
+    -fx-accent:            -c-brand;
+    -fx-focus-color:       -c-brand;
+    -fx-faint-focus-color: rgba(227, 6, 19, 0.25);
+
+    -fx-background-color: -c-bg;
 }
 
-.text-field, .password-field {
+/* =========================
+   Farbvariablen (Dark Mode)
+   ========================= */
+.rootDark {
+    -c-brand:        #0F61A8;
+    -c-brand-dark:   #094272;
+    -c-bg:           #151A1F;
+    -c-surface:      #20262D;
+    -c-surface-alt:  #232B34;
+    -c-on-brand:     #FFFFFF;
+    -c-text:         #F5F6FA;
+    -c-text-muted:   #A0AEC0;
+    -c-border:       #27303A;
+    -c-shadow:       rgba(0, 0, 0, 0.32);
+
+    -fx-font-family: "Segoe UI", "Roboto", "Sans-Serif";
+    -fx-accent:            -c-brand;
+    -fx-focus-color:       -c-brand;
+    -fx-faint-focus-color: rgba(15, 97, 168, 0.18);
+
+    -fx-background-color: -c-bg;
+}
+
+/* =========================
+   TextField & PasswordField
+   ========================= */
+.text-field,
+.password-field {
     -fx-pref-width: 250px;
     -fx-padding: 10px 16px;
     -fx-background-radius: 6px;
     -fx-border-radius: 6px;
 
-    -fx-background-color: #f5f5f5;
-    -fx-border-color: #cccccc;
+    -fx-background-color: -c-surface-alt;
+    -fx-border-color: -c-border;
 
-    -fx-prompt-text-fill: #888888;
+    -fx-text-fill: -c-text;
+    -fx-prompt-text-fill: -c-text-muted;
 }
 
-.text-field:focused, .password-field:focused {
-    -fx-background-color: #ffffff;
-    -fx-border-color: #4a90e2;
+.text-field:focused,
+.password-field:focused {
+    -fx-background-color: -c-surface;
+    -fx-border-color: -c-brand;
     -fx-border-width: 2px;
 }
 
+/* =========================
+   Buttons
+   ========================= */
 .button {
     -fx-pref-width: 250px;
     -fx-padding: 10px 12px;
     -fx-background-radius: 6px;
     -fx-border-radius: 6px;
     -fx-font-weight: bold;
+    -fx-text-fill: -c-text;
 }
 
+/* LOGIN BUTTON */
 #loginButton {
-    -fx-background-color: linear-gradient(to bottom, #4a90e2, #357ab7);
-    -fx-text-fill: white;
+    -fx-background-color: linear-gradient(to bottom, -c-brand, -c-brand-dark);
+    -fx-text-fill: -c-on-brand;
+    -fx-border-color: transparent;
 }
 
 #loginButton:hover {
-    -fx-background-color: linear-gradient(to bottom, #5aa0f5, #3c85c9);
+    -fx-background-color: linear-gradient(to bottom, derive(-c-brand, 10%), -c-brand);
 }
 
 #loginButton:pressed {
-    -fx-background-color: linear-gradient(to bottom, #357ab7, #2c6796);
+    -fx-background-color: linear-gradient(to bottom, -c-brand-dark, derive(-c-brand-dark, -10%));
 }
 
+/* =========================
+   ToggleButton (Register/Zurück)
+   ========================= */
 #toggleButton {
     -fx-background-color: transparent;
-    -fx-text-fill: #4a90e2;
+    -fx-text-fill: -c-brand;
     -fx-border-color: transparent;
     -fx-font-size: 13px;
 }
 
 #toggleButton:hover {
-    -fx-text-fill: #1e6fbe;
+    -fx-text-fill: derive(-c-brand, -10%);
     -fx-underline: true;
 }
 
 #toggleButton:pressed {
-    -fx-text-fill: #144c82;
+    -fx-text-fill: -c-brand-dark;
 }

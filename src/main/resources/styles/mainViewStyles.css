@@ -1,4 +1,5 @@
 /* wurde KI erstellt erstelle mir eine passende css zu dieser fxml: main_view.fxml, und ein passendes Farbkonzept (Blau, Weiß, Grau) */
+
 .root {
     -c-brand:        #0F61A8;
     -c-brand-dark:   #094272;
@@ -18,6 +19,27 @@
     -fx-font-family: "Segoe UI", "Roboto", "Sans-Serif";
     -fx-background-color: -c-bg;
 }
+
+.rootDark {
+    -c-brand:        #0F61A8;     /* Primärfarbe bleibt */
+    -c-brand-dark:   #094272;     /* Dunkleres Blau bleibt */
+    -c-bg:           #151A1F;     /* Haupt-Hintergrund, sehr dunkles Grau */
+    -c-surface:      #20262D;     /* Flächen, leicht heller */
+    -c-surface-alt:  #232B34;     /* Alternative Flächen, für Cards etc. */
+    -c-on-brand:     #FFFFFF;     /* Text/Icons auf Brand: weiß */
+    -c-text:         #F5F6FA;     /* Standardtext: fast weiß */
+    -c-text-muted:   #A0AEC0;     /* Muted Text: abgeschwächtes Hellgrau */
+    -c-border:       #27303A;     /* Rahmen: abgedunkeltes Grau */
+    -c-shadow:       rgba(0, 0, 0, 0.32); /* Schatten kräftiger für Darkmode */
+
+    -fx-accent:            -c-brand;
+    -fx-focus-color:       -c-brand;
+    -fx-faint-focus-color: rgba(15, 97, 168, 0.18); /* Leichter, gebrandeter Glow */
+
+    -fx-font-family: "Segoe UI", "Roboto", "Sans-Serif";
+    -fx-background-color: -c-bg;
+}
+
 
 .grid-pane,
 .vbox,
@@ -236,6 +258,62 @@
 .list-cell:filled:selected .text {
     -fx-fill: -c-on-brand;
 }
+.scroll-bar,
+.scroll-bar:vertical,
+.scroll-bar:horizontal {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: linear-gradient(to bottom, derive(-c-brand, 8%), derive(-c-brand-dark, 4%));
+    -fx-background-radius: 7;
+    -fx-padding: 2;
+}
+
+.scroll-bar:vertical .thumb {
+    -fx-min-width: 13px;
+}
+
+.scroll-bar:horizontal .thumb {
+    -fx-min-height: 13px;
+}
+
+.scroll-bar .track {
+    -fx-background-color: -c-surface-alt;
+    -fx-background-radius: 7;
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: -c-surface-alt;
+    -fx-padding: 2;
+}
+
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
+    -fx-background-color: transparent;
+    -fx-shape: "M0 0 L6 3 L0 6 Z";
+    -fx-background-insets: 0;
+    -fx-padding: 2;
+}
+
+.scroll-bar:vertical .increment-arrow {
+    -fx-shape: "M3 0 L6 6 L0 6 Z"; /* Pfeil nach unten */
+}
+.scroll-bar:vertical .decrement-arrow {
+    -fx-shape: "M3 6 L6 0 L0 0 Z"; /* Pfeil nach oben */
+}
+.scroll-bar:horizontal .increment-arrow {
+    -fx-shape: "M0 3 L6 6 L6 0 Z"; /* Pfeil nach rechts */
+}
+.scroll-bar:horizontal .decrement-arrow {
+    -fx-shape: "M6 3 L0 0 L0 6 Z"; /* Pfeil nach links */
+}
+
+.scroll-bar .thumb:hover,
+.scroll-bar .thumb:pressed {
+    -fx-background-color: linear-gradient(to bottom, derive(-c-brand-dark, 10%), -c-brand-dark);
+}
 
 .region {
     -fx-background-color: transparent;
@@ -284,4 +362,33 @@
 .auto-complete-popup .list-cell:filled:focused {
     -fx-background-color: -c-brand-dark;
     -fx-text-fill: -c-on-brand;
+}
+/* Basisbutton */
+.toggle-button.theme-toggle-button {
+    -fx-background-color: transparent;
+    -fx-border-color: -c-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 999;
+    -fx-background-radius: 999;
+
+    -fx-padding: 4 12;
+    -fx-font-size: 14px;
+    -fx-text-fill: -c-fg;
+}
+
+/* Hover */
+.toggle-button.theme-toggle-button:hover {
+    -fx-background-color: -c-surface-alt;
+}
+
+/* Selected = Dark Mode aktiv */
+.toggle-button.theme-toggle-button:selected {
+    -fx-background-color: -c-brand;
+    -fx-border-color: -c-brand;
+    -fx-text-fill: -c-on-brand;
+}
+
+/* Fokus */
+.toggle-button.theme-toggle-button:focused {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 6, 0.3, 0, 0);
 }

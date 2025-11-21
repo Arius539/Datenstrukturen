@@ -1,7 +1,9 @@
 package org.fpj.javafxcontroller.mainView;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ToggleButton;
 import org.fpj.util.AlertService;
 import org.fpj.navigation.NavigationResponse;
 import org.fpj.navigation.ViewNavigator;
@@ -20,6 +22,9 @@ public class MainViewController {
     private final ChatPreviewController chatPreviewController;
     private final AlertService alertService;
     private final ViewNavigator viewNavigator;
+
+    @FXML
+    private ToggleButton themeButton;
 
     @FXML
     private Label lblEmail;
@@ -56,6 +61,10 @@ public class MainViewController {
         lblEmail.setText(currentUser.getUsername());
         transactionsLiteController.initialize(currentUser, this::updateBalanceLabel);
         chatPreviewController.initialize(currentUser);
+
+        boolean isDark = !viewNavigator.isWhiteMode();
+        themeButton.setSelected(isDark);
+        updateThemeIcon(isDark);
     }
     // </editor-fold>
 
@@ -80,7 +89,22 @@ public class MainViewController {
         }
     }
 
+    @FXML
+    private void onToggleTheme() {
+        boolean useDark = themeButton.isSelected();
+        updateThemeIcon(useDark);
+        this.viewNavigator.setWhiteMode(!useDark);
+    }
+
     private void updateBalanceLabel(String balance) {
         lblBalance.setText(balance);
+    }
+
+    private void updateThemeIcon(boolean isSelected) {
+        if (isSelected) {
+            themeButton.setText("🌙");
+        } else {
+            themeButton.setText("☀");
+        }
     }
 }

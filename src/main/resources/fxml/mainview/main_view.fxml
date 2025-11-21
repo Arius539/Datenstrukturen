@@ -10,7 +10,7 @@
           xmlns:fx="http://javafx.com/fxml/1"
           fx:controller="org.fpj.javafxcontroller.mainView.MainViewController"
           hgap="12" vgap="12"
-          styleClass="root"
+          styleClass="rootDark"
           stylesheets="@/styles/mainViewStyles.css">
 
     <padding>
@@ -41,6 +41,15 @@
                 <Label text="Kontostand" styleClass="card-title"/>
                 <Label fx:id="lblBalance" styleClass="balance"/>
             </VBox>
+        </StackPane>
+
+        <StackPane styleClass="card">
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Label text="Theme" styleClass="card-title"/>
+                <ToggleButton fx:id="themeButton"
+                              onAction="#onToggleTheme"
+                              styleClass="theme-toggle-button"/>
+            </HBox>
         </StackPane>
 
         <StackPane styleClass="card" VBox.vgrow="ALWAYS">

@@ -1,6 +1,7 @@
-/* wurde KI erstellt erstelle mir eine passende css zu dieser fxml: main_view.fxml, und ein passendes Farbkonzept (Blau, Weiß, Grau) */
-
-.transaction-root {
+/* =========================
+   Farbvariablen & Grundlayout
+   ========================= */
+.root {
     -c-brand:        #0F61A8;
     -c-brand-dark:   #094272;
     -c-bg:           #F3F6FA;
@@ -20,20 +21,29 @@
     -fx-background-color: -c-bg;
 }
 
-.transaction-root .grid-pane,
-.transaction-root .vbox,
-.transaction-root .hbox {
+.rootDark {
+    -c-brand:        #0F61A8;
+    -c-brand-dark:   #094272;
+    -c-bg:           #151A1F;
+    -c-surface:      #20262D;
+    -c-surface-alt:  #232B34;
+    -c-on-brand:     #FFFFFF;
+    -c-text:         #F5F6FA;
+    -c-text-muted:   #A0AEC0;
+    -c-border:       #27303A;
+    -c-shadow:       rgba(0, 0, 0, 0.32);
+
+    -fx-accent:            -c-brand;
+    -fx-focus-color:       -c-brand;
+    -fx-faint-focus-color: rgba(15, 97, 168, 0.18);
+
+    -fx-font-family: "Segoe UI", "Roboto", "Sans-Serif";
     -fx-background-color: -c-bg;
 }
 
-.transaction-main-grid {
-    -fx-background-color: -c-bg;
-}
-
-.transactions-right-container {
-    -fx-background-color: transparent;
-}
-
+/* =========================
+   Cards / Allgemeine Flächen
+   ========================= */
 .card {
     -fx-background-color: -c-surface;
     -fx-background-radius: 12;
@@ -43,94 +53,89 @@
     -fx-border-width: 1;
     -fx-effect: dropshadow(gaussian, -c-shadow, 16, 0.3, 0, 3);
 }
+.card .vbox { -fx-spacing: 8; }
 
-.card .vbox {
-    -fx-spacing: 8;
+/* =========================
+   GridPane
+   ========================= */
+.grid-pane {
+    -fx-background-color: transparent; /* Standard: kein eigener Hintergrund */
 }
-
-.label {
-    -fx-text-fill: -c-text;
-    -fx-font-size: 16px;
-}
-
-.card-title {
-    -fx-font-size: 18px;
-    -fx-font-weight: bold;
-    -fx-text-fill: -c-text;
-}
-
-.balance {
-    -fx-font-size: 16px;
-    -fx-font-weight: bold;
-    -fx-text-fill: -c-text;
-}
-
-.label-button-like {
-    -fx-background-color: linear-gradient(to bottom, -c-surface, -c-surface-alt);
-    -fx-text-fill: -c-text;
-    -fx-padding: 8 14;
-    -fx-background-radius: 10;
+.grid-pane.card-like {
+    -fx-background-color: -c-surface;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
     -fx-border-color: -c-border;
-    -fx-border-radius: 10;
     -fx-border-width: 1;
-    -fx-font-size: 14px;
+    -fx-effect: dropshadow(gaussian, -c-shadow, 16, 0.3, 0, 3);
+    -fx-padding: 16 20;
 }
-
-.button {
-    -fx-background-color: linear-gradient(to bottom, -c-surface, -c-surface-alt);
-    -fx-text-fill: -c-text;
-    -fx-padding: 8 14;
-    -fx-background-radius: 10;
-    -fx-border-color: -c-border;
-    -fx-border-radius: 10;
-    -fx-border-width: 1;
-    -fx-cursor: hand;
-    -fx-font-size: 14px;
-}
-
-.button:hover {
-    -fx-background-color: -c-brand;
-    -fx-text-fill: -c-on-brand;
-}
-
-.button:pressed {
-    -fx-background-color: -c-brand-dark;
-    -fx-text-fill: -c-on-brand;
-}
-
-.button:disabled {
-    -fx-opacity: 0.6;
-    -fx-cursor: default;
-}
-
-.button.primary {
-    -fx-background-color: -c-brand;
-    -fx-text-fill: -c-on-brand;
+/* Spezialfall: GridPane innerhalb einer TitledPane */
+.titled-pane > .content > .grid-pane {
+    -fx-background-color: -c-surface;
+    -fx-background-radius: 0 0 12 12;
+    -fx-border-radius: 0 0 12 12;
     -fx-border-color: transparent;
+    -fx-padding: 0;
 }
 
-.button.primary:hover {
-    -fx-background-color: -c-brand-dark;
+/* =========================
+   TitledPane
+   ========================= */
+.titled-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0 0 12 0;
+}
+.titled-pane > .title {
+    -fx-background-color: linear-gradient(to bottom, -c-surface, -c-surface-alt);
+    -fx-background-radius: 12 12 0 0;
+    -fx-border-radius: 12 12 0 0;
+    -fx-border-color: -c-border;
+    -fx-border-width: 1 1 0 1;
+    -fx-padding: 10 18 10 18;
+    -fx-font-size: 16px;
+    -fx-font-weight: 600;
+    -fx-text-fill: -c-text;
+}
+.titled-pane:focused > .title,
+.titled-pane > .title:hover {
+    -fx-background-color: linear-gradient(to bottom, -c-brand, derive(-c-brand, 8%));
+    -fx-text-fill: -c-on-brand;
+}
+.titled-pane > .content {
+    -fx-background-color: -c-surface;
+    -fx-background-radius: 0 0 12 12;
+    -fx-border-radius: 0 0 12 12;
+    -fx-border-color: -c-border;
+    -fx-border-width: 0 1 1 1;
+    -fx-padding: 16 18 18 18;
+    -fx-text-fill: -c-text;
 }
 
-.button-row {
-    -fx-alignment: CENTER;
-    -fx-spacing: 10;
+/* =========================
+   Eingabefelder
+   ========================= */
+.text-area,
+.chat-input-area {
+    -fx-font-size: 14px;
+    -fx-background-color: -c-bg;
+    -fx-text-fill: -c-text;
+    -fx-prompt-text-fill: -c-text-muted;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: -c-border;
+    -fx-padding: 8 10;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, -c-shadow, 8, 0.2, 0, 1);
 }
-
-.button-small {
-    -fx-font-size: 11px;
-    -fx-padding: 3 10;
-    -fx-min-width: 22px;
-    -fx-min-height: 22px;
-    -fx-background-radius: 7;
-    -fx-border-radius: 7;
+.text-area .content { -fx-background-color: transparent; }
+.text-area:focused,
+.chat-input-area:focused {
+    -fx-border-color: -c-brand;
+    -fx-background-insets: 0;
 }
-
-.button-small .graphic {
-    -fx-padding: 0 2 0 0;
-}
-
 .text-field,
 .password-field {
     -fx-font-size: 14px;
@@ -143,13 +148,11 @@
     -fx-border-width: 1;
     -fx-padding: 8 10;
 }
-
 .text-field:focused,
 .password-field:focused {
     -fx-border-color: -c-brand;
     -fx-background-insets: 0;
 }
-
 .combo-box-base {
     -fx-background-color: -c-surface;
     -fx-background-radius: 10;
@@ -161,29 +164,166 @@
     -fx-text-fill: -c-text;
 }
 
-.combo-box-base:selected {
-    -fx-border-color: -c-on-brand;
-    -fx-background-color: -c-on-brand;
-}
-
-.combo-box-base:focused {
-    -fx-border-color: -c-on-brand;
-    -fx-background-color: -c-on-brand;
-}
-
-.combo-box-base .label {
+/* =========================
+   Buttons
+   ========================= */
+.button {
+    -fx-background-color: linear-gradient(to bottom, -c-surface, -c-surface-alt);
     -fx-text-fill: -c-text;
-    -fx-background-color: -c-on-brand;
+    -fx-padding: 8 14;
+    -fx-background-radius: 10;
+    -fx-border-color: -c-border;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+}
+.button:hover {
+    -fx-background-color: -c-brand;
+    -fx-text-fill: -c-on-brand;
+}
+.button:pressed {
+    -fx-background-color: -c-brand-dark;
+    -fx-text-fill: -c-on-brand;
+}
+.button:disabled {
+    -fx-opacity: 0.6;
+    -fx-cursor: default;
+}
+.button.primary {
+    -fx-background-color: -c-brand;
+    -fx-text-fill: -c-on-brand;
+    -fx-border-color: transparent;
+}
+.button.primary:hover {
+    -fx-background-color: -c-brand-dark;
+}
+.button-small {
+    -fx-font-size: 11px;
+    -fx-padding: 3 10;
+    -fx-min-width: 22px;
+    -fx-min-height: 22px;
+    -fx-background-radius: 7;
+    -fx-border-radius: 7;
+}
+.button-small .graphic { -fx-padding: 0 2 0 0; }
+
+/* =========================
+   Listen & Kontextmenüs
+   ========================= */
+.list-view {
+    -fx-background-color: transparent;
+    -fx-control-inner-background: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -c-text;
+    -fx-padding: 8 10;
+    -fx-border-color: transparent transparent -c-border transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.list-cell:filled:hover { -fx-background-color: -c-surface-alt; }
+.list-cell:selected {
+    -fx-background-color: -c-brand;
+    -fx-text-fill: -c-on-brand;
+}
+.list-cell .label {
+    -fx-font-weight: 600;
+    -fx-font-size: 14px;
+    -fx-text-fill: -c-text;
+}
+.list-cell:filled:selected .label { -fx-text-fill: -c-on-brand; }
+.list-cell:filled:selected .text { -fx-fill: -c-on-brand; }
+
+/* =========================
+   Weitere Controls (optional)
+   ========================= */
+.context-menu {
+    -fx-background-color: -c-surface;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: -c-border;
+    -fx-border-width: 1;
+    -fx-padding: 4 0;
+    -fx-effect: dropshadow(gaussian, -c-shadow, 16, 0.3, 0, 4);
+}
+.menu-item { -fx-padding: 6 12; }
+.menu-item .label {
+    -fx-font-size: 10px;
+    -fx-text-fill: -c-text;
+}
+.menu-item:focused { -fx-background-color: -c-brand; }
+.menu-item:focused .label { -fx-text-fill: -c-on-brand; }
+
+/* =========================
+   Sonstiges (z. B. Scrollbars)
+   ========================= */
+.scroll-bar,
+.scroll-bar:vertical,
+.scroll-bar:horizontal {
+    -fx-background-color: transparent;
+}
+.scroll-bar .thumb {
+    -fx-background-color: linear-gradient(to bottom, derive(-c-brand, 8%), derive(-c-brand-dark, 4%));
+    -fx-background-radius: 7;
+    -fx-padding: 2;
+}
+.scroll-bar:vertical .thumb { -fx-min-width: 13px; }
+.scroll-bar:horizontal .thumb { -fx-min-height: 13px; }
+.scroll-bar .track {
+    -fx-background-color: -c-surface-alt;
+    -fx-background-radius: 7;
+}
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: -c-surface-alt;
+    -fx-padding: 2;
+}
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
+    -fx-background-color: transparent;
+    -fx-shape: "M0 0 L6 3 L0 6 Z";
+    -fx-background-insets: 0;
+    -fx-padding: 2;
+}
+.scroll-bar .thumb:hover,
+.scroll-bar .thumb:pressed {
+    -fx-background-color: linear-gradient(to bottom, derive(-c-brand-dark, 10%), -c-brand-dark);
 }
 
-.combo-box-base .text {
-    -fx-fill: -c-text-muted;
-    -fx-background-color: -c-on-brand;
+/* =========================
+   Typografie & Labels
+   ========================= */
+.label {
+    -fx-text-fill: -c-text;
+    -fx-font-size: 16px;
 }
+.card-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -c-text;
+}
+.balance {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -c-text;
+}
+.label-button-like {
+    -fx-background-color: linear-gradient(to bottom, -c-surface, -c-surface-alt);
+    -fx-text-fill: -c-text;
+    -fx-padding: 8 14;
+    -fx-background-radius: 10;
+    -fx-border-color: -c-border;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-font-size: 14px;
+}
+
 
 .radio-button {
     -fx-text-fill: -c-text;
-    -fx-font-size: 13px;
 }
 
 .radio-button > .radio {
@@ -207,85 +347,4 @@
 
 .radio-button:selected > .radio > .dot {
     -fx-background-color: -c-brand;
-}
-
-.transaction-type-row {
-    -fx-alignment: CENTER;
-    -fx-spacing: 10;
-}
-
-.list-view {
-    -fx-background-color: transparent;
-    -fx-control-inner-background: transparent;
-    -fx-background-insets: 0;
-    -fx-padding: 0;
-}
-
-.transaction-list {
-}
-
-.list-cell {
-    -fx-background-color: transparent;
-    -fx-text-fill: -c-text;
-    -fx-padding: 8 10;
-    -fx-border-color: transparent transparent -c-border transparent;
-    -fx-border-width: 0 0 1 0;
-}
-
-.list-cell:filled:hover {
-    -fx-background-color: -c-surface-alt;
-}
-
-.list-cell:selected {
-    -fx-background-color: -c-brand;
-    -fx-text-fill: -c-on-brand;
-}
-
-.list-cell .label {
-    -fx-font-weight: 600;
-    -fx-font-size: 14px;
-    -fx-text-fill: -c-text;
-}
-
-.list-cell:filled:selected .label {
-    -fx-text-fill: -c-on-brand;
-}
-
-.list-cell:filled:selected .text {
-    -fx-fill: -c-on-brand;
-}
-
-.context-menu {
-    -fx-background-color: -c-surface;
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
-    -fx-border-color: -c-border;
-    -fx-border-width: 1;
-    -fx-padding: 4 0;
-    -fx-effect: dropshadow(gaussian, -c-shadow, 16, 0.3, 0, 4);
-}
-
-.menu-item {
-    -fx-padding: 6 12;
-}
-
-.menu-item .label {
-    -fx-font-size: 10px;
-    -fx-text-fill: -c-text;
-}
-
-.menu-item:focused {
-    -fx-background-color: -c-brand;
-}
-
-.menu-item:focused .label {
-    -fx-text-fill: -c-on-brand;
-}
-
-.transaction-form-grid {
-    -fx-background-color: -c-on-brand;
-}
-
-.region {
-    -fx-background-color: -c-on-brand;
 }

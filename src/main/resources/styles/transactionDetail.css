@@ -19,6 +19,26 @@
     -fx-background-color: -c-bg;
 }
 
+.rootDark {
+    -c-brand:        #0F61A8;     /* Primärfarbe bleibt */
+    -c-brand-dark:   #094272;     /* Dunkleres Blau bleibt */
+    -c-bg:           #151A1F;     /* Haupt-Hintergrund, sehr dunkles Grau */
+    -c-surface:      #20262D;     /* Flächen, leicht heller */
+    -c-surface-alt:  #232B34;     /* Alternative Flächen, für Cards etc. */
+    -c-on-brand:     #FFFFFF;     /* Text/Icons auf Brand: weiß */
+    -c-text:         #F5F6FA;     /* Standardtext: fast weiß */
+    -c-text-muted:   #A0AEC0;     /* Muted Text: abgeschwächtes Hellgrau */
+    -c-border:       #27303A;     /* Rahmen: abgedunkeltes Grau */
+    -c-shadow:       rgba(0, 0, 0, 0.32); /* Schatten kräftiger für Darkmode */
+
+    -fx-accent:            -c-brand;
+    -fx-focus-color:       -c-brand;
+    -fx-faint-focus-color: rgba(15, 97, 168, 0.18); /* Leichter, gebrandeter Glow */
+
+    -fx-font-family: "Segoe UI", "Roboto", "Sans-Serif";
+    -fx-background-color: -c-bg;
+}
+
 /* Grundlayout des Detailfensters */
 .vbox {
     -fx-background-color: -c-bg;
