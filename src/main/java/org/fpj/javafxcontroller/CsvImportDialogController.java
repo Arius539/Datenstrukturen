@@ -16,6 +16,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
+import org.fpj.navigation.ViewNavigator;
 import org.fpj.util.AlertService;
 import org.fpj.exportimport.domain.CsvError;
 import org.fpj.exportimport.domain.CsvImportResult;
@@ -48,9 +49,13 @@ public class CsvImportDialogController<E> {
     private CsvReader csvReader;
     private Consumer<List<E>> csvImportConsumer;
 
+    private final ViewNavigator  viewNavigator;
+
     @Autowired
-    public CsvImportDialogController(AlertService alertService) {
+    public CsvImportDialogController(AlertService alertService, ViewNavigator viewNavigator) {
         this.alertService = alertService;
+        this.viewNavigator = viewNavigator;
+
     }
 
     // <editor-fold defaultstate="collapsed" desc="initialize">
@@ -115,8 +120,9 @@ public class CsvImportDialogController<E> {
         importTask.setOnSucceeded(event1 -> {
             CsvImportResult<E> result = importTask.getValue();
             if (result.getErrors().isEmpty()) {
-                alertService.info("Import erfolgreich", null, "Import erfolgreich ohne Fehler.");
+                alertService.info("Import erfolgreich", null, "Der CSV import war erfolgreich.");
                 csvImportConsumer.accept(result.getRecords());
+                this.viewNavigator.closeCsvDialog();
             } else {
                 errorList.addAll(result.getErrors());
             }

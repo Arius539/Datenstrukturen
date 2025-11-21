@@ -133,4 +133,11 @@ public class ViewNavigator {
     public NavigationResponse<CsvImportDialogController> loadCsvDialogView() throws IOException {
         return loadView("csvImport", "csvImportDialog.fxml", "PayTalk: Csv Importer", 800, 400, false, CsvImportDialogController.class);
     }
+
+    public void closeCsvDialog() {
+        NavigationContext info = openWindows.get("csvImport");
+        if (info == null) { return; }
+        Stage stage = info.windowStage();
+        if (stage != null && stage.isShowing()) { stage.close(); } else { openWindows.remove("login"); }
+    }
 }
