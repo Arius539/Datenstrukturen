@@ -269,12 +269,12 @@
 }
 
 .scroll-pane > .viewport {
-    -fx-background-color: -c-bg;
+    -fx-background-color: transparent;
 }
 
 /* Spezielle ScrollPane in der Wall – z. B. styleClass="wall-scroll" */
 .wall-scroll {
-    /* falls du optisch absetzen willst */
+
 }
 
 /* Grid mit Kommentaren – z. B. styleClass="wall-grid" auf dem GridPane */
@@ -430,4 +430,46 @@
 
 .radio-button:selected > .radio > .dot {
     -fx-background-color: -c-brand;
+}
+
+.auto-complete-popup {
+    -fx-background-color: transparent;
+    -fx-font-size: 13px;
+    -fx-padding: 4 0 0 0;
+}
+
+.auto-complete-popup > .list-view {
+    -fx-background-color: -c-surface;        /* Weiß, wie Cards/Textfelder */
+    -fx-control-inner-background: -c-surface;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: -c-border;
+    -fx-border-width: 1;
+    -fx-padding: 4;
+    -fx-effect: dropshadow(gaussian, -c-shadow, 16, 0.3, 0, 4);
+    -fx-pref-width: 240;
+}
+
+.auto-complete-popup .list-cell {
+    -fx-background-color: -c-surface;        /* Weiß */
+    -fx-text-fill: -c-text;
+    -fx-padding: 8 10;
+    -fx-border-color: transparent transparent -c-border transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.auto-complete-popup .list-cell:filled:hover {
+    -fx-background-color: -c-brand;
+    -fx-text-fill: -c-on-brand;
+    -fx-cursor: hand;
+}
+
+.auto-complete-popup .list-cell:filled:selected {
+    -fx-background-color: -c-brand;
+    -fx-text-fill: -c-on-brand;
+}
+
+.auto-complete-popup .list-cell:filled:focused {
+    -fx-background-color: -c-brand-dark;
+    -fx-text-fill: -c-on-brand;
 }

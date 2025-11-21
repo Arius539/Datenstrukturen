@@ -135,31 +135,27 @@
                     <Insets bottom="20" right="40"/>
                 </StackPane.margin>
 
-                <content>
-                    <VBox spacing="5"
-                          styleClass="card"
-                          prefWidth="420"
-                          prefHeight="200">
-                        <TextArea fx:id="newCommentTextArea"
-                                  promptText="Neuen Kommentar schreiben…"
-                                  wrapText="true"
-                                  prefRowCount="3"
-                                  prefWidth="420"
-                                  prefHeight="120"
-                                  styleClass="wall-new-comment-area"/>
+                <VBox spacing="5"
+                      styleClass="card"
+                      prefWidth="420"
+                      prefHeight="200">
+                    <TextArea fx:id="newCommentTextArea"
+                              promptText="Neuen Kommentar schreiben…"
+                              wrapText="true"
+                              prefRowCount="3"
+                              prefWidth="420"
+                              prefHeight="120"
+                              styleClass="wall-new-comment-area"/>
 
-                        <HBox alignment="CENTER_RIGHT">
-                            <children>
-                                <Button fx:id="sendButton"
-                                        text="Senden"
-                                        onAction="#onSendClicked"
-                                        prefWidth="120"
-                                        prefHeight="40"
-                                        styleClass="wall-primary-button"/>
-                            </children>
-                        </HBox>
-                    </VBox>
-                </content>
+                    <HBox alignment="CENTER_RIGHT">
+                        <Button fx:id="sendButton"
+                                text="Senden"
+                                onAction="#onSendClicked"
+                                prefWidth="120"
+                                prefHeight="40"
+                                styleClass="wall-primary-button"/>
+                    </HBox>
+                </VBox>
             </TitledPane>
 
 
