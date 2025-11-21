@@ -130,11 +130,9 @@ public class TransactionService {
             if (currentBalance.compareTo(transactionLite.amount()) < 0) throw new TransactionException("Nicht genügend Guthaben für die Auszahlung.");
             currentBalance = currentBalance.subtract(transactionLite.amount());
             transaction= this.withdraw(currentUser, transactionLite.amount(), transactionLite.description());
-            currentBalance = currentBalance.add(transactionLite.amount());
         } else {
             if (currentBalance.compareTo(transactionLite.amount()) < 0) throw new TransactionException("Nicht genügend Guthaben für die Auszahlung.");
             currentBalance = currentBalance.subtract(transactionLite.amount());
-
             transaction=  this.transfer(currentUser, transactionLite.recipientUsername(), transactionLite.amount(), transactionLite.description());
         }
         return new TransactionResult(transaction, currentBalance);
