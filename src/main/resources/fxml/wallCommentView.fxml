@@ -79,8 +79,8 @@
             <GridPane hgap="20"
                       styleClass="card">
                 <columnConstraints>
-                    <ColumnConstraints percentWidth="70"/>
-                    <ColumnConstraints percentWidth="30"/>
+                    <ColumnConstraints percentWidth="100"/>
+                    <ColumnConstraints percentWidth="0"/>
                 </columnConstraints>
                 <VBox spacing="5"
                       GridPane.columnIndex="0"
@@ -89,21 +89,6 @@
                     <Label fx:id="headlineLabel"
                            text="Pinnwand von Username"
                            styleClass="label-head"/>
-                </VBox>
-                <VBox spacing="5"
-                      GridPane.columnIndex="1"
-                      alignment="CENTER_RIGHT"
-                      styleClass="card">
-                    <TextArea fx:id="newCommentTextArea"
-                              promptText="Neuen Kommentar schreiben…"
-                              wrapText="true"
-                              prefRowCount="3"
-                              styleClass="wall-new-comment-area"/>
-
-                    <Button fx:id="sendButton"
-                            text="Senden"
-                            onAction="#onSendClicked"
-                            styleClass="wall-primary-button"/>
                 </VBox>
             </GridPane>
         </VBox>
@@ -114,31 +99,71 @@
             <padding>
                 <Insets top="20" right="20" bottom="20" left="20"/>
             </padding>
-        <VBox alignment="TOP_CENTER"
-              spacing="10"
-              styleClass="card">
-            <padding>
-                <Insets top="20" right="20" bottom="10" left="20"/>
-            </padding>
-        <ScrollPane fitToWidth="true"
-                    pannable="true"
-                    styleClass="wall-scroll">
-            <GridPane
-                    fx:id="commentGrid"
-                      hgap="20"
-                      vgap="20"
-                      styleClass="wall-grid">
+            <VBox alignment="TOP_CENTER"
+                  spacing="10"
+                  styleClass="card">
                 <padding>
-                    <Insets top="20" right="20" bottom="20" left="20"/>
+                    <Insets top="20" right="20" bottom="10" left="20"/>
                 </padding>
-                <columnConstraints>
-                    <ColumnConstraints percentWidth="33.33"/>
-                    <ColumnConstraints percentWidth="33.33"/>
-                    <ColumnConstraints percentWidth="33.33"/>
-                </columnConstraints>
-            </GridPane>
-        </ScrollPane>
-        </VBox>
+                <ScrollPane fitToWidth="true"
+                            pannable="true"
+                            styleClass="wall-scroll">
+                    <GridPane
+                            fx:id="commentGrid"
+                            hgap="20"
+                            vgap="20"
+                            styleClass="wall-grid">
+                        <padding>
+                            <Insets top="20" right="20" bottom="20" left="20"/>
+                        </padding>
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="33.33"/>
+                            <ColumnConstraints percentWidth="33.33"/>
+                            <ColumnConstraints percentWidth="33.33"/>
+                        </columnConstraints>
+                    </GridPane>
+                </ScrollPane>
+            </VBox>
+            <TitledPane StackPane.alignment="BOTTOM_RIGHT"
+                        text="Neuen Kommentar schreiben"
+                        styleClass="wall-new-comment-toggle"
+                        collapsible="true"
+                        expanded="false"
+                        prefWidth="560"
+                        maxWidth="560">
+                <StackPane.margin>
+                    <Insets bottom="20" right="40"/>
+                </StackPane.margin>
+
+                <content>
+                    <VBox spacing="5"
+                          styleClass="card"
+                          prefWidth="420"
+                          prefHeight="200">
+                        <TextArea fx:id="newCommentTextArea"
+                                  promptText="Neuen Kommentar schreiben…"
+                                  wrapText="true"
+                                  prefRowCount="3"
+                                  prefWidth="420"
+                                  prefHeight="120"
+                                  styleClass="wall-new-comment-area"/>
+
+                        <HBox alignment="CENTER_RIGHT">
+                            <children>
+                                <Button fx:id="sendButton"
+                                        text="Senden"
+                                        onAction="#onSendClicked"
+                                        prefWidth="120"
+                                        prefHeight="40"
+                                        styleClass="wall-primary-button"/>
+                            </children>
+                        </HBox>
+                    </VBox>
+                </content>
+            </TitledPane>
+
+
         </StackPane>
+
     </center>
 </BorderPane>

@@ -104,8 +104,76 @@
 .wall-new-comment-box {
     -fx-spacing: 5;
 }
+/* Root des TitledPane: unsichtbarer Container */
+.titled-pane.wall-new-comment-toggle {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-insets: 0;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-padding: 0;
+}
 
-/* Basis für alle TextAreas */
+/* Titelzeile – Standardzustand (expanded = „normal“) */
+.titled-pane.wall-new-comment-toggle > .title {
+    -fx-background-color: -c-surface;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-border-color: -c-border;
+    -fx-border-width: 1;
+    -fx-background-insets: 0;
+
+    -fx-padding: 10 20 10 20;
+    -fx-min-height: 40;
+    -fx-alignment: CENTER_LEFT;
+
+    -fx-effect: dropshadow(gaussian, -c-shadow, 8, 0.3, 0, 1);
+}
+
+/* Text im Titel: Standardfarben */
+.titled-pane.wall-new-comment-toggle > .title > .text {
+    -fx-fill: -c-text;
+    -fx-font-weight: 600;
+    -fx-font-size: 15px;
+}
+
+/* Arrow-Button vergrößern */
+.titled-pane.wall-new-comment-toggle > .title > .arrow-button {
+    -fx-padding: 0 6 0 0;
+    -fx-min-width: 18;
+    -fx-min-height: 18;
+}
+
+.titled-pane.wall-new-comment-toggle > .title > .arrow-button .arrow {
+    -fx-background-color: -c-text-muted;
+    -fx-background-insets: 0;
+    -fx-background-radius: 10;
+}
+
+.titled-pane.wall-new-comment-toggle:collapsed > .title {
+    -fx-background-color: -c-brand;
+    -fx-border-color: -c-brand-dark;
+}
+
+.titled-pane.wall-new-comment-toggle:collapsed > .title > .text {
+    -fx-fill: -c-on-brand;
+}
+
+.titled-pane.wall-new-comment-toggle:collapsed > .title > .arrow-button .arrow {
+    -fx-background-color: -c-on-brand;
+}
+
+.titled-pane.wall-new-comment-toggle > .content {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-insets: 0;
+    -fx-padding: 8 0 0 0;
+}
+
+
+
 .text-area {
     -fx-font-size: 14px;
     -fx-background-color: -c-bg;
@@ -126,11 +194,6 @@
     -fx-pref-row-count: 3;
 }
 
-/* ------------------------------------------------------------------
- * Buttons
- * ------------------------------------------------------------------ */
-
-/* Basis-Button-Design (übernimmt vorhandenes Design) */
 .button {
     -fx-background-color: linear-gradient(to bottom, -c-surface, -c-surface-alt);
     -fx-text-fill: -c-text;
@@ -152,12 +215,12 @@
     -fx-cursor: default;
 }
 
-/* Primärer Aktion-Button – z. B. styleClass="wall-primary-button" zusätzlich zur Basis */
 .wall-primary-button {
+    -fx-font-size: 16;
     -fx-background-color: -c-brand;
     -fx-text-fill: -c-on-brand;
     -fx-border-color: transparent;
-    -fx-font-weight: 600;
+    -fx-font-weight: 800;
     -fx-min-width: 96;
 }
 
@@ -165,7 +228,6 @@
     -fx-background-color: -c-brand-dark;
 }
 
-/* "Sekundäre" Tool-Buttons (Export/Reload) – z. B. styleClass="wall-secondary-button" */
 .wall-secondary-button {
     -fx-font-size: 13px;
 }
@@ -267,7 +329,7 @@
 }
 
 .label-head {
-    -fx-font-size: 60px;
+    -fx-font-size: 100px;
     -fx-font-family: "Segoe UI Black", "Segoe UI Semibold", "Segoe UI", "Roboto", "Sans-Serif";
     -fx-font-weight: 900;
     -fx-text-fill: linear-gradient(
