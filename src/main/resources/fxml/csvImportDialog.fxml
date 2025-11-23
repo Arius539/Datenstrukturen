@@ -9,69 +9,87 @@
             fx:controller="org.fpj.javafxcontroller.CsvImportDialogController"
             prefWidth="800.0" prefHeight="520.0"
             minWidth="480.0" minHeight="260.0"
-            styleClass="transaction-root"
-            stylesheets="@../styles/transactionView.css">
+            styleClass="rootDark"
+            stylesheets="@/styles/transactionView.css">
 
     <center>
-        <StackPane BorderPane.alignment="CENTER"
-                   styleClass="card">
-            <VBox spacing="12.0">
-                <padding>
-                    <Insets top="12.0" right="12.0" bottom="12.0" left="12.0"/>
-                </padding>
+        <GridPane hgap="12.0" vgap="12.0"
+                  BorderPane.alignment="CENTER"
+                  styleClass="transaction-main-grid">
+            <padding>
+                <Insets top="12.0" right="12.0" bottom="12.0" left="12.0"/>
+            </padding>
 
-                <Label text="CSV-Import"
-                       styleClass="card-title"/>
+            <columnConstraints>
+                <ColumnConstraints percentWidth="100.0"/>
+            </columnConstraints>
 
-                <GridPane hgap="10.0" vgap="10.0"
-                          styleClass="transaction-form-grid">
-                    <columnConstraints>
-                        <ColumnConstraints halignment="RIGHT"/>
-                        <ColumnConstraints hgrow="ALWAYS"/>
-                    </columnConstraints>
+            <rowConstraints>
+                <RowConstraints vgrow="NEVER"/>
+                <RowConstraints vgrow="ALWAYS"/>
+            </rowConstraints>
+            <StackPane GridPane.rowIndex="0">
+                <VBox spacing="10.0"
+                      styleClass="card">
+                    <VBox spacing="2.0">
+                        <Label text="CSV-Import"
+                               styleClass="card-title"/>
+                        <Label text="Transaktionen aus einer CSV-Datei importieren."
+                               wrapText="true"
+                               styleClass="label-small label-muted"/>
+                    </VBox>
 
-                    <Label text="CSV-Datei:"
-                           GridPane.rowIndex="0"
-                           GridPane.columnIndex="0"/>
+                    <GridPane hgap="10.0" vgap="10.0">
+                        <columnConstraints>
+                            <ColumnConstraints halignment="RIGHT"/>
+                            <ColumnConstraints hgrow="ALWAYS"/>
+                        </columnConstraints>
 
-                    <HBox spacing="8.0"
-                          GridPane.rowIndex="0"
-                          GridPane.columnIndex="1"
-                          styleClass="button-row">
-                        <Button fx:id="chooseFileButton"
-                                text="Datei auswählen"
-                                onAction="#onChooseFile"/>
-                        <Label fx:id="selectedFileLabel"
-                               text="Keine Datei ausgewählt"
-                               wrapText="true"/>
-                    </HBox>
+                        <Label text="CSV-Datei:"
+                               GridPane.rowIndex="0"
+                               GridPane.columnIndex="0"/>
 
-                    <Label text=""
-                           GridPane.rowIndex="1"
-                           GridPane.columnIndex="0"/>
+                        <HBox spacing="8.0"
+                              GridPane.rowIndex="0"
+                              GridPane.columnIndex="1">
+                            <Button fx:id="chooseFileButton"
+                                    text="Datei auswählen"
+                                    onAction="#onChooseFile"/>
+                            <Label fx:id="selectedFileLabel"
+                                   text="Keine Datei ausgewählt"
+                                   wrapText="true"
+                                   styleClass="label-small label-muted"/>
+                        </HBox>
 
-                    <HBox spacing="8.0"
-                          GridPane.rowIndex="1"
-                          GridPane.columnIndex="1"
-                          styleClass="button-row">
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Button fx:id="startImportButton"
-                                text="Start"
-                                onAction="#onStartImport"/>
-                    </HBox>
-                    <Label text="Lesefehler:"
-                           GridPane.rowIndex="2"
-                           GridPane.columnIndex="0"
-                    />
+                        <Label text=""
+                               GridPane.rowIndex="1"
+                               GridPane.columnIndex="0"/>
+
+                        <HBox spacing="8.0"
+                              GridPane.rowIndex="1"
+                              GridPane.columnIndex="1">
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button fx:id="startImportButton"
+                                    text="Import starten"
+                                    onAction="#onStartImport"/>
+                        </HBox>
+                    </GridPane>
+                </VBox>
+            </StackPane>
+
+            <!-- Card 2: Importprotokoll / Lesefehler -->
+            <StackPane GridPane.rowIndex="1">
+                <VBox spacing="8.0"
+                      styleClass="card">
+                    <Label text="Importprotokoll"
+                           styleClass="card-title"/>
 
                     <ListView fx:id="errorListView"
-                              GridPane.rowIndex="2"
-                              GridPane.columnIndex="1"
                               prefHeight="150.0"
                               VBox.vgrow="ALWAYS"
                               styleClass="transaction-list"/>
-                </GridPane>
-            </VBox>
-        </StackPane>
+                </VBox>
+            </StackPane>
+        </GridPane>
     </center>
 </BorderPane>

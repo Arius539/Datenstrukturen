@@ -1,71 +1,8 @@
-/* wurde KI erstellt*/
+/*
+Ki generiert
+*/
 
-.root {
-    /* Brand / Primärfarben */
-    -c-brand:        #0F61A8;
-    -c-brand-dark:   #0B4C84;
-
-    /* Flächen / Hintergründe (Light) */
-    -c-bg:           #FFFFFF;
-    -c-surface:      #F4F6F8;
-    -c-surface-alt:  #E5E7EB;
-
-    /* Text & On-Brand */
-    -c-on-brand:         #FFFFFF;
-    -c-on-brand-muted:   rgba(255, 255, 255, 0.75);
-    -c-text:             #1A1A1A;
-    -c-text-muted:       #6B7280;
-
-    /* Rahmen & Schatten */
-    -c-border:       #E2E8F0;
-    -c-shadow:       rgba(16, 24, 40, 0.08);
-    -c-shadow-strong: rgba(15, 97, 168, 0.25);
-
-    /* Fokus / States */
-    -c-focus-faint:  rgba(15, 97, 168, 0.18);
-
-    -fx-accent:            -c-brand;
-    -fx-focus-color:       -c-brand;
-    -fx-faint-focus-color: -c-focus-faint;
-
-    -fx-font-family: "Segoe UI", "Roboto", "Sans-Serif";
-    -fx-background-color: -c-bg;
-}
-
-.rootDark {
-    /* Brand bleibt gleich */
-    -c-brand:        #0F61A8;
-    -c-brand-dark:   #094272;
-
-    /* Flächen / Hintergründe (Dark) */
-    -c-bg:           #151A1F;
-    -c-surface:      #20262D;
-    -c-surface-alt:  #232B34;
-
-    /* Text & On-Brand */
-    -c-on-brand:         #FFFFFF;
-    -c-on-brand-muted:   rgba(255, 255, 255, 0.75);
-    -c-text:             #F5F6FA;
-    -c-text-muted:       #A0AEC0;
-
-    /* Rahmen & Schatten */
-    -c-border:       #27303A;
-    -c-shadow:       rgba(0, 0, 0, 0.32);
-    -c-shadow-strong: rgba(15, 97, 168, 0.40);
-
-    /* Fokus / States */
-    -c-focus-faint:  rgba(15, 97, 168, 0.18);
-
-    -fx-accent:            -c-brand;
-    -fx-focus-color:       -c-brand;
-    -fx-faint-focus-color: -c-focus-faint;
-
-    -fx-font-family: "Segoe UI", "Roboto", "Sans-Serif";
-    -fx-background-color: -c-bg;
-}
-
-
-/* === Header / Top Bar =================================================== */
+@import "common.css";
 
 .chat-header {
     -fx-background-color: -c-surface;
@@ -81,9 +18,6 @@
     -fx-text-fill: -c-text;
 }
 
-
-/* === Scroll & Message Container ======================================== */
-
 .chat-scroll {
     -fx-background-color: transparent;
     -fx-padding: 0;
@@ -97,9 +31,6 @@
     -fx-padding: 16 20 20 20;
     -fx-spacing: 10;
 }
-
-
-/* === Message Rows & Bubbles ============================================ */
 
 .message-row {
     -fx-padding: 4 16 4 16;
@@ -135,7 +66,7 @@
 .message-bubble.outgoing {
     -fx-background-color: derive(-c-brand, 10%);
     -fx-border-color: derive(-c-brand, -5%);
-    -fx-effect: dropshadow(gaussian, -c-shadow-strong, 12, 0.25, 0, 1);
+    -fx-effect: dropshadow(gaussian, -c-shadow, 12, 0.25, 0, 1);
 }
 
 .message-bubble:hover {
@@ -161,11 +92,8 @@
 }
 
 .message-bubble.outgoing .message-meta {
-    -fx-text-fill: -c-on-brand-muted;
+    -fx-text-fill: rgba(255, 255, 255, 0.75);
 }
-
-
-/* === Chat Input Bereich ================================================ */
 
 .chat-input-wrapper {
     -fx-background-color: -c-surface;
@@ -176,100 +104,24 @@
 .chat-input-row {
     -fx-alignment: CENTER_LEFT;
     -fx-background-color: -c-surface;
-    -fx-text-fill: -c-text-muted;
 }
 
-
-/* === TextArea / Chat Input ============================================= */
-
-/* Basiseinstellungen für alle TextAreas, inkl. der Chat-Eingabe */
-.text-area,
 .chat-input-area {
-    -fx-font-size: 14px;
-
-    /* Äußere Fläche des Controls */
-    -fx-background-color: transparent;
-    -fx-control-inner-background: -c-bg;
-
-    -fx-text-fill: -c-text;
-    -fx-prompt-text-fill: -c-text-muted;
-
-    -fx-background-radius: 10;
-    -fx-border-radius: 10;
-    -fx-border-color: -c-border;
-    -fx-border-width: 1;
-    -fx-padding: 8 10;
-
-    -fx-effect: dropshadow(gaussian, -c-shadow, 8, 0.2, 0, 1);
+    -fx-control-inner-background: -c-surface;
 }
 
-/* ScrollPane innerhalb der TextArea neutralisieren */
-.text-area .scroll-pane,
 .chat-input-area .scroll-pane {
     -fx-background-color: transparent;
 }
 
-/* Viewport neutralisieren */
-.text-area .scroll-pane .viewport,
 .chat-input-area .scroll-pane .viewport {
     -fx-background-color: transparent;
 }
 
-/* Eigentliche Schreibfläche */
-.text-area .content,
 .chat-input-area .content {
-    -fx-background-color: -c-bg;
+    -fx-background-color: -c-surface;
 }
-
-/* Fokuszustand */
-.text-area:focused,
-.chat-input-area:focused {
-    -fx-border-color: -c-brand;
-    -fx-background-insets: 0;
-}
-
-
-/* === Senden-Button ====================================================== */
 
 .chat-send-button {
     -fx-min-width: 96;
-}
-
-
-/* === Allgemeine Buttons ================================================= */
-
-.button {
-    -fx-background-color: linear-gradient(to bottom, -c-surface, -c-surface-alt);
-    -fx-text-fill: -c-text;
-    -fx-padding: 8 14;
-    -fx-background-radius: 10;
-    -fx-border-color: -c-border;
-    -fx-border-radius: 10;
-    -fx-cursor: hand;
-    -fx-font-size: 14px;
-}
-
-.button:hover {
-    -fx-background-color: -c-brand;
-    -fx-text-fill: -c-on-brand;
-}
-
-.button:pressed {
-    -fx-background-color: -c-brand-dark;
-    -fx-text-fill: -c-on-brand;
-}
-
-.button:disabled {
-    -fx-opacity: 0.6;
-    -fx-cursor: default;
-}
-
-.button.primary {
-    -fx-background-color: -c-brand;
-    -fx-text-fill: -c-on-brand;
-    -fx-border-color: transparent;
-}
-
-.button.primary:hover {
-    -fx-background-color: -c-brand-dark;
 }
