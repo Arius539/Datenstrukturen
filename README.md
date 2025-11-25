@@ -1,0 +1,2 @@
+# Datenstrukturen
+Verschiedene Datenstrukture
