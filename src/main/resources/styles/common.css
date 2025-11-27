@@ -152,9 +152,9 @@ Ki generiert
 }
 
 .balance {
-    -fx-font-size: 32px;
+    -fx-font-size: 24px;
     -fx-font-weight: bold;
-    -fx-text-fill: -c-brand-dark;
+    -fx-text-fill: -c-brand;
 }
 
 .text-small {
