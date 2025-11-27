@@ -37,6 +37,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,10 +45,9 @@ import java.util.List;
 @Component
 public class TransactionViewController {
 
-    private static final int PAGE_SIZE_LIST = 100;
-    private static final int PAGE_PRE_FETCH_THRESHOLD = 100;
+    private static final int PAGE_SIZE_LIST = 40;
+    private static final int PAGE_PRE_FETCH_THRESHOLD = 20;
 
-    private final ApplicationContext applicationContext;
     private final UserService userService;
     private final TransactionService transactionService;
     private final TransactionCsvExporter transactionCsvExporter = new TransactionCsvExporter();
@@ -111,9 +111,8 @@ public class TransactionViewController {
     private String beforeActionComboBoxValue;
 
     @Autowired
-    public TransactionViewController(ApplicationContext applicationContext, UserService userService, TransactionService transactionService, AlertService alertService, ViewNavigator  viewNavigator) {
+    public TransactionViewController(UserService userService, TransactionService transactionService, AlertService alertService, ViewNavigator  viewNavigator) {
         this.viewNavigator = viewNavigator;
-        this.applicationContext = applicationContext;
         this.userService = userService;
         this.transactionService = transactionService;
         this.alertService = alertService;
@@ -510,7 +509,7 @@ public class TransactionViewController {
         }
         try {
             NavigationResponse<TransactionDetailController> response = viewNavigator.loadTransactionDetailView();
-            response.controller().initialize(row, currentUser, null, null, this::useTransactionAsTemplate, null, null);
+            response.controller().initialize(row, currentUser, this::onTransactionDetailSenderClicked, this::onTransactionDetailRecipientClicked, this::useTransactionAsTemplate, this::onTransactionDetailDescriptionClicked, this::onTransactionDetailAmountClicked);
         } catch (Exception e) {
             alertService.error("Fehler", "Fenster konnte nicht geöffnet werden", "Fehler beim Laden der Transaktionsdetails. Versuche es erneut oder starte die Anwendung neu: " + e.getMessage());
         }
@@ -523,7 +522,7 @@ public class TransactionViewController {
                 alertService.info("Info", "Info", "Es ist bereits ein Importer Fenster offen, schließe dieses bitte zuerst");
                 return;
             }
-            CsvImportDialogController<MassTransfer> dialogController =response.controller();
+            CsvImportDialogController<MassTransfer> dialogController = response.controller();
             MassTransferCsvReader reader = new MassTransferCsvReader();
             reader.setCurrentUser(this.currentUser);
             reader.setUserService(this.userService);
@@ -544,6 +543,30 @@ public class TransactionViewController {
         for (TransactionResult transactionResult : transactions) {
             transactionList.add(0, TransactionRow.fromTransaction(transactionResult.transaction()));
         }
+    }
+
+    private void onTransactionDetailDescriptionClicked(TransactionLite row) {
+        this.searchParameter = new TransactionViewSearchParameter(null, row.description(), null, null, null, null, null);
+        initialize(currentUser, searchParameter);
+    }
+
+    private void onTransactionDetailSenderClicked(TransactionLite row) {
+        this.searchParameter = new TransactionViewSearchParameter(null, null, null, null, row.senderUsername(), null, null);
+        initialize(currentUser, searchParameter);
+    }
+
+    private void onTransactionDetailRecipientClicked(TransactionLite row) {
+        this.searchParameter = new TransactionViewSearchParameter(null, null, null, null, row.recipientUsername(), null, null);
+        initialize(currentUser, searchParameter);
+    }
+
+    private void onTransactionDetailAmountClicked(TransactionLite row) {
+        BigDecimal amount = row.amount();
+        BigDecimal min = amount.setScale(0, RoundingMode.FLOOR);
+        BigDecimal max = amount.setScale(0, RoundingMode.CEILING);
+
+        this.searchParameter = new TransactionViewSearchParameter(null, null, null, null, null, min, max);
+        initialize(currentUser, searchParameter);
     }
 
     @FXML
