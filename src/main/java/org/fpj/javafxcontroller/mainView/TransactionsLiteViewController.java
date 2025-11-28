@@ -37,6 +37,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 
 @Component
@@ -126,17 +127,7 @@ public class TransactionsLiteViewController {
                     return;
                 }
 
-                boolean outgoing = item.senderId() == currentUser.getId();
-
-                String name = outgoing
-                        ? (item.recipientUsername() != null ? item.recipientUsername() : "Empfänger unbekannt")
-                        : (item.senderUsername() != null ? item.senderUsername() : "Sender unbekannt");
-
-                String counterparty = switch (item.type()) {
-                    case EINZAHLUNG -> "Einzahlung";
-                    case AUSZAHLUNG -> "Auszahlung";
-                    case UEBERWEISUNG -> (outgoing ? "Überweisung an " : "Überweisung von ") + name;
-                };
+                String counterparty = getCounterparty(item);
 
                 String subtitle = UiHelpers.formatInstant(item.createdAt()) + "  •  " + UiHelpers.truncateFull(item.description(), 20);
                 String amountText = item.amountString(currentUser.getId());
@@ -148,6 +139,20 @@ public class TransactionsLiteViewController {
                 transactionPager.ensureLoadedForIndex(index, liteTransactionList.size(), PAGE_PRE_FETCH_THRESHOLD);
             }
         });
+    }
+
+    private String getCounterparty(TransactionRow item) {
+        boolean outgoing = item.senderId().equals(currentUser.getId());
+
+        String name = outgoing
+                ? (item.recipientUsername() != null ? item.recipientUsername() : "Empfänger unbekannt")
+                : (item.senderUsername() != null ? item.senderUsername() : "Sender unbekannt");
+
+        return switch (item.type()) {
+            case EINZAHLUNG -> "Einzahlung";
+            case AUSZAHLUNG -> "Auszahlung";
+            case UEBERWEISUNG -> (outgoing ? "Überweisung an " : "Überweisung von ") + name;
+        };
     }
 
     private void setUpAutoCompletion() {
@@ -237,7 +242,7 @@ public class TransactionsLiteViewController {
             tfBetreff.clear();
             tfEmpfaenger.clear();
             updateBalance();
-        } catch (TransactionException | DataNotPresentException ex) {
+        } catch (TransactionException | DataNotPresentException | NoSuchElementException ex) {
             alertService.error("Fehler", "Transaktion fehlgeschlagen", "Transaktion fehlgeschlagen: " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
             alertService.error("Fehler", "Eingabe ungültig", "Eingabe ungültig: " + ex.getMessage());

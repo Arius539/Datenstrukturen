@@ -4,6 +4,7 @@ import org.fpj.exceptions.TransactionException;
 import org.fpj.payments.domain.*;
 import org.fpj.users.application.UserService;
 import org.fpj.users.domain.User;
+import org.fpj.users.domain.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,9 @@ public class TransactionService {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private UserRepository userRepo;
+
     @Transactional(readOnly = true)
     public Page<TransactionRow> findLiteItemsForUser(long userId, int page, int size) {
         Pageable pr = PageRequest.of(page, size);
@@ -43,7 +47,7 @@ public class TransactionService {
         return this.txRepo.findRowsForUserList(userId);
     }
 
-    public Transaction deposit(User user, BigDecimal amount, String subject) {
+    private Transaction deposit(User user, BigDecimal amount, String subject) {
         Transaction tx = new Transaction();
         tx.setTransactionType(EINZAHLUNG);
         tx.setRecipient(user);
@@ -54,7 +58,7 @@ public class TransactionService {
         return tx;
     }
 
-    public Transaction withdraw(User user, BigDecimal amount, String subject) {
+    private Transaction withdraw(User user, BigDecimal amount, String subject) {
         Transaction tx = new Transaction();
         tx.setTransactionType(AUSZAHLUNG);
         tx.setSender(user);
@@ -65,7 +69,7 @@ public class TransactionService {
         return tx;
     }
 
-    public Transaction transfer(User sender, String recipientUsername, BigDecimal amount, String subject) {
+    private Transaction transfer(User sender, String recipientUsername, BigDecimal amount, String subject) {
         if (recipientUsername == null || recipientUsername.isBlank()) {
             throw new TransactionException("Empfänger ist erforderlich.");
         }
@@ -107,38 +111,42 @@ public class TransactionService {
     public TransactionLite transactionInfosToTransactionLite(String amountIn, String senderUsername, String recipientUsername, String description, TransactionType type) {
         BigDecimal amount = parseAmountTolerant(amountIn);
         String recipient = safe(recipientUsername);
-        if (type == TransactionType.EINZAHLUNG) {
-
-        } else if (type == TransactionType.AUSZAHLUNG) {
-        } else if (type == TransactionType.UEBERWEISUNG) {
-            if (recipient.equals(senderUsername))
-                throw new TransactionException("Der angegebene Empfänger existiert nicht.");
-                userService.findByUsername(recipient);
-        } else {
+        if (type == TransactionType.UEBERWEISUNG) {
+            if (recipient.equals(senderUsername)) throw new TransactionException("Der angegebene Empfänger existiert nicht.");
+            userService.findByUsername(recipient);
+        } else if (type != AUSZAHLUNG && type != EINZAHLUNG){
             throw new IllegalStateException("Kein Transaktionstyp ausgewählt.");
         }
         return new TransactionLite(amount, type, senderUsername, recipientUsername, description);
     }
 
+    @Transactional
     public TransactionResult sendTransfers(TransactionLite transactionLite, User currentUser) {
+        userRepo.lockById(currentUser.getId()).orElseThrow();
+
         BigDecimal currentBalance = this.computeBalance(currentUser.getId());
-        Transaction transaction = new Transaction();
+        Transaction transaction;
         if (transactionLite.type() == TransactionType.EINZAHLUNG) {
-            transaction= this.deposit(currentUser, transactionLite.amount(), transactionLite.description());
+            transaction = this.deposit(currentUser, transactionLite.amount(), transactionLite.description());
             currentBalance = currentBalance.add(transactionLite.amount());
         } else if (transactionLite.type() == TransactionType.AUSZAHLUNG) {
             if (currentBalance.compareTo(transactionLite.amount()) < 0) throw new TransactionException("Nicht genügend Guthaben für die Auszahlung.");
             currentBalance = currentBalance.subtract(transactionLite.amount());
-            transaction= this.withdraw(currentUser, transactionLite.amount(), transactionLite.description());
+            transaction = this.withdraw(currentUser, transactionLite.amount(), transactionLite.description());
         } else {
             if (currentBalance.compareTo(transactionLite.amount()) < 0) throw new TransactionException("Nicht genügend Guthaben für die Auszahlung.");
             currentBalance = currentBalance.subtract(transactionLite.amount());
-            transaction=  this.transfer(currentUser, transactionLite.recipientUsername(), transactionLite.amount(), transactionLite.description());
+
+            if (transactionLite.recipientUsername() == null || transactionLite.recipientUsername().isBlank()) {
+                throw new TransactionException("Empfänger ist erforderlich.");
+            }
+            transaction = this.transfer(currentUser, transactionLite.recipientUsername(), transactionLite.amount(), transactionLite.description());
         }
         return new TransactionResult(transaction, currentBalance);
     }
 
 
+    @Transactional
     public ArrayList<TransactionResult> sendBulkTransfers(List<TransactionLite> transactionsLite, User currentUser) {
         if(transactionsLite.isEmpty()) throw new IllegalArgumentException("Die Transaktionsliste ist leer, es können keine Transaktionen ausgeführt werden");
         ArrayList<TransactionResult> results =  new ArrayList<>();
@@ -154,12 +162,11 @@ public class TransactionService {
         if(balance.compareTo(sum) < 0) throw  new TransactionException( "Dein Kontostand ist zu gering um die Transaktionen auszuführen");
 
         balance = balance.subtract(sum);
-        for (int i = 0; i < transactionsLite.size(); i++) {
-            TransactionLite lite = transactionsLite.get(i);
+        for (TransactionLite lite : transactionsLite) {
             Transaction transaction = sendTransfersWithoutBalanceCheck(lite, currentUser);
             results.add(new TransactionResult(transaction, balance));
         }
-        if(results.isEmpty())throw new IllegalArgumentException("Es gab ein Problem beim ausführen deiner Transaktionen");
+        if(results.isEmpty()) throw new IllegalArgumentException("Es gab ein Problem beim Ausführen deiner Transaktionen");
         return results;
     }
 
