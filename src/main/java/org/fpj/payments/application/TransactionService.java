@@ -162,8 +162,7 @@ public class TransactionService {
         if(balance.compareTo(sum) < 0) throw  new TransactionException( "Dein Kontostand ist zu gering um die Transaktionen auszuführen");
 
         balance = balance.subtract(sum);
-        for (int i = 0; i < transactionsLite.size(); i++) {
-            TransactionLite lite = transactionsLite.get(i);
+        for (TransactionLite lite : transactionsLite) {
             Transaction transaction = sendTransfersWithoutBalanceCheck(lite, currentUser);
             results.add(new TransactionResult(transaction, balance));
         }

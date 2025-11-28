@@ -127,17 +127,7 @@ public class TransactionsLiteViewController {
                     return;
                 }
 
-                boolean outgoing = item.senderId() == currentUser.getId();
-
-                String name = outgoing
-                        ? (item.recipientUsername() != null ? item.recipientUsername() : "Empfänger unbekannt")
-                        : (item.senderUsername() != null ? item.senderUsername() : "Sender unbekannt");
-
-                String counterparty = switch (item.type()) {
-                    case EINZAHLUNG -> "Einzahlung";
-                    case AUSZAHLUNG -> "Auszahlung";
-                    case UEBERWEISUNG -> (outgoing ? "Überweisung an " : "Überweisung von ") + name;
-                };
+                String counterparty = getCounterparty(item);
 
                 String subtitle = UiHelpers.formatInstant(item.createdAt()) + "  •  " + UiHelpers.truncateFull(item.description(), 20);
                 String amountText = item.amountString(currentUser.getId());
@@ -149,6 +139,20 @@ public class TransactionsLiteViewController {
                 transactionPager.ensureLoadedForIndex(index, liteTransactionList.size(), PAGE_PRE_FETCH_THRESHOLD);
             }
         });
+    }
+
+    private String getCounterparty(TransactionRow item) {
+        boolean outgoing = item.senderId().equals(currentUser.getId());
+
+        String name = outgoing
+                ? (item.recipientUsername() != null ? item.recipientUsername() : "Empfänger unbekannt")
+                : (item.senderUsername() != null ? item.senderUsername() : "Sender unbekannt");
+
+        return switch (item.type()) {
+            case EINZAHLUNG -> "Einzahlung";
+            case AUSZAHLUNG -> "Auszahlung";
+            case UEBERWEISUNG -> (outgoing ? "Überweisung an " : "Überweisung von ") + name;
+        };
     }
 
     private void setUpAutoCompletion() {
