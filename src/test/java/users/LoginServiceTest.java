@@ -8,14 +8,18 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -53,6 +57,29 @@ public class LoginServiceTest {
         hashedPassword = passwordEncoder.encode(RAW_PASSWORD);
     }
 
+    //TODO: gleiches für PasswortValidator
+    @ParameterizedTest
+    @MethodSource("provideUsernames")
+    public void testRegex(String username, boolean expected){
+        boolean valid = username.matches(REGEX_USERNAME_VALIDATOR);
+        Assertions.assertEquals(expected, valid);
+    }
+
+    private static Stream<Arguments> provideUsernames(){
+        return Stream.of(
+                Arguments.of(USERNAME, true),
+                Arguments.of(USERNAMENOTVALIDREGEX, false),
+                Arguments.of("test..User@abc.de", false),
+                Arguments.of("user_name@sub.domain.org", true),
+                Arguments.of("email@domain.co.uk", true),
+                Arguments.of("plainaddress", false),
+                Arguments.of("user@ domain.com", false),
+                Arguments.of("user@@domain.com", false),
+                Arguments.of("user@domain", false),
+                Arguments.of("ab@cd.ed", true),
+                Arguments.of("ab@c.de", false)
+        );
+    }
 
     @Test
     public void testLoginSuccessful(){
