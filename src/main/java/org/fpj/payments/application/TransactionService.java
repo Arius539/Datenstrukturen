@@ -158,6 +158,7 @@ public class TransactionService {
                 sum = sum.add(lite.amount());
             }
         }
+        userRepo.lockById(currentUser.getId()).orElseThrow();
         BigDecimal balance = this.computeBalance(currentUser.getId());
         if(balance.compareTo(sum) < 0) throw  new TransactionException( "Dein Kontostand ist zu gering um die Transaktionen auszuführen");
 
