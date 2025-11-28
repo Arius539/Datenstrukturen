@@ -37,6 +37,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 
 @Component
@@ -237,7 +238,7 @@ public class TransactionsLiteViewController {
             tfBetreff.clear();
             tfEmpfaenger.clear();
             updateBalance();
-        } catch (TransactionException | DataNotPresentException ex) {
+        } catch (TransactionException | DataNotPresentException | NoSuchElementException ex) {
             alertService.error("Fehler", "Transaktion fehlgeschlagen", "Transaktion fehlgeschlagen: " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
             alertService.error("Fehler", "Eingabe ungültig", "Eingabe ungültig: " + ex.getMessage());
