@@ -11,6 +11,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,7 +27,10 @@ public class LoginServiceTest {
     UserService userService;
 
     @Mock
-    GenericApplicationContext context;
+    ConfigurableApplicationContext context;
+
+    @Mock
+    ConfigurableListableBeanFactory beanFactory;
 
     @Mock
     User user;
@@ -52,38 +57,39 @@ public class LoginServiceTest {
     @Test
     public void testLoginSuccessful(){
         //Mocks
-        when(userService.findByUsername(USERNAME)).thenReturn(user);
+        when(userService.findByUsername(USERNAME.toLowerCase())).thenReturn(user);
         when(user.getPasswordHash()).thenReturn(hashedPassword);
-        doNothing().when(context).registerBean(anyString(), any(), eq(user));
+        when(context.getBeanFactory()).thenReturn(beanFactory);
+        doNothing().when(beanFactory).registerSingleton(anyString(), eq(user));
         //Ausführen der Methode
         underTest.login(USERNAME, RAW_PASSWORD);
         //verifications
-        verify(context, times(1)).registerBean(anyString(), any(), eq(user));
+        verify(beanFactory, times(1)).registerSingleton(anyString(), eq(user));
     }
 
     @Test
     public void testLoginFailedNoUserFound(){
         //Mocks
-        doThrow(LoginFailedException.class).when(userService).findByUsername(USERNAMENOTPRESENT);
+        doThrow(LoginFailedException.class).when(userService).findByUsername(USERNAMENOTPRESENT.toLowerCase());
         //Ausführen der Methode
         Assertions.assertThrows(LoginFailedException.class,()->underTest.login(USERNAMENOTPRESENT, RAW_PASSWORD));
         //verifications
-        verify(context, times(0)).registerBean(anyString(), any(), any());
+        verify(beanFactory, times(0)).registerSingleton(anyString(), eq(user));
     }
 
     @Test
     public void testLoginFailedWrongPassword(){
-        when(userService.findByUsername(USERNAME)).thenReturn(user);
+        when(userService.findByUsername(USERNAME.toLowerCase())).thenReturn(user);
         when(user.getPasswordHash()).thenReturn(hashedPassword);
 
         Assertions.assertThrows(LoginFailedException.class, ()->underTest.login(USERNAME, RAW_PASSWORDNOTMATCHING));
-        verify(context, times(0)).registerBean(anyString(), any(), any());
-        verify(userService, times(1)).findByUsername(USERNAME);
+        verify(beanFactory, times(0)).registerSingleton(anyString(), eq(user));
+        verify(userService, times(1)).findByUsername(USERNAME.toLowerCase());
     }
 
     @Test
     public void testRegisterSuccessful() {
-        when(userService.usernameExists(USERNAME)).thenReturn(false);
+        when(userService.usernameExists(USERNAME.toLowerCase())).thenReturn(false);
         when(userService.save(any())).thenReturn(user);
         underTest.register(USERNAME, RAW_PASSWORD, RAW_PASSWORD);
         verify(userService, times(1)).save(any());
@@ -91,21 +97,21 @@ public class LoginServiceTest {
 
     @Test
     public void testRegisterFailedUsernameRegex() {
-        when(userService.usernameExists(USERNAMENOTVALIDREGEX)).thenReturn(false);
+        when(userService.usernameExists(USERNAMENOTVALIDREGEX.toLowerCase())).thenReturn(false);
         Assertions.assertThrows(LoginFailedException.class,()-> underTest.register(USERNAMENOTVALIDREGEX, RAW_PASSWORD, RAW_PASSWORD));
         verify(userService, times(0)).save(user);
     }
 
     @Test
     public void testRegisterPasswordNotEqual() {
-        when(userService.usernameExists(USERNAME)).thenReturn(false);
+        when(userService.usernameExists(USERNAME.toLowerCase())).thenReturn(false);
         Assertions.assertThrows(LoginFailedException.class,()-> underTest.register(USERNAME, RAW_PASSWORD, RAW_PASSWORDNOTMATCHING));
         verify(userService, times(0)).save(user);
     }
 
     @Test
     public void testRegisterUsernameAlreadyExists() {
-        when(userService.usernameExists(USERNAME)).thenReturn(true);
+        when(userService.usernameExists(USERNAME.toLowerCase())).thenReturn(true);
         Assertions.assertThrows(LoginFailedException.class,()-> underTest.register(USERNAME, RAW_PASSWORD, RAW_PASSWORDNOTMATCHING));
 
         verify(userService, times(0)).save(user);
@@ -113,7 +119,7 @@ public class LoginServiceTest {
 
     @Test
     public void testRegisterPasswordNotValid() {
-        when(userService.usernameExists(USERNAME)).thenReturn(false);
+        when(userService.usernameExists(USERNAME.toLowerCase())).thenReturn(false);
         Assertions.assertThrows(LoginFailedException.class,()-> underTest.register(USERNAME, "abcd", "abcd"));
 
         verify(userService, times(0)).save(user);
