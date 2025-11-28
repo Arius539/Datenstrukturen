@@ -46,7 +46,7 @@ public class LoginService {
 
     public void register(final String username, final String password, final String passwordCheck) {
         final String message;
-        if (userService.usernameExists(username)) {
+        if (userService.usernameExists(username.toLowerCase())) {
             message = "Username existiert bereits";
         } else if (!username.matches(REGEX_USERNAME_VALIDATOR)) {
             message = "Username erfüllt nicht die Anforderungen";
@@ -59,7 +59,7 @@ public class LoginService {
         else {
             final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
             final String hashedPassword = passwordEncoder.encode(password);
-            final User newUser = new User(username, hashedPassword);
+            final User newUser = new User(username.toLowerCase(), hashedPassword);
             final User savedUser = userService.save(newUser);
             return;
         }
