@@ -63,4 +63,36 @@ public class Transaction {
         boolean outgoing = this.sender== null ? false : this.sender.getId() == currentUserId;
         return UiHelpers.formatSignedEuro(!outgoing ? this.amount : new BigDecimal("0").subtract(this.amount));
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Transaction transaction = (Transaction) obj;
+        boolean basic = transactionType.equals(transaction.getTransactionType()) && amount.equals(transaction.getAmount())
+                && description.equals(transaction.getDescription());
+        boolean equalUsers;
+        if (transactionType == TransactionType.EINZAHLUNG){
+            equalUsers = recipient.equals(transaction.recipient);
+        } else if (transactionType == TransactionType.AUSZAHLUNG){
+            equalUsers = sender.equals(transaction.sender);
+        } else {
+            equalUsers = recipient.equals(transaction.recipient) && sender.equals(transaction.sender);
+        }
+        return basic && equalUsers;
+    }
+
+    @Override
+    public String toString(){
+        String string = "Transaktion{TransactionType= " + transactionType.toString() + ", Amount= " + amount.toString();
+        if (transactionType == TransactionType.EINZAHLUNG){
+            string = string + ", Recipient= " + recipient.toString() + ", Descripion= " + description + ", CreatedAt= " + createdAt.toString();
+        } else if (transactionType == TransactionType.AUSZAHLUNG){
+            string = string + ", Sender= " + sender.toString() + ", Descripion= " + description + ", CreatedAt= " + createdAt.toString();
+        } else {
+            string = string + ", Sender= " + sender.toString() + ", Recipient= " + recipient.toString() + ", Descripion= " + description + ", CreatedAt= " + createdAt.toString();
+        }
+        return string;
+    }
+
 }
